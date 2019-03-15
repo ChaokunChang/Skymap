@@ -11,9 +11,10 @@
 #include <vector>
 #include <algorithm>
 #include <map>
-#include <math.h>
+#include <cmath>
 #include <stack>
-#include <time.h>
+#include <ctime>
+#include <random>
 #include "Star.h"
 #include "MyFunctions.h"
 
@@ -21,8 +22,7 @@ using namespace std;
 //星对存储结构
 struct StarPair
 {
-    int group_number;//分组存储星对数据，分组依据为角距大小。首先星对按角距由小到大排序，然后没0.02°分一个组，便于索引
-
+    // int group_number;//分组存储星对数据，分组依据为角距大小。首先星对按角距由小到大排序，然后每0.02°分一个组，便于索引
     int star1;//存储星对的两颗星的编号
     int star2;
     float angular_distance;//四位有效数字存储，且小于对焦距d（d 可取12°）
@@ -40,12 +40,14 @@ struct MatchPair {
 
 class TriangleMatching {
 private:
-    int GuideStarNumber, GroupNumber;
-    float Threshold, GapWidth;
-    MatchPair ChosedTriangle;
+    int __GuideStarNumber, __GroupNumber;
+    float __Threshold, __GapWidth;
+    //vector<StarPoint> __TargetTriangle;
+    MatchPair __TargetTriangle;
+    stack<int> __Candidate;
 public:
-    TriangleMatching(int starnum, float thres, float gap):GuideStarNumber(starnum),
-                                                                        Threshold(thres),GapWidth(gap){ };
+    TriangleMatching(int starnum, float thres, float gap):__GuideStarNumber(starnum),
+                                                                        __Threshold(thres),__GapWidth(gap){ };
     vector<StarPair> stardata_;
     vector<MatchPair> matchgroup_;
     vector<int> grouphead_;
@@ -53,14 +55,11 @@ public:
     vector<int> groupsize_;
     void LoadData(vector<StarPoint> &stars);
 
-    bool MCheck(int k, float m0, float m1, float m2,float deta);
-    int Check(int k,float m1,float m2,float m3);
-    float GetThreshold(){ return Threshold;};
+    float GetThreshold(){ return this->__Threshold;};
 
-    vector<StarPoint> ChooseTargetStars(vector<StarPoint> &obv_stars);
-    vector<StarPoint> Random3Stars(vector<StarPoint> &obv_stars);
-    void MatchAlgorithm(float ad12, float ad23, float ad13,float m1, float m2,float m3);
-
+    void ChooseAdjacentStars(vector<StarPoint> &obv_stars, vector<StarPoint> &triangle);
+    vector<StarPoint> RandomAdjacentStars(vector<StarPoint> &obv_stars, int except);
+    int MatchAlgorithm(float center_edge1, float center_edge2, float edge1_edge2, float m1, float m2,float m3);
 
 };
 

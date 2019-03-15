@@ -20,10 +20,13 @@ int main() {
     string picture = "D:\\Program Files\\CLion\\SkyMap\\Data\\observation_00.csv";
     SMM.LoadSky(filename);
     SMM.LoadImage(picture);
-    StarPoint c(0,10.0,40.0,0.0);
-    float len = 15.0,width = 15.0;
+    StarPoint c(0,140.0,0.0,0.0);
+    float len = 20.0,width = 20.0;
     SMM.GenerateSimImage(c,len,width);
+    SMM.SelectTargetStar();
     SMM.Match();
+    if( SMM.Check() ) cout<<"Good!"<<endl;
+    else cout<<"Sad!"<<endl;
 
     return 0;
 }

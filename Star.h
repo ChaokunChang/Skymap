@@ -5,12 +5,16 @@
 #ifndef SKYMAP_STAR_H
 #define SKYMAP_STAR_H
 
+#include "MyFunctions.h"
+
 struct StarPoint{
     int index;
     float x; //0 -> 360
     float y; //-90 -> 90
     float magnitude;
+    StarPoint():index(0),x(0.0),y(0.0),magnitude(0.0){};
     StarPoint(int i,float x, float y,float mag):index(i),x(x),y(y),magnitude(mag){};
+    float Distance(const StarPoint &s){return cal_dis(x,y,s.x,s.y);}
 };
 
 
@@ -19,7 +23,7 @@ public:
     Star();
     Star(int, double, double, double);
     ~Star();
-    void operator=(const Star &source){
+    Star & operator=(const Star &source){
         id = source.id;
         spx = source.spx;
         spy = source.spy;
