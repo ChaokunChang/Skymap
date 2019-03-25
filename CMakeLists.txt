@@ -3,9 +3,8 @@ project(SkyMap)
 
 set(CMAKE_CXX_STANDARD 14)
 
-#set(OpenCV_DIR D:\\Program Files\\CLion\\SkyMap\\ThirdParty\\opencv-4.0.1 )
+#set(OpenCV_DIR D:/libs/opencv/build )
 #find_package(OpenCV REQUIRED)
-#
 #message(STATUS "OpenCV library status:")
 #message(STATUS "    config: ${OpenCV_DIR}")
 #message(STATUS "    version: ${OpenCV_VERSION}")
@@ -14,6 +13,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 
 add_executable(SkyMap main.cpp Sky.cpp Sky.h SkyMapMatching.cpp SkyMapMatching.h Star.cpp Star.h
-        CSVAdapter.cpp CSVAdapter.h TriangleMatching.cpp TriangleMatching.h MyFunctions.cpp MyFunctions.h)
-
-# target_link_libraries(SkyMap ${OpenCV_LIBS})
+        CSVAdapter.cpp CSVAdapter.h TriangleMatching.cpp TriangleMatching.h MyFunctions.cpp MyFunctions.h
+        )
+#ImageProcessing.cpp ImageProcessing.h
+#target_link_libraries(SkyMap ${OpenCV_LIBS})

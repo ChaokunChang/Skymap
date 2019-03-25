@@ -13,9 +13,9 @@
 #include <map>
 #include "CSVAdapter.h"
 #include "Star.h"
+//#include "ImageProcessing.h"
 #include "TriangleMatching.h"
 #include "MyFunctions.h"
-//#include "ThirdParty/MatPlot/64bit/MatPlot.h"
 
 using namespace std;
 
@@ -52,6 +52,7 @@ public:
 public:
     void LoadSky(string &f_name);
     void LoadImage(string &f_name);
+
 
     vector<StarPoint> Subset(float x_s, float x_len, float y_s, float y_len); //In fact, this method should be write in Class SkyMap.
     void GenerateSimImage(StarPoint centre, float length, float width); //generate image with given position and size;

@@ -2,7 +2,7 @@
 #define EXTRACTION_H
 
 #include <iostream>
-#include <opencv2/opencv.hpp>
+#include "lib/opencv-4.0.1/include/opencv2/opencv.hpp"
 #include <vector>
 
 // macros
@@ -11,8 +11,9 @@
 #define STARS_MAX 200
 #define FOOTSTEP 40
 
-using namespace std;
 using namespace cv;
+using namespace std;
+
 
 // functions
 vector<pair<int, int>> projection_row(Mat &segimg);

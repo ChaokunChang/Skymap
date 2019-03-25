@@ -65,10 +65,10 @@ int SkyMapMatching::TriangleModel() {
         triangle.pop_back();
     }
 
-    int result_index = TM.MatchAlgorithm(dis12,dis13,dis23,triangle[0].magnitude,triangle[1].magnitude,triangle[2].magnitude);
+    int result_number = TM.MatchAlgorithm(dis12,dis13,dis23,triangle[0].magnitude,triangle[1].magnitude,triangle[2].magnitude);
 
     cout<<"Match Ended!"<<endl;
-    return result_index;
+    return result_number-1; //编号和index差1
 }
 
 void SkyMapMatching::Match() {

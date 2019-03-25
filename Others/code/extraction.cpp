@@ -1,7 +1,10 @@
-#include "extraction.h"
-#include <iostream>
-#include <opencv2/opencv.hpp>
+//#include "extraction.h"
+
+#include <stdfix.h>
 #include <vector>
+#include <iostream>
+//#include "lib/opencv-4.0.1/include/opencv2/opencv.hpp"
+#include "opencv2/opencv.hpp"
 
 using namespace std;
 using namespace cv;
