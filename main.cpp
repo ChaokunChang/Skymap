@@ -12,8 +12,8 @@ int main() {
 //    if(processed_picture == "") return 0;
 
     SkyMapMatching SMM;
-    string dataset = "D:\\Program Files\\CLion\\SkyMap\\Data\\skymaps.csv";
-    string picture = "D:\\Program Files\\CLion\\SkyMap\\Data\\observation_00.csv";
+    string dataset = "../Data/skymaps.csv";
+    string picture = "../Data/observation_00.csv";
     SMM.LoadSky(dataset);
     SMM.LoadImage(picture);
     StarPoint c(0,140.0,0.0,0.0);
