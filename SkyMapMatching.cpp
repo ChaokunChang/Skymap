@@ -6,6 +6,8 @@
 #include "extraction.h"
 #include <fstream>
 
+using namespace cv;
+
 void SkyMapMatching::LoadSky(string &f_name) {
     CSVAdapter csv_sky(f_name);
     Star s;
@@ -21,6 +23,9 @@ void SkyMapMatching::LoadSky(string &f_name) {
 }
 
 void SkyMapMatching::LoadImage_img(string &f_name) {
+    Mat srcimg, segimg;
+    vector<pair<double, double>> centroids;
+
     // read srcimg
     cout << "Reading image..." << endl;
     srcimg = read_img(f_name);
@@ -38,9 +43,7 @@ void SkyMapMatching::LoadImage_img(string &f_name) {
     fout.open("Data/data.csv", ios::out);
     int length = centroids.length();
     for (int i = 0; i < length; i++)
-    {
         fout << i << ',' << centroids[i].first << ',' << centroids[i].second << ',' << 0 << endl;
-    }
     fout.close();
 }
 
