@@ -1,5 +1,8 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.12)
 project(SkyMap)
+
+find_package(OpenCV)
+include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -12,8 +15,8 @@ set(CMAKE_CXX_STANDARD 14)
 #message(STATUS "    libraries: ${OpenCV_LIBS}")
 #message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 
-
+set(SOURCE_FILES main.cpp)
 add_executable(SkyMap main.cpp Sky.cpp Sky.h SkyMapMatching.cpp SkyMapMatching.h Star.cpp Star.h
-        CSVAdapter.cpp CSVAdapter.h TriangleMatching.cpp TriangleMatching.h MyFunctions.cpp MyFunctions.h)
+        CSVAdapter.cpp CSVAdapter.h TriangleMatching.cpp TriangleMatching.h MyFunctions.cpp MyFunctions.h extraction.h extraction.cpp)
 
-# target_link_libraries(SkyMap ${OpenCV_LIBS})
+target_link_libraries(SkyMap ${OpenCV_LIBS})

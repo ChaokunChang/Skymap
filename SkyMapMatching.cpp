@@ -22,7 +22,7 @@ void SkyMapMatching::LoadSky(string &f_name) {
     this->sky_.centre_ = StarPoint(-1,180.0,0,0);
 }
 
-void SkyMapMatching::LoadImage_img(string &f_name) {
+void SkyMapMatching::LoadImage_img(string &f_name, string &output_file) {
     Mat srcimg, segimg;
     vector<pair<double, double>> centroids;
 
@@ -40,8 +40,8 @@ void SkyMapMatching::LoadImage_img(string &f_name) {
 
     fstream fout;
 
-    fout.open("Data/data.csv", ios::out);
-    int length = centroids.length();
+    fout.open(output_file, ios::out);
+    int length = centroids.size();
     for (int i = 0; i < length; i++)
         fout << i << ',' << centroids[i].first << ',' << centroids[i].second << ',' << 0 << endl;
     fout.close();

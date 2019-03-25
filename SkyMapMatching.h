@@ -52,7 +52,7 @@ public:
 public:
     void LoadSky(string &f_name);
     void LoadImage(string &f_name);
-    void LoadImage_img(string &f_name);
+    void LoadImage_img(string &f_name, string &output_file);
 
     vector<StarPoint> Subset(float x_s, float x_len, float y_s, float y_len); //In fact, this method should be write in Class SkyMap.
     void GenerateSimImage(StarPoint centre, float length, float width); //generate image with given position and size;
