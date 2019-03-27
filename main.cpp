@@ -24,5 +24,11 @@ int main() {
     if( SMM.Check() ) cout<<"Good!"<<endl;
     else cout<<"Sad!"<<endl;
 
+//    string filename = "images/stars1.jpg";
+//    string output_file = "Data/centroids.csv";
+//    cout << "start?" << endl;
+//    SMM.LoadImage_img(filename, output_file);
+//    cout << "finished?" << endl;
+
     return 0;
 }
