@@ -1,10 +1,4 @@
-//#include "extraction.h"
-
-#include <stdfix.h>
-#include <vector>
-#include <iostream>
-//#include "lib/opencv-4.0.1/include/opencv2/opencv.hpp"
-#include "opencv2/opencv.hpp"
+#include "extraction.h"
 
 using namespace std;
 using namespace cv;
@@ -20,7 +14,7 @@ vector<pair<int, int>> projection_row(Mat &segimg)
     pair<int, int> p;
 
     height = segimg.rows;
-    reduce(segimg, img, 1, CV_REDUCE_SUM, CV_32S);
+    reduce(segimg, img, 1, REDUCE_SUM, CV_32S);
 
     for (i = 0; i < height; )
     {
@@ -54,7 +48,7 @@ vector<pair<int, int>> projection_col(Mat &segimg)
     pair<int, int> p;
 
     width = segimg.cols;
-    reduce(segimg, img, 0, CV_REDUCE_SUM, CV_32S);
+    reduce(segimg, img, 0, REDUCE_SUM, CV_32S);
 
     for (i = 0; i < width; )
     {
@@ -119,7 +113,7 @@ Mat preprocess_img(Mat &srcimg)
 
     // get greyimg
     if (srcimg.channels() == 3)
-        cvtColor(srcimg, greyimg, CV_BGR2GRAY);
+        cvtColor(srcimg, greyimg, COLOR_BGR2GRAY);
     else
         greyimg = srcimg;
 

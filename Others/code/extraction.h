@@ -2,7 +2,7 @@
 #define EXTRACTION_H
 
 #include <iostream>
-#include "lib/opencv-4.0.1/include/opencv2/opencv.hpp"
+#include "opencv2/opencv.hpp"
 #include <vector>
 
 // macros

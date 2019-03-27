@@ -1,13 +1,13 @@
 #include <iostream>
 
-
+//#include "ImageProcessing.h"
 #include "SkyMapMatching.h"
-
+#include <malloc.h>
 using namespace std;
 
 int main() {
 
-//    ImageProcessing IP("./Data/source001.png","./Data/source001.csv");
+//    ImageProcessing IP("../Data/source001.png","../Data/source001.csv");
 //    string processed_picture = IP.Process();
 //    if(processed_picture == "") return 0;
 

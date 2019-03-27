@@ -6,6 +6,7 @@
 #define SKYMAP_IMAGEPROCESSING_H
 
 #include <string>
+#include <fstream>
 #include "Others/code/extraction.cpp"
 
 using namespace std;

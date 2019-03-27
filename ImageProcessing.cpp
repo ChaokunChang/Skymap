@@ -10,7 +10,7 @@ string ImageProcessing::Process() {
 
     // read srcimg
     cout << "Reading image..." << endl;
-    srcimg = read_img(f_name);
+    srcimg = read_img(this->__raw_picture);
 
     // segmentation
     cout << "Preprocessing image..." << endl;
@@ -20,12 +20,11 @@ string ImageProcessing::Process() {
     cout << "Get centroids of stars..." << endl;
     centroids = get_centroids(segimg);
 
-    fstream fout;
-
-    fout.open("Data/data.csv", ios::out);
-    int length = centroids.length();
+    fstream fileout;
+    fileout.open(this->__gen_picture, ios::out);
+    int length = centroids.size();
     for (int i = 0; i < length; i++)
-        fout << i << ',' << centroids[i].first << ',' << centroids[i].second << ',' << 0 << endl;
-    fout.close();
+        fileout << i << ',' << centroids[i].first << ',' << centroids[i].second << ',' << 0 << endl;
+    fileout.close();
     return this->__gen_picture;
 }
