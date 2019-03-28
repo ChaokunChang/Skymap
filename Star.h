@@ -28,6 +28,7 @@ public:
         spx = source.spx;
         spy = source.spy;
         mag = source.mag;
+        return *this;
     }
     int getID() { return id; }
     double getX() { return spx; }
