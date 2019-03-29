@@ -14,8 +14,14 @@ struct StarPoint{
     float magnitude;
     StarPoint():index(0),x(0.0),y(0.0),magnitude(0.0){};
     StarPoint(int i,float x, float y,float mag):index(i),x(x),y(y),magnitude(mag){};
-    float Distance(const StarPoint &s){return cal_dis(x,y,s.x,s.y);}
+    float Distance(const StarPoint &s){ return cal_dis(x,y,s.x,s.y);}
+    float Module(){ return  sqrt(pow(x,2)+pow(y,2));}
+    bool XInRange(StarPoint &center, float length);
+    bool YInRange(StarPoint &center, float width);
+    bool InRange(StarPoint &center, float length, float width);
+    void change_coordinate(StarPoint new_center);
 };
+
 
 
 class Star {

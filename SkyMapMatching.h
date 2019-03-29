@@ -22,20 +22,24 @@ using namespace std;
 
 class SkyMap{
 public:
-    int number_;
-    pair<int,int> size_; //size_ = {length, width}
+    int count_;
+    pair<float,float> range_; //range_ = {length, width}
     StarPoint centre_;
     vector<StarPoint> stars_;
-    SkyMap():number_(0),size_({0,0}){};
+    SkyMap():count_(0),range_({0,0}){};
+
+    vector<StarPoint> Subset(StarPoint centre, float length, float width); //generate image with given position and size;
+    vector<StarPoint> Subset(StarPoint centre, float image_ratio, int num); // generate image with centre and particular number of stars.
 };
 
 class Observation{
 public:
-    int number_;
-    pair<int,int> size_; //size_ = {length, width}
+    int count_;
+    pair<float,float> range_; //range_ = {length, width}
     StarPoint centre_;
     vector<StarPoint> stars_;
-    Observation():number_(0),size_({0,0}){};
+    Observation():count_(0),range_({0,0}){};
+    void RangeStandardization();
 };
 
 class SkyMapMatching {
@@ -53,7 +57,6 @@ public:
     void LoadSky(string &f_name);
     void LoadImage(string &f_name);
 
-    vector<StarPoint> Subset(float x_s, float x_len, float y_s, float y_len); //In fact, this method should be write in Class SkyMap.
     void GenerateSimImage(StarPoint centre, float length, float width); //generate image with given position and size;
     void GenerateSimImage(StarPoint centre, float image_ratio, int num); // generate image with centre and particular number of stars.
 

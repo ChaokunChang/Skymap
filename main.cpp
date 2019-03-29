@@ -19,6 +19,7 @@ int main() {
     StarPoint c(0,140.0,0.0,0.0);
     float len = 20.0,width = 20.0;
     SMM.GenerateSimImage(c,len,width);
+    //SMM.GenerateSimImage(c,1,20);
     SMM.SelectTargetStar();
     SMM.Match();
     if( SMM.Check() ) cout<<"Good!"<<endl;

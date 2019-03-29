@@ -5,7 +5,10 @@
 
 float cal_dis(float x1,float y1,float x2,float y2){
     //return sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
-    return sqrt( pow(fmod(x1-x2,180),2) + pow(fmod(y1-y2,90),2) );
+    float dx = abs(x1-x2);
+    float dy = abs(y1-y2);
+    if(dx>180) dx = 360-dx;
+    return sqrt( pow(dx,2) + pow(dy,2) );
 }
 
 bool between(float target, float left, float right){

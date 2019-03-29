@@ -180,7 +180,7 @@ int TriangleMatching::MatchAlgorithm(float center_edge1, float center_edge2, flo
             cout << "Match succeed!"<<endl;
             cout << "The answer'id in match group(all possible answer) is: "<<result << endl;
             cout <<"The answer is(star'id in SkyMap): "<< matchgroup_[result].middle_star << " " << matchgroup_[result].star1 << " " << matchgroup_[result].star2 << endl;
-            cout <<"Other candidates are:"<<endl;
+            cout <<"All candidates are:"<<endl;
             while(!__Candidate.empty()){
                 int candidate = __Candidate.top();
                 cout<< matchgroup_[candidate].middle_star << " " << matchgroup_[candidate].star1 << " " << matchgroup_[candidate].star2 << endl;

@@ -13,9 +13,9 @@ void SkyMapMatching::LoadSky(string &f_name) {
         s = csv_sky.getNextRecord();
         StarPoint sp(s.getID(),s.getX(),s.getY(),s.getMag());
         this->sky_.stars_.push_back(sp);
-        this->sky_.number_++;
+        this->sky_.count_++;
     }
-    this->sky_.size_ = {360,180};
+    this->sky_.range_ = {360,180};
     this->sky_.centre_ = StarPoint(-1,180.0,0,0);
 }
 
@@ -28,19 +28,19 @@ void SkyMapMatching::LoadImage(string &f_name) {
         s = csv_sky.getNextRecord();
         StarPoint sp(s.getID(),s.getX(),s.getY(),s.getMag());
         this->image_.stars_.push_back(sp);
-        this->image_.number_++;
+        this->image_.count_++;
     }
+    this->image_.RangeStandardization();
 }
 
 void SkyMapMatching::SelectTargetStar() {
-    StarPoint cen = this->image_.centre_;
-    float mindis = INT32_MAX;
+    float min_dis = INT32_MAX;
     int target = 0;
     for(int i=0;i<this->image_.stars_.size();i++){
         StarPoint s = this->image_.stars_[i];
-        float dis = s.Distance(cen);
-        if(dis<mindis){
-            mindis = dis;
+        float dis = pow(s.x,2)+pow(s.y,2);
+        if(dis<min_dis){
+            min_dis = dis;
             target = i;
         }
     }
@@ -77,65 +77,119 @@ void SkyMapMatching::Match() {
     this->__matching_star = this->sky_.stars_[skymap_index];
 }
 
+bool star_point_cmp(const StarPoint &s1, const StarPoint &s2){
+    float dis1 = sqrt(pow(s1.x,2)+pow(s1.y,2));
+    float dis2 = sqrt(pow(s2.x,2)+pow(s2.y,2));
+    return dis1<dis2;
+}
 
-bool SkyMapMatching::Check() {
-    if(this->__matching_star.index == this->__target_star.index) return true;
+bool similar_position(StarPoint &s1, StarPoint &s2){
+    if(abs(s1.Distance(s2)) <0.001) return true;
     else return false;
 }
 
-vector<StarPoint> SkyMapMatching::Subset(float x_s, float x_len, float y_s, float y_len) {
+bool similar_vector(vector<StarPoint> &vec1, vector<StarPoint> &vec2){
+    /*TODO:
+     * compare two vector,
+     * without consideration of the absolute position, but the relative position.*/
+    return true;
+}
+
+bool SkyMapMatching::Check() {
+    vector<StarPoint> check_set = sky_.Subset(this->__matching_star,this->image_.range_.first,this->image_.range_.second);
+    for(int i=0;i<check_set.size();i++){
+        check_set[i].change_coordinate(this->__matching_star);
+//        check_set[i].x -= this->__matching_star.x;
+//        check_set[i].y -= this->__matching_star.y;
+    }
+
+    sort(check_set.begin(),check_set.end(),star_point_cmp);
+
+    vector<StarPoint> candidate_set(this->image_.stars_);
+    StarPoint new_centre = this->__target_star;
+    for(int i=0;i<candidate_set.size();i++){
+        candidate_set[i].change_coordinate(new_centre);
+//        s.x -= new_centre.x;
+//        s.y -= new_centre.y;
+    }
+    sort(candidate_set.begin(),candidate_set.end(),star_point_cmp);
+
+    int len = min(check_set.size(),candidate_set.size());
+    float loss = 0;
+    int i=0,j=0;
+    while(i<check_set.size() && j<candidate_set.size()){
+        if(similar_position(check_set[i],candidate_set[j])){
+            loss += abs(check_set[i].Distance(candidate_set[j]));
+            i++;j++;
+        }else if(check_set[i].Module() < candidate_set[j].Module()){
+            loss += 1;
+            i++;
+        } else{
+            loss += 1;
+            j++;
+        }
+        cout<<loss<<endl;
+    }
+    cout<<loss<<endl;
+    if(loss/len > 0.5) return false;
+    return true;
+
+//    if(this->__matching_star.index == this->__target_star.index) return true;
+//    else return false;
+}
+
+vector<StarPoint> SkyMap::Subset(StarPoint centre, float length, float width) {
+    //Some Check here.
     vector<StarPoint> stars;
-    for(StarPoint point : sky_.stars_){
-        if(between(point.x,x_s,x_s+x_len) && between(point.y, y_s, y_s+y_len)){
+    for(StarPoint point : stars_){
+        if(point.InRange(centre,length,width)){
             stars.push_back(point);
         }
     }
+    cout<<"Subset(length,width)=("<<length<<","<<width<<"):"<<endl;
+    cout<<"Number of stars:"<<stars.size()<<endl;
     return stars;
+
 }
 
 void SkyMapMatching::GenerateSimImage(StarPoint centre, float length, float width) {
     //Some Check here.
     if(length<=0 || width<=0 ){
         if(!this->image_.stars_.empty()) this->image_.stars_.clear();
-        this->image_.number_ = 0;
-        this->image_.size_ = {length<0?0:length , width<0?0:width};
+        this->image_.count_ = 0;
+        this->image_.range_ = {length<0?0:length , width<0?0:width};
+        return;
     }
-    vector<StarPoint> stars = Subset(centre.x-(length/2),length, centre.y-(width/2),width);
+    vector<StarPoint> stars = sky_.Subset(centre,length,width);
+    for(int i=0;i<stars.size();i++){
+        stars[i].change_coordinate(centre);
+//        stars[i].x -= centre.x;
+//        stars[i].y -= centre.y;
+    }
     if(!this->image_.stars_.empty()) this->image_.stars_.clear();
 
-    for(int i=0;i<stars.size();i++){
-        stars[i].x -= centre.x-(length/2);
-        stars[i].y -= centre.y-(width/2);
-    }
-    this->image_.size_ = {length , width};
+    this->image_.range_ = {length , width};
     this->image_.stars_.insert(this->image_.stars_.end(),stars.begin(),stars.end());
-    this->image_.number_ = this->image_.stars_.size();
+    this->image_.count_ = this->image_.stars_.size();
     this->image_.centre_ = centre;
 
-    //double *longitude = new double[stars.size()];
-    //double *latitude = new double[stars.size()];
     cout<<"The Generated image is:"<<endl;
     for(int i=0;i<stars.size();i++){
         cout<<stars[i].index<<": ("<<stars[i].x<<" , "<<stars[i].y<<")"<<endl;
-        //longitude[i] = (stars[i].x);
-        //latitude[i] = (stars[i].y);
     }
-    //MatPlot::scatter(longitude,latitude,stars.size());
     cout<<"The number of stars is:"<<stars.size()<<endl;
+    //this->image_.RangeStandardization();
 }
 
-void SkyMapMatching::GenerateSimImage(StarPoint centre, float image_ratio, int num) {
-    float upper_bound = 15;
+vector<StarPoint> SkyMap::Subset(StarPoint centre, float image_ratio, int num=0) {
+    float upper_bound = 20;
     float lower_bound = 1;
     float length = (upper_bound+lower_bound)/2;
     vector<StarPoint> stars;
     float width;
-    float x0,y0;
-    while( abs(lower_bound-upper_bound)<0.01 ){
+    while( abs(lower_bound-upper_bound)>0.01 ){
         width = length/image_ratio;
-        x0 = centre.x-(length/2);
-        y0 = centre.y-(width/2);
-        stars = Subset(x0,length, y0,width);
+        stars = this->Subset(centre,length,width);
         if(stars.size() == num) break;
         else if(stars.size() < num){
             stars.clear();
@@ -147,21 +201,54 @@ void SkyMapMatching::GenerateSimImage(StarPoint centre, float image_ratio, int n
             length = (upper_bound+lower_bound)/2;
         }
     }
+    if(stars.size() == num) {
+        cout<<"The number of star of this Subset:"<<stars.size()<<endl;
+    } else{
+        cout<<"Invalid subset! You can try another ratio or center."<<endl;
+        stars.clear();
+    }
+    return stars;
+}
 
+void SkyMapMatching::GenerateSimImage(StarPoint centre, float image_ratio, int num) {
+    vector<StarPoint> stars = sky_.Subset(centre,image_ratio,num);
     if(!this->image_.stars_.empty()) this->image_.stars_.clear();
     if(stars.size() == num) {
-        this->image_.size_ = {length , width};
         for(int i=0;i<stars.size();i++){
-            stars[i].x -= x0;
-            stars[i].y -= y0;
+            stars[i].change_coordinate(centre);
+//            stars[i].x -= centre.x;
+//            stars[i].y -= centre.y;
         }
         this->image_.stars_.insert(this->image_.stars_.end(),stars.begin(),stars.end());
-        this->image_.number_ = this->image_.stars_.size();
+        this->image_.count_ = this->image_.stars_.size();
         this->image_.centre_ = centre;
+
+        cout<<"The Generated image is:"<<endl;
+        for(int i=0;i<stars.size();i++){
+            cout<<stars[i].index<<": ("<<stars[i].x<<" , "<<stars[i].y<<")"<<endl;
+        }
+        cout<<"The number of stars is:"<<stars.size()<<endl;
+
     } else{
-        this->image_.number_ = 0;
-        this->image_.size_ = {length , width};
+        this->image_.count_ = 0;
         this->image_.centre_ = centre;
-        cout<<"Can Not get such set! You can try another ratio or center."<<endl;
+        cout<<"Invalid Subset! You can try another ratio or center."<<endl;
+    }
+    this->image_.RangeStandardization();
+}
+
+void Observation::RangeStandardization(){
+    if(this->count_==0){
+        this->range_ = {0,0};
+        return;
+    }else{
+        float lx = 10000.0,rx = -10000.0,ly = 10000.0,ry = -10000.0;
+        for(int i=0;i<stars_.size();i++){
+            lx = min(stars_[i].x,lx);
+            rx = max(stars_[i].x,rx);
+            ly = min(stars_[i].x,ly);
+            ry = max(stars_[i].x,ry);
+        }
+        this->range_ = {rx-lx,ry-ly};
     }
 }
