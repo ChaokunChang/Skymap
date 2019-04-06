@@ -1,15 +1,16 @@
 #include <iostream>
 
-//#include "ImageProcessing.h"
+#include "ImageProcessing.h"
 #include "SkyMapMatching.h"
 #include <malloc.h>
+#include <algorithm>
 using namespace std;
 
 int main() {
 
-//    ImageProcessing IP("../Data/source001.png","../Data/source001.csv");
-//    string processed_picture = IP.Process();
-//    if(processed_picture == "") return 0;
+   ImageProcessing IP("../Data/source001.png","../Data/source001.csv");
+   string processed_picture = IP.Process();
+   if(processed_picture == "") return 0;
 
     SkyMapMatching SMM;
     string dataset = "../Data/skymaps.csv";

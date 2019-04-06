@@ -7,7 +7,7 @@
 
 #include <string>
 #include <fstream>
-#include "extraction.cpp"
+#include "extraction.h"
 
 using namespace std;
 class ImageProcessing {
