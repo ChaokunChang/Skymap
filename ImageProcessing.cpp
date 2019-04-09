@@ -4,7 +4,7 @@
 
 #include "ImageProcessing.h"
 
-string ImageProcessing::Process() {
+vector<pair<double, double>> ImageProcessing::Process() {
     Mat srcimg, segimg;
     vector<pair<double, double>> centroids;
 
@@ -26,5 +26,5 @@ string ImageProcessing::Process() {
     for (int i = 0; i < length; i++)
         fileout << i << ',' << centroids[i].first << ',' << centroids[i].second << ',' << 0 << endl;
     fileout.close();
-    return this->__gen_picture;
+    return centroids;
 }

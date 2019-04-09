@@ -10,7 +10,7 @@
 using namespace std;
 CSVAdapter::CSVAdapter(std::string FileName)
 {
-	CSVFile.open(FileName);
+    CSVFile.open(FileName);
 }
 
 bool CSVAdapter::hasRecord() {
@@ -24,11 +24,11 @@ CSVAdapter::~CSVAdapter()
 	CSVFile.close();
 }
 
-Star CSVAdapter::getNextRecord()
+StarPoint CSVAdapter::getNextRecord()
 {
-	std::string line;
+    std::string line;
 	std::vector<std::string> fields;
-	Star starRec0(0,0,0,0);
+    StarPoint starRec0(0,0,0,0);
 	if (!hasRecord())
 	{
 		//throw std::exception("CSVAdapter has reached the end of the file.");
@@ -36,47 +36,47 @@ Star CSVAdapter::getNextRecord()
 	}
 	else
 	{
-		std::getline(CSVFile, line);
+        std::getline(CSVFile,line);
 		std::istringstream sin(line);
 		std::string fieldBuf;
 
-		if(line == "") return starRec0;
+        if(line=="") return starRec0;
 		while (std::getline(sin, fieldBuf, ','))
 		{
 			fields.push_back(fieldBuf);
 		}
-		Star starRec(atoi(fields[0].c_str()), atof(fields[1].c_str()), atof(fields[2].c_str()), atof(fields[3].c_str()));
+        StarPoint starRec(atoi(fields[0].c_str()), atof(fields[1].c_str()), atof(fields[2].c_str()), atof(fields[3].c_str()));
 		return starRec;
 	}
-	return starRec0;
+    return starRec0;
 }
 
-int CSVAdapter::appendNewRecord(Star starRec)
+int CSVAdapter::appendNewRecord(StarPoint starRec)
 {
 	std::streampos cur = CSVFile.tellg();
 	CSVFile.seekp(0, std::ios::end);
-	CSVFile << starRec.getID() << ',' << starRec.getX() << ',' << starRec.getY() << ',' << starRec.getMag() << std::endl;
+    CSVFile << starRec.index << ',' << starRec.x << ',' << starRec.y << ',' << starRec.magnitude << std::endl;
 	CSVFile.seekp(cur);
 	return 0;
 }
 
-Star CSVAdapter::getSpecRecord(int key)
+StarPoint CSVAdapter::getSpecRecord(int key)
 {
 	std::streampos cur = CSVFile.tellg();
 	CSVFile.seekg(0, std::ios::beg);
-	std::string line;
+    std::string line;
 	std::vector<std::string> fields;
 	while (!CSVFile.eof())
 	{
-		std::getline(CSVFile, line);
+        std::getline(CSVFile,line);
 		std::istringstream sin(line);
 		std::string fieldBuf;
 		while (std::getline(sin, fieldBuf, ','))
 		{
 			fields.push_back(fieldBuf);
 		}
-		Star starRec(atoi(fields[0].c_str()), atof(fields[1].c_str()), atof(fields[2].c_str()), atof(fields[3].c_str()));
-		if (starRec.getID() == key)
+        StarPoint starRec(atoi(fields[0].c_str()), atof(fields[1].c_str()), atof(fields[2].c_str()), atof(fields[3].c_str()));
+        if (starRec.index == key)
 		{
 			CSVFile.seekg(cur);
 			return starRec;

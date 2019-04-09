@@ -7,12 +7,9 @@
 
 void SkyMapMatching::LoadSky(string &f_name) {
     CSVAdapter csv_sky(f_name);
-    Star s;
     //int count = 0;
     while(csv_sky.hasRecord()){
-        s = csv_sky.getNextRecord();
-        StarPoint sp(s.getID(),s.getX(),s.getY(),s.getMag());
-        this->sky_.stars_.push_back(sp);
+        this->sky_.stars_.push_back(csv_sky.getNextRecord());
         this->sky_.count_++;
     }
     this->sky_.range_ = {360,180};
@@ -22,23 +19,20 @@ void SkyMapMatching::LoadSky(string &f_name) {
 void SkyMapMatching::LoadImage(string &f_name) {
     //Not completed now.
     CSVAdapter csv_sky(f_name);
-    Star s;
     //int count = 0;
     while(csv_sky.hasRecord()){
-        s = csv_sky.getNextRecord();
-        StarPoint sp(s.getID(),s.getX(),s.getY(),s.getMag());
-        this->image_.stars_.push_back(sp);
+        this->image_.stars_.push_back(csv_sky.getNextRecord());
         this->image_.count_++;
     }
     this->image_.RangeStandardization();
 }
 
 void SkyMapMatching::SelectTargetStar() {
-    float min_dis = INT32_MAX;
-    int target = 0;
-    for(int i=0;i<this->image_.stars_.size();i++){
+    double min_dis = INT32_MAX;
+    size_t target = 0;
+    for(size_t i=0;i<this->image_.stars_.size();i++){
         StarPoint s = this->image_.stars_[i];
-        float dis = pow(s.x,2)+pow(s.y,2);
+        double dis = pow(s.x,2)+pow(s.y,2);
         if(dis<min_dis){
             min_dis = dis;
             target = i;
@@ -47,6 +41,9 @@ void SkyMapMatching::SelectTargetStar() {
     this->__target_star = this->image_.stars_[target];
 }
 
+void SkyMapMatching::SelectTargetStar(size_t target) {
+    this->__target_star = this->image_.stars_[target];
+}
 
 int SkyMapMatching::TriangleModel() {
     TriangleMatching TM(sky_.stars_.size(), 12.0, 0.02);
@@ -95,7 +92,7 @@ bool similar_vector(vector<StarPoint> &vec1, vector<StarPoint> &vec2){
     return true;
 }
 
-bool SkyMapMatching::Check() {
+int SkyMapMatching::Check() {
     vector<StarPoint> check_set = sky_.Subset(this->__matching_star,this->image_.range_.first,this->image_.range_.second);
     for(int i=0;i<check_set.size();i++){
         check_set[i].change_coordinate(this->__matching_star);
@@ -131,8 +128,8 @@ bool SkyMapMatching::Check() {
         cout<<loss<<endl;
     }
     cout<<loss<<endl;
-    if(loss/len > 0.5) return false;
-    return true;
+    if(loss/len > 0.5) return -1;
+    return this->__matching_star.index;
 
 //    if(this->__matching_star.index == this->__target_star.index) return true;
 //    else return false;

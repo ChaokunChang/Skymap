@@ -1,15 +1,15 @@
 #include <string>
 #include <fstream>
 #include "Star.h"
-
+#include <cstring>
 class CSVAdapter
 {
 public:
 	CSVAdapter(std::string);
 	~CSVAdapter();
-	Star getNextRecord();
-	int appendNewRecord(Star);
-	Star getSpecRecord(int);
+    StarPoint getNextRecord();
+    int appendNewRecord(StarPoint);
+    StarPoint getSpecRecord(int);
 	void setCursorBegin();
 	bool hasRecord();
 private:

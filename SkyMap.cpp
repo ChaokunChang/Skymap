@@ -2,8 +2,8 @@
 
 void SkyMapInterface::run(){
 	ImageProcessing IP("../Data/source001.png","../Data/source001.csv");
-   	string processed_picture = IP.Process();
-    if(processed_picture == "") return;
+    vector<pair<double, double>> centroids = IP.Process();
+    if(centroids.empty()) return;
 
     SkyMapMatching SMM;
     string dataset = "../Data/skymaps.csv";
@@ -16,6 +16,6 @@ void SkyMapInterface::run(){
     //SMM.GenerateSimImage(c,1,20);
     SMM.SelectTargetStar();
     SMM.Match();
-    if( SMM.Check() ) cout<<"Good!"<<endl;
+    if( SMM.Check()>=0 ) cout<<"Good!"<<endl;
     else cout<<"Sad!"<<endl;
 }

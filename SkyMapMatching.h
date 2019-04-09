@@ -26,7 +26,7 @@ public:
     pair<float,float> range_; //range_ = {length, width}
     StarPoint centre_;
     vector<StarPoint> stars_;
-    SkyMap():count_(0),range_({0,0}){};
+    SkyMap():count_(0),range_({0,0}){}
 
     vector<StarPoint> Subset(StarPoint centre, float length, float width); //generate image with given position and size;
     vector<StarPoint> Subset(StarPoint centre, float image_ratio, int num); // generate image with centre and particular number of stars.
@@ -61,9 +61,10 @@ public:
     void GenerateSimImage(StarPoint centre, float image_ratio, int num); // generate image with centre and particular number of stars.
 
     void SelectTargetStar();
+    void SelectTargetStar(size_t);
     int TriangleModel();
     void Match();
-    bool Check();
+    int Check();
 
     StarPoint GetAnswer(){ return this->__matching_star;}
     StarPoint GetTargetStar(){ return this->__target_star;}

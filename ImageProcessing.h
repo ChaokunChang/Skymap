@@ -16,7 +16,7 @@ private:
     string __gen_picture;
 public:
     ImageProcessing(string source_path, string target_path):__raw_picture(source_path),__gen_picture(target_path){};
-    string Process();
+    vector<pair<double, double>> Process();
 };
 
 

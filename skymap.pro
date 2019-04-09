@@ -6,7 +6,8 @@
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets \
+                                        concurrent
 
 TARGET = skymap
 TEMPLATE = app
@@ -30,8 +31,6 @@ SOURCES = \
     CSVAdapter.cpp \
     extraction.cpp \
     ImageProcessing.cpp \
-    main.cpp \
-    mainwindow.cpp \
     MyFunctions.cpp \
     NoOptic.cpp \
     Sky.cpp \
@@ -40,12 +39,11 @@ SOURCES = \
     Star.cpp \
     TriangleMatching.cpp
 
-HEADERS = \
+HEADERS += \
         mainwindow.h \
     CSVAdapter.h \
     extraction.h \
     ImageProcessing.h \
-    mainwindow.h \
     MyFunctions.h \
     NoOptic.h \
     Sky.h \
@@ -58,25 +56,25 @@ FORMS += \
         mainwindow.ui
 
 INCLUDEPATH = \
-    D:\opencv\build\include\opencv\
-    D:\opencv\build\include\opencv2\
-    D:\opencv\build\include\
+    D:\opencv\install\include\opencv2 \
+    D:\opencv\install\include \
 
 LIBS += \
-    D:\opencv\build\lib\libopencv_core401.dll.a \
-    D:\opencv\build\lib\libopencv_highgui401.dll.a \
-    D:\opencv\build\lib\libopencv_imgproc401.dll.a \
-    D:\opencv\build\lib\libopencv_imgcodecs401.dll.a \
-    D:\opencv\build\lib\libopencv_calib3d401.dll.a \
-    D:\opencv\build\lib\libopencv_features2d401.dll.a \
-    D:\opencv\build\lib\libopencv_objdetect401.dll.a \
-    D:\opencv\build\lib\libopencv_ml401.dll.a \
-    D:\opencv\build\lib\libopencv_video401.dll.a \
-    D:\opencv\build\lib\libopencv_videoio401.dll.a \
-    D:\opencv\build\lib\libopencv_ts401.a \
-    D:\opencv\build\lib\libopencv_photo401.dll.a \
+    D:\opencv\lib\libopencv_core401.dll.a \
+    D:\opencv\lib\libopencv_highgui401.dll.a \
+    D:\opencv\lib\libopencv_imgproc401.dll.a \
+    D:\opencv\lib\libopencv_imgcodecs401.dll.a \
+    D:\opencv\lib\libopencv_calib3d401.dll.a \
+    D:\opencv\lib\libopencv_features2d401.dll.a \
+    D:\opencv\lib\libopencv_objdetect401.dll.a \
+    D:\opencv\lib\libopencv_ml401.dll.a \
+    D:\opencv\lib\libopencv_video401.dll.a \
+    D:\opencv\lib\libopencv_ts401.a \
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    skymap.qrc
