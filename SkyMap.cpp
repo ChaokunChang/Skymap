@@ -1,9 +1,9 @@
 #include "SkyMap.h"
 
-void SkyMap:: run(){
+void SkyMapInterface::run(){
 	ImageProcessing IP("../Data/source001.png","../Data/source001.csv");
    	string processed_picture = IP.Process();
-   	if(processed_picture == "") return 0;
+    if(processed_picture == "") return;
 
     SkyMapMatching SMM;
     string dataset = "../Data/skymaps.csv";

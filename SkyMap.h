@@ -6,8 +6,8 @@
 using namespace std;
 
 
-class SkyMap{
+class SkyMapInterface{
 public:
-	SkyMap();
-	void Run();
-}
+    SkyMapInterface();
+    void run();
+};

@@ -38,7 +38,7 @@ public:
     pair<float,float> range_; //range_ = {length, width}
     StarPoint centre_;
     vector<StarPoint> stars_;
-    Observation():count_(0),range_({0,0}){};
+    Observation():count_(0),range_({0,0}){}
     void RangeStandardization();
 };
 
@@ -65,8 +65,8 @@ public:
     void Match();
     bool Check();
 
-    StarPoint GetAnswer(){ return this->__matching_star;};
-    StarPoint GetTargetStar(){ return this->__target_star;};
+    StarPoint GetAnswer(){ return this->__matching_star;}
+    StarPoint GetTargetStar(){ return this->__target_star;}
 
 };
 
