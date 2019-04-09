@@ -24,15 +24,57 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++11
 
-SOURCES += \
+SOURCES = \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    CSVAdapter.cpp \
+    extraction.cpp \
+    ImageProcessing.cpp \
+    main.cpp \
+    mainwindow.cpp \
+    MyFunctions.cpp \
+    NoOptic.cpp \
+    Sky.cpp \
+    SkyMap.cpp \
+    SkyMapMatching.cpp \
+    Star.cpp \
+    TriangleMatching.cpp
 
-HEADERS += \
-        mainwindow.h
+HEADERS = \
+        mainwindow.h \
+    CSVAdapter.h \
+    extraction.h \
+    ImageProcessing.h \
+    mainwindow.h \
+    MyFunctions.h \
+    NoOptic.h \
+    Sky.h \
+    SkyMap.h \
+    SkyMapMatching.h \
+    Star.h \
+    TriangleMatching.h
 
 FORMS += \
         mainwindow.ui
+
+INCLUDEPATH = \
+    D:\opencv\build\include\opencv\
+    D:\opencv\build\include\opencv2\
+    D:\opencv\build\include\
+
+LIBS += \
+    D:\opencv\build\lib\libopencv_core401.dll.a \
+    D:\opencv\build\lib\libopencv_highgui401.dll.a \
+    D:\opencv\build\lib\libopencv_imgproc401.dll.a \
+    D:\opencv\build\lib\libopencv_imgcodecs401.dll.a \
+    D:\opencv\build\lib\libopencv_calib3d401.dll.a \
+    D:\opencv\build\lib\libopencv_features2d401.dll.a \
+    D:\opencv\build\lib\libopencv_objdetect401.dll.a \
+    D:\opencv\build\lib\libopencv_ml401.dll.a \
+    D:\opencv\build\lib\libopencv_video401.dll.a \
+    D:\opencv\build\lib\libopencv_videoio401.dll.a \
+    D:\opencv\build\lib\libopencv_ts401.a \
+    D:\opencv\build\lib\libopencv_photo401.dll.a \
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

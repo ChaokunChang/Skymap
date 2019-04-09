@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>696</width>
-    <height>631</height>
+    <width>548</width>
+    <height>497</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -64,9 +64,9 @@
        </layout>
       </widget>
       <widget class="QWidget" name="mainWidget" native="true">
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QSplitter" name="mainSpitter">
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="QSplitter" name="splitter">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -79,8 +79,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>443</width>
-              <height>447</height>
+              <width>304</width>
+              <height>292</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout">
@@ -94,7 +94,14 @@
             </layout>
            </widget>
           </widget>
-          <widget class="QTableWidget" name="starTable"/>
+          <widget class="QTableWidget" name="starTable">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
          </widget>
         </item>
        </layout>
