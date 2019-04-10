@@ -14,6 +14,8 @@
 #include <QElapsedTimer>
 #include <QDrag>
 #include <QDropEvent>
+#include <QPainter>
+#include <QAbstractItemView>
 #include "ImageProcessing.h"
 #include "SkyMapMatching.h"
 
@@ -43,6 +45,7 @@ private:
     int findMatchingStar(int);
     vector<StarPoint> starRecs;
     SkyMapMatching SMM;
+    QImage skyImg;
 };
 vector<StarPoint> loadStarPoint(QString);
 void initStarMapMatching(SkyMapMatching*);
