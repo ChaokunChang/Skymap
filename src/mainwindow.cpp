@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#define LOADANI(i) ((i)/50)%4
+#define LOADANI(i) ((i)/100)%4
 static QStringList loading={"",".","..","..."};
 
 MainWindow::MainWindow(QWidget *parent) :
