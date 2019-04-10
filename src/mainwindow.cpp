@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#define LOADANI(i) ((i)/100)%4
+#define LOADANI(i) loading[((i)/100)%4]
 static QStringList loading={"",".","..","..."};
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -15,9 +15,9 @@ MainWindow::~MainWindow()
     delete ui;
     terminate();
 }
-void MainWindow::loadPicture()
+void MainWindow::loadPicture(QString fileName)
 {
-    QString fileName = QFileDialog::getOpenFileName(this,tr("打开图片"),"",tr("所有文件(*.*);;图片文件(*.jpg *.png *.bmp)"));
+    this->setAcceptDrops(false);
     QImage skyImg = QImage(fileName);
     if(skyImg.isNull())
     {
@@ -27,28 +27,29 @@ void MainWindow::loadPicture()
     }
     else
     {
+        ui->starList->clear();
         ui->statusBar->showMessage(tr("请稍候……正在处理图片"));
         ui->picDisplayArea->setPixmap(QPixmap::fromImage(skyImg));
         QElapsedTimer timer;
         timer.start();
-        QFuture<vector<pair<double, double>>> futureIP = QtConcurrent::run(loadStarPoint,fileName);
+        QFuture<vector<StarPoint>> futureIP = QtConcurrent::run(loadStarPoint,fileName);
         while(!futureIP.isFinished())
         {
-            ui->statusBar->showMessage(tr("请稍候……正在处理图片")+loading[LOADANI((int)timer.elapsed())]);
+            ui->statusBar->showMessage(tr("请稍候……正在处理图片")+LOADANI((int)timer.elapsed()));
             QCoreApplication::processEvents();
         }
-        this->centroids = futureIP.result();
-        if(this->centroids.empty())
+        this->starRecs = futureIP.result();
+        if(this->starRecs.empty())
         {
             QMessageBox unableFindStarMsgBox;
             unableFindStarMsgBox.setText(tr("无法找到星点！"));
             unableFindStarMsgBox.exec();
         }
         else {
-            for(size_t i=0;i!=this->centroids.size();i++)
+            for(size_t i=0;i!=this->starRecs.size();i++)
             {
                 QListWidgetItem* item = new QListWidgetItem;
-                item->setText(QString::number(i+1)+tr("-坐标：（")+QString::number(this->centroids[i].first)+tr("，")+QString::number(this->centroids[i].second)+tr("）"));
+                item->setText(QString::number(this->starRecs[i].index+1)+tr("-坐标：（")+QString::number(this->starRecs[i].x)+tr("，")+QString::number(this->starRecs[i].y)+tr("）"));
                 ui->starList->addItem(item);
             }
         }
@@ -61,6 +62,7 @@ void MainWindow::loadPicture()
         QCoreApplication::processEvents();
     }
     ui->statusBar->clearMessage();
+    this->setAcceptDrops(true);
 }
 
 
@@ -71,11 +73,11 @@ int MainWindow::findMatchingStar(int targetIndex)
     return this->SMM.Check();
 }
 
-vector<pair<double, double>> loadStarPoint(QString fileName)
+vector<StarPoint> loadStarPoint(QString fileName)
 {
     ImageProcessing IP(fileName.toStdString(),"./tmp.csv");
-    vector<pair<double, double>> centroids = IP.Process();
-    return centroids;
+    vector<StarPoint> starRecs = IP.Process();
+    return starRecs;
 }
 
 void initStarMapMatching(SkyMapMatching* pSMM)
@@ -88,11 +90,13 @@ void initStarMapMatching(SkyMapMatching* pSMM)
 
 void MainWindow::on_pushButton_clicked()
 {
-    loadPicture();
+    QString fileName = QFileDialog::getOpenFileName(this,tr("打开图片"),"",tr("所有文件(*.*);;图片文件(*.jpg *.png *.bmp *.jpeg)"));
+    loadPicture(fileName);
 }
 
 void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
 {
+    this->setAcceptDrops(false);
     int res;
     QElapsedTimer timer;
     timer.start();
@@ -100,7 +104,7 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
     QFuture<int> futureFMS = QtConcurrent::run(this,&MainWindow::findMatchingStar,item->text().section('-',0,0).toInt()-1);
     while(!futureFMS.isFinished())
     {
-        ui->statusBar->showMessage(tr("请稍候……正在寻找匹配")+loading[LOADANI((int)timer.elapsed())]);
+        ui->statusBar->showMessage(tr("请稍候……正在寻找匹配")+LOADANI((int)timer.elapsed()));
         QApplication::processEvents();
     }
     res=futureFMS.result();
@@ -114,4 +118,27 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
         matchingFailMsgBox.setText(tr("匹配失败！"));
         matchingFailMsgBox.exec();
    }
+    this->setAcceptDrops(true);
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent* event)
+{
+    if(!event->mimeData()->urls()[0].toLocalFile().right(3).compare("jpg",Qt::CaseInsensitive)
+        ||!event->mimeData()->urls()[0].toLocalFile().right(3).compare("png",Qt::CaseInsensitive)
+        ||!event->mimeData()->urls()[0].toLocalFile().right(3).compare("bmp",Qt::CaseInsensitive)
+        ||!event->mimeData()->urls()[0].toLocalFile().right(4).compare("jpeg",Qt::CaseInsensitive))
+    {
+        event->acceptProposedAction();//接受鼠标拖入事件
+    }
+    else
+    {
+        event->ignore();//否则不接受鼠标事件
+    }
+}
+
+void MainWindow::dropEvent(QDropEvent* event)
+{
+    //窗口部件放下一个对象时,调用该函数
+    const QMimeData *qm=event->mimeData();//获取MIMEData
+    this->loadPicture(qm->urls()[0].toLocalFile());//使用图片函数
 }

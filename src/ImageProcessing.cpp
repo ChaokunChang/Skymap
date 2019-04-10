@@ -4,7 +4,7 @@
 
 #include "ImageProcessing.h"
 
-vector<pair<double, double>> ImageProcessing::Process() {
+vector<StarPoint> ImageProcessing::Process() {
     Mat srcimg, segimg;
     vector<pair<double, double>> centroids;
 
@@ -27,5 +27,5 @@ vector<pair<double, double>> ImageProcessing::Process() {
     }
     QCSVAdapter pic_csv(QString::fromStdString(this->__gen_picture));
     pic_csv.writeRecords(recList);
-    return centroids;
+    return recList;
 }

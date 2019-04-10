@@ -12,6 +12,8 @@
 #include <QFuture>
 #include <QListWidgetItem>
 #include <QElapsedTimer>
+#include <QDrag>
+#include <QDropEvent>
 #include "ImageProcessing.h"
 #include "SkyMapMatching.h"
 
@@ -31,13 +33,17 @@ private slots:
     void on_starList_itemDoubleClicked(QListWidgetItem*);
     void on_pushButton_clicked();
 
+protected:
+    void dragEnterEvent(QDragEnterEvent*event);//拖动进入事件
+    void dropEvent(QDropEvent*event);
+
 private:
     Ui::MainWindow *ui;
-    void loadPicture();
+    void loadPicture(QString);
     int findMatchingStar(int);
-    vector<pair<double, double>> centroids;
+    vector<StarPoint> starRecs;
     SkyMapMatching SMM;
 };
-vector<pair<double, double>> loadStarPoint(QString);
+vector<StarPoint> loadStarPoint(QString);
 void initStarMapMatching(SkyMapMatching*);
 #endif // MAINWINDOW_H
