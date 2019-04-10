@@ -1,0 +1,32 @@
+version: 1.0.{build}
+pull_requests:
+  do_not_increment_build_number: true
+branches:
+  only:
+  - master
+configuration: Release
+platform: x64
+environment:
+  QTDIR: C:\Qt\5.12.1\mingw73_64
+  PATH: '%PATH%;%QTDIR%\bin;C:\mingw-w64\x86_64-7.2.0-posix-seh-rt_v5-rev1\mingw64\bin'
+build_script:
+- cmd: >-
+    qmake skymap.pro  -spec win32-g++ "CONFIG+=qtquickcompiler" && C:\mingw-w64\x86_64-7.2.0-posix-seh-rt_v5-rev1\mingw64\bin\mingw32-make.exe qmake_all
+
+    mingw32-make
+
+    windeployqt release/skymap.exe
+
+    copy lib\*.dll release
+
+    del release\*.o
+
+    del release\*.cpp
+artifacts:
+- path: Output\skymap.exe
+- path: release
+deploy:
+- provider: GitHub
+  auth_token:
+    secure: 2oGkN5fY0UaTnEIIzAcny5rC9bL1LrsYLywSc46hAq8W0hC1fo1N1SBu/ZN0n/oj
+  repository: fdcck/Skymap
