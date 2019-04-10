@@ -18,8 +18,8 @@ MainWindow::~MainWindow()
 void MainWindow::loadPicture(QString fileName)
 {
     this->setAcceptDrops(false);
-    QImage skyImg = QImage(fileName);
-    if(skyImg.isNull())
+    this->skyImg = QImage(fileName);
+    if(this->skyImg.isNull())
     {
         QMessageBox skyImgNullMsgBox;
         skyImgNullMsgBox.setText(tr("无效的图片！"));
@@ -28,8 +28,9 @@ void MainWindow::loadPicture(QString fileName)
     else
     {
         ui->starList->clear();
+        ui->pushButton->blockSignals(true);
         ui->statusBar->showMessage(tr("请稍候……正在处理图片"));
-        ui->picDisplayArea->setPixmap(QPixmap::fromImage(skyImg));
+        ui->picDisplayArea->setPixmap(QPixmap::fromImage(this->skyImg));
         QElapsedTimer timer;
         timer.start();
         QFuture<vector<StarPoint>> futureIP = QtConcurrent::run(loadStarPoint,fileName);
@@ -53,7 +54,7 @@ void MainWindow::loadPicture(QString fileName)
                 ui->starList->addItem(item);
             }
         }
-
+         ui->pushButton->blockSignals(false);
     }
     ui->statusBar->showMessage(tr("请稍候……正在加载星表"));
     QFuture<void> futureSMM = QtConcurrent::run(initStarMapMatching,&this->SMM);
@@ -100,9 +101,16 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
     double x=item->text().section('(',1,1).section(',',0,0).toDouble();
     double y=item->text().section(',',1,1).section(')',0,0).toDouble();
     this->ui->picDisplayScrollArea->ensureVisible(ceil(x),ceil(y));
+    QImage tImg = this->skyImg;
+    QPainter painter(&tImg);
+    painter.setPen(QPen(QColor(255, 255, 255), 2));
+    painter.drawEllipse(QPointF(ceil(x),ceil(y)), 10, 10);
+    painter.end();
+    ui->picDisplayArea->setPixmap(QPixmap::fromImage(tImg));
     int res;
     QElapsedTimer timer;
     timer.start();
+    ui->starList->blockSignals(true);
     ui->statusBar->showMessage(tr("请稍候……正在寻找匹配"));
     QFuture<int> futureFMS = QtConcurrent::run(this,&MainWindow::findMatchingStar,item->text().section('-',0,0).toInt()-1);
     while(!futureFMS.isFinished())
@@ -121,7 +129,8 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
         matchingFailMsgBox.setText(tr("匹配失败！"));
         matchingFailMsgBox.exec();
    }
-    this->setAcceptDrops(true);
+    ui->starList->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->starList->blockSignals(false);
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)
