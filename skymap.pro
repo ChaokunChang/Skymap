@@ -66,12 +66,9 @@ LIBS += \
     $$PWD\lib\libopencv_highgui401.dll.a \
     $$PWD\lib\libopencv_imgproc401.dll.a \
     $$PWD\lib\libopencv_imgcodecs401.dll.a \
-    $$PWD\lib\libopencv_calib3d401.dll.a \
     $$PWD\lib\libopencv_features2d401.dll.a \
     $$PWD\lib\libopencv_objdetect401.dll.a \
-    $$PWD\lib\libopencv_ml401.dll.a \
-    $$PWD\lib\libopencv_video401.dll.a \
-    $$PWD\lib\libopencv_ts401.a \
+
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

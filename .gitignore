@@ -1,5 +1,5 @@
 .idea/
 cmake-build-debug
-build/*
+build
 !build/.gitignore
-skymap.pro.user
+*.pro.user
