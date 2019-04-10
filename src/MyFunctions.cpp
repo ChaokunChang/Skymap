@@ -1,0 +1,17 @@
+//
+// Created by 70700 on 2019/3/3.
+//
+#include "MyFunctions.h"
+
+double cal_dis(double x1,double y1,double x2,double y2){
+    //return sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
+    double dx = abs(x1-x2);
+    double dy = abs(y1-y2);
+    if(dx>180) dx = 360-dx;
+    return sqrt( pow(dx,2) + pow(dy,2) );
+}
+
+bool between(double target, double left, double right){
+    if(target>=left && target<=right) return true;
+    else return false;
+}

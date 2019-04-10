@@ -6,7 +6,8 @@
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets \
+                                        concurrent
 
 TARGET = skymap
 TEMPLATE = app
@@ -25,58 +26,58 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES = \
-        main.cpp \
-        mainwindow.cpp \
-    CSVAdapter.cpp \
-    extraction.cpp \
-    ImageProcessing.cpp \
-    main.cpp \
-    mainwindow.cpp \
-    MyFunctions.cpp \
-    NoOptic.cpp \
-    Sky.cpp \
-    SkyMap.cpp \
-    SkyMapMatching.cpp \
-    Star.cpp \
-    TriangleMatching.cpp
+    src\main.cpp \
+    src\mainwindow.cpp \
+    src\CSVAdapter.cpp \
+    src\extraction.cpp \
+    src\ImageProcessing.cpp \
+    src\MyFunctions.cpp \
+    src\NoOptic.cpp \
+    src\Sky.cpp \
+    src\SkyMap.cpp \
+    src\SkyMapMatching.cpp \
+    src\Star.cpp \
+    src\TriangleMatching.cpp \
+    src/QCSVAdapter.cpp
 
-HEADERS = \
-        mainwindow.h \
-    CSVAdapter.h \
-    extraction.h \
-    ImageProcessing.h \
-    mainwindow.h \
-    MyFunctions.h \
-    NoOptic.h \
-    Sky.h \
-    SkyMap.h \
-    SkyMapMatching.h \
-    Star.h \
-    TriangleMatching.h
+HEADERS += \
+    include\mainwindow.h \
+    include\CSVAdapter.h \
+    include\extraction.h \
+    include\ImageProcessing.h \
+    include\MyFunctions.h \
+    include\NoOptic.h \
+    include\Sky.h \
+    include\SkyMap.h \
+    include\SkyMapMatching.h \
+    include\Star.h \
+    include\TriangleMatching.h \
+    include/QCSVAdapter.h
 
 FORMS += \
-        mainwindow.ui
+    form\mainwindow.ui
 
 INCLUDEPATH = \
-    D:\opencv\build\include\opencv\
-    D:\opencv\build\include\opencv2\
-    D:\opencv\build\include\
+    include \
+    include\opencv2 \
 
 LIBS += \
-    D:\opencv\build\lib\libopencv_core401.dll.a \
-    D:\opencv\build\lib\libopencv_highgui401.dll.a \
-    D:\opencv\build\lib\libopencv_imgproc401.dll.a \
-    D:\opencv\build\lib\libopencv_imgcodecs401.dll.a \
-    D:\opencv\build\lib\libopencv_calib3d401.dll.a \
-    D:\opencv\build\lib\libopencv_features2d401.dll.a \
-    D:\opencv\build\lib\libopencv_objdetect401.dll.a \
-    D:\opencv\build\lib\libopencv_ml401.dll.a \
-    D:\opencv\build\lib\libopencv_video401.dll.a \
-    D:\opencv\build\lib\libopencv_videoio401.dll.a \
-    D:\opencv\build\lib\libopencv_ts401.a \
-    D:\opencv\build\lib\libopencv_photo401.dll.a \
+    $$PWD\lib\libopencv_core401.dll.a \
+    $$PWD\lib\libopencv_highgui401.dll.a \
+    $$PWD\lib\libopencv_imgproc401.dll.a \
+    $$PWD\lib\libopencv_imgcodecs401.dll.a \
+    $$PWD\lib\libopencv_calib3d401.dll.a \
+    $$PWD\lib\libopencv_features2d401.dll.a \
+    $$PWD\lib\libopencv_objdetect401.dll.a \
+    $$PWD\lib\libopencv_ml401.dll.a \
+    $$PWD\lib\libopencv_video401.dll.a \
+    $$PWD\lib\libopencv_ts401.a \
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    res.qrc
+
