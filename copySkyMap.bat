@@ -1,1 +1,0 @@
-xcopy .\Data\skymaps.csv %1 %2
