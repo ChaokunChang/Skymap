@@ -49,7 +49,7 @@ void MainWindow::loadPicture(QString fileName)
             for(size_t i=0;i!=this->starRecs.size();i++)
             {
                 QListWidgetItem* item = new QListWidgetItem;
-                item->setText(QString::number(this->starRecs[i].index+1)+tr("-坐标：（")+QString::number(this->starRecs[i].x)+tr("，")+QString::number(this->starRecs[i].y)+tr("）"));
+                item->setText(QString::number(this->starRecs[i].index+1)+tr("-坐标：(")+QString::number(this->starRecs[i].x)+tr(",")+QString::number(this->starRecs[i].y)+tr(")"));
                 ui->starList->addItem(item);
             }
         }
@@ -97,6 +97,9 @@ void MainWindow::on_pushButton_clicked()
 void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
 {
     this->setAcceptDrops(false);
+    double x=item->text().section('(',1,1).section(',',0,0).toDouble();
+    double y=item->text().section(',',1,1).section(')',0,0).toDouble();
+    this->ui->picDisplayScrollArea->ensureVisible(ceil(x),ceil(y));
     int res;
     QElapsedTimer timer;
     timer.start();
