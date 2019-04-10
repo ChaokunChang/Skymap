@@ -25,8 +25,3 @@ build_script:
 artifacts:
 - path: Output\skymap.exe
 - path: release
-deploy:
-- provider: GitHub
-  auth_token:
-    secure: 2oGkN5fY0UaTnEIIzAcny5rC9bL1LrsYLywSc46hAq8W0hC1fo1N1SBu/ZN0n/oj
-  repository: fdcck/Skymap
