@@ -38,7 +38,8 @@ SOURCES = \
     src\SkyMapMatching.cpp \
     src\Star.cpp \
     src\TriangleMatching.cpp \
-    src/QCSVAdapter.cpp
+    src/QCSVAdapter.cpp \
+    src/exif.cpp
 
 HEADERS += \
     include\mainwindow.h \
@@ -52,7 +53,8 @@ HEADERS += \
     include\SkyMapMatching.h \
     include\Star.h \
     include\TriangleMatching.h \
-    include/QCSVAdapter.h
+    include/QCSVAdapter.h \
+    include/exif.h
 
 FORMS += \
     form\mainwindow.ui
