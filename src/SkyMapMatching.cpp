@@ -27,13 +27,15 @@ void SkyMapMatching::LoadImage(QString &f_name) {
         max_y = max(max_y,sp.y);
     }
     for(size_t i=0;i<stars.size();i++){
-        stars[i].x *= 12/max_x;
-        stars[i].y *= 12/max_y;
+        stars[i].x *= 20/max_x;
+        stars[i].y *= 20/max_y;
+        cout<<i<<"th:("<<stars[i].x<<","<<stars[i].y<<")"<<endl;
     }
 
     this->image_.stars_ = stars;
     this->image_.count_=this->image_.stars_.size();
     this->image_.RangeStandardization();
+    cout<<"image range: ("<<this->image_.range_.first<<","<<this->image_.range_.second<<")"<<endl;
 
     StarPoint center(0,this->image_.range_.first/2,this->image_.range_.second/2,0);
     for(size_t i=0;i<this->image_.count_;i++){
@@ -56,8 +58,8 @@ void SkyMapMatching::SelectTargetStar() {
     this->__target_star = this->image_.stars_[target];
 }
 
-void SkyMapMatching::SelectTargetStar(size_t target) {
-    this->__target_star = this->image_.stars_[target];
+void SkyMapMatching::SelectTargetStar(int target) {
+    this->__target_star = this->image_.stars_[size_t(target)];
 }
 
 int SkyMapMatching::TriangleModel() {
@@ -88,30 +90,34 @@ int SkyMapMatching::TriangleModel() {
 int SkyMapMatching::NoOpticModel(){
     NoOptic NOM(this->sky_.stars_,this->image_.stars_);
     int result = NOM.ExeNoOptic();
-    cout<<"NoOptic Model end:"<<result-1<<endl;
-    return (result-1);
+    cout<<"NoOptic Model end:"<<result<<endl;
+    return (result);
 }
 
 void SkyMapMatching::Match() {
     int skymap_index1 = NoOpticModel();
     if(skymap_index1 >= 0) {
         printf("NoOptic Model Result: %d\n",skymap_index1);
-        this->candidate_.push_back(this->sky_.stars_[size_t(skymap_index1)]);
+        this->__matching_star = this->sky_.stars_[size_t(skymap_index1)];
+        Candidate one("NoOptic Model",this->__matching_star);
+        this->candidates_.push_back(one);
     }
     else printf("NoOptic Model cannot get answer.\n");
-    cout.flush();
     fflush(stdin);
+
     int skymap_index2 = TriangleModel();
-    if(skymap_index2 >= 0) printf("Triangle Model Result: %d \n",skymap_index2);
-    else printf("Triangle Model cannot get answer.\n");
-    cout.flush();
-    fflush(stdin);
-    if(skymap_index2>0) {
+    if(skymap_index2 >= 0) {
+        printf("Triangle Model Result: %d \n",skymap_index2);
         this->__matching_star = this->sky_.stars_[size_t(skymap_index2)];
-        this->candidate_.push_back(this->__matching_star);
+        Candidate one("Triangle Model",this->__matching_star);
+        this->candidates_.push_back(one);
     }
-    else{
-        printf("No Model get answer.");
+    else printf("Triangle Model cannot get answer.\n");
+    fflush(stdin);
+
+    if(skymap_index1<=0 && skymap_index2<=0) {
+        printf("No Model get answer.\n");
+        fflush(stdin);
     }
 }
 
@@ -175,11 +181,12 @@ int SkyMapMatching::Check() {
     return this->__matching_star.index;
 }
 
-int SkyMapMatching::CheckAllCandidate(){
-    assert(this->candidate_.size()>0);
-    for(StarPoint sp:this->candidate_){
+int SkyMapMatching::CheckAllCandidates(){
+    assert(this->candidates_.size()>0);
+    for(Candidate one:this->candidates_){
+        StarPoint sp = one.star;
         this->__matching_star = sp;
-        cout<<"Checking "<<sp.index<<" ("<<sp.x<<","<<sp.y<<") "<<sp.magnitude<<endl;
+        cout<<"Checking answer from"<<one.model_name<<"::"<<sp.index<<" ("<<sp.x<<","<<sp.y<<") "<<sp.magnitude<<endl;
         int pass = Check();
         if(pass == -1){
             cout<<"This candidate didn't pass checking"<<endl;

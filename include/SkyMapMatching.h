@@ -42,6 +42,16 @@ public:
     void RangeStandardization();
 };
 
+struct Candidate{
+    string model_name;
+    //size_t model_type;
+    StarPoint star;
+    double confidence;
+    Candidate():model_name("Default Model"),confidence(0.0){}
+    Candidate(string name,StarPoint sp,double conf = 0.0):model_name(name),star(sp),confidence(conf){}
+    //Candidate(string name,StarPoint sp):model_name(name),star(sp){}
+};
+
 class SkyMapMatching {
 private:
     StarPoint __target_star; //the chosen star in image. this variable stores its location in image.
@@ -52,7 +62,7 @@ public:
     const int LatitudeRange = 180;
     SkyMap sky_;
     Observation image_;
-    vector<StarPoint> candidate_;
+    vector<Candidate> candidates_;
 
 public:
     void LoadSky(QString &f_name);
@@ -62,12 +72,12 @@ public:
     void GenerateSimImage(StarPoint centre, double image_ratio, int num); // generate image with centre and particular number of stars.
 
     void SelectTargetStar();
-    void SelectTargetStar(size_t);
+    void SelectTargetStar(int);
     int TriangleModel();
     int NoOpticModel();
     void Match();
     int Check();
-    int CheckAllCandidate();
+    int CheckAllCandidates();
 
     StarPoint GetAnswer(){ return this->__matching_star;}
     StarPoint GetTargetStar(){ return this->__target_star;}

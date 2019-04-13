@@ -71,7 +71,7 @@ int MainWindow::findMatchingStar(int targetIndex)
 {
     this->SMM.SelectTargetStar(targetIndex);
     this->SMM.Match();
-    return this->SMM.Check();
+    return this->SMM.CheckAllCandidates();
 }
 
 vector<StarPoint> loadStarPoint(QString fileName)
