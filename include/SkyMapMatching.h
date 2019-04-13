@@ -18,7 +18,17 @@
 #include "MyFunctions.h"
 
 using namespace std;
-
+struct image_properties{
+    int imageWidth;
+    int imageHeight; //pixel based.
+    double imageWidthL;
+    double imageHeightL;
+    double focal_length;
+    image_properties(int iw,int ih,double iwl,double ihl,double fl):imageWidth(iw),imageHeight(ih),
+        imageWidthL(iwl),imageHeightL(ihl),focal_length(fl){}
+    image_properties():imageWidth(0),imageHeight(0),
+        imageWidthL(0.0),imageHeightL(0.0),focal_length(0.0){}
+};
 
 class SkyMap{
 public:
@@ -36,13 +46,14 @@ class Observation{
 public:
     size_t count_;
     pair<double,double> range_; //range_ = {length, width}
-    int imageWidth,imageHeight;
+    int imageWidth,imageHeight; //pixel based
     double imageWidthL,imageHeightL;
     double focal_length;
     StarPoint centre_;
     vector<StarPoint> stars_;
     Observation():count_(0),range_({0,0}){}
     void RangeStandardization();
+    void setProperties(image_properties prop);
 };
 
 struct Candidate{
@@ -70,7 +81,7 @@ public:
 
 public:
     void LoadSky(QString &f_name);
-    void LoadImage(QString &f_name);
+    void LoadImage(QString &f_name,image_properties);
 
     void GenerateSimImage(StarPoint centre, double length, double width); //generate image with given position and size;
     void GenerateSimImage(StarPoint centre, double image_ratio, int num); // generate image with centre and particular number of stars.
@@ -82,7 +93,7 @@ public:
     void Match();
     int Check();
     int CheckAllCandidates();
-    void initPara(int,int,double,double,double);
+    //void initPara(int,int,double,double,double);
     StarPoint GetAnswer(){ return this->__matching_star;}
     StarPoint GetTargetStar(){ return this->__target_star;}
 

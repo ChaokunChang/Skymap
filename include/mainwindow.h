@@ -52,5 +52,5 @@ private:
     double posX,posY,focus;
 };
 vector<StarPoint> loadStarPoint(QString);
-void initStarMapMatching(SkyMapMatching*);
+void initStarMapMatching(SkyMapMatching*,image_properties prop);
 #endif // MAINWINDOW_H

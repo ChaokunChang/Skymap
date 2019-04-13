@@ -13,20 +13,37 @@ void SkyMapMatching::LoadSky(QString &f_name) {
     this->sky_.centre_ = StarPoint(-1,180.0,0,0);
 }
 
-void SkyMapMatching::LoadImage(QString &f_name) {
+void Observation::setProperties(image_properties prop){
+    this->imageWidth = prop.imageWidth;
+    this->imageHeight = prop.imageHeight;
+    this->imageWidthL = prop.imageWidthL;
+    this->imageHeightL = prop.imageHeightL;
+    this->focal_length = prop.focal_length;
+    this->range_ = {prop.imageWidthL,prop.imageHeightL};
+}
+
+void SkyMapMatching::LoadImage(QString &f_name,image_properties property) {
 
     QCSVAdapter csv_sky(f_name);
     vector<StarPoint> stars = csv_sky.getRecords();
     //TO DO:change the pixel to angular_distance...
     //need the size of the picture...
+    this->image_.setProperties(property);
     double max_x=0,max_y=0;
     for(StarPoint sp:stars){
         max_x = max(max_x,sp.x);
         max_y = max(max_y,sp.y);
     }
+    cout<<"Max_x:"<<max_x<<endl;
+    cout<<"Max_y:"<<max_y<<endl;
+    cout<<" ImageWidthL:"<<property.imageWidthL<<endl;
+    cout<<"ImageHeightL:"<<property.imageHeightL<<endl;
+    /*TODO
+     * get angle distance from image distance.
+     */
     for(size_t i=0;i<stars.size();i++){
-        stars[i].x *= 20/max_x;
-        stars[i].y *= 20/max_y;
+        stars[i].x *= property.imageWidthL/property.imageWidth;
+        stars[i].y *= property.imageHeightL/property.imageHeight;
         cout<<i<<"th:("<<stars[i].x<<","<<stars[i].y<<")"<<endl;
     }
 
@@ -79,7 +96,10 @@ int SkyMapMatching::TriangleModel() {
         triangle.pop_back();
         triangle.pop_back();
     }
-
+    if(round>=100){
+        cout<<"Trangle Model cannot find proper adjacent stars."<<endl;
+        return -1;
+    }
     int result_number = TM.MatchAlgorithm(dis12,dis13,dis23,triangle[0].magnitude,triangle[1].magnitude,triangle[2].magnitude);
     cout<<"Match Ended!"<<endl;
     return (result_number-1); //编号和index差1
@@ -310,14 +330,14 @@ void Observation::RangeStandardization(){
     }
 }
 
-void SkyMapMatching::initPara(int w,int h,double wl,double hl,double f)
-{
-    this->image_.imageWidth=w;
-    this->image_.imageHeight=h;
-    this->image_.imageWidthL=wl;
-    this->image_.imageHeightL=hl;
-    if(f!=0)
-        this->image_.focal_length=f;
-    else
-        this->image_.focal_length=12;
-}
+//void SkyMapMatching::initPara(int w,int h,double wl,double hl,double f)
+//{
+//    this->image_.imageWidth=w;
+//    this->image_.imageHeight=h;
+//    this->image_.imageWidthL=wl;
+//    this->image_.imageHeightL=hl;
+//    if(fabs(f)<1e-9)
+//        this->image_.focal_length=f;
+//    else
+//        this->image_.focal_length=12;
+//}

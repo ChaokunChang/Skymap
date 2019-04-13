@@ -97,8 +97,9 @@ void MainWindow::loadPicture(QString fileName)
          ui->pushButton->blockSignals(false);
     }
     ui->statusBar->showMessage(tr("请稍候……正在加载星表"));
-    this->SMM.initPara(skyImg.width(),skyImg.height(),skyImg.width()*25.4/skyImg.logicalDpiX(),skyImg.height()*25.4/skyImg.logicalDpiY(),this->focus);
-    QFuture<void> futureSMM = QtConcurrent::run(initStarMapMatching,&this->SMM);
+    image_properties prop(skyImg.width(),skyImg.height(),skyImg.width()*25.4/skyImg.logicalDpiX(),skyImg.height()*25.4/skyImg.logicalDpiY(),this->focus);
+    //this->SMM.initPara(skyImg.width(),skyImg.height(),skyImg.width()*25.4/skyImg.logicalDpiX(),skyImg.height()*25.4/skyImg.logicalDpiY(),this->focus);
+    QFuture<void> futureSMM = QtConcurrent::run(initStarMapMatching,&this->SMM,prop);
     while(!futureSMM.isFinished())
     {
         QCoreApplication::processEvents();
@@ -122,12 +123,13 @@ vector<StarPoint> loadStarPoint(QString fileName)
     return starRecs;
 }
 
-void initStarMapMatching(SkyMapMatching* pSMM)
+void initStarMapMatching(SkyMapMatching* pSMM, image_properties prop)
 {
     QString dataset = ":/Data/Data/skymaps.csv";
     QString picture = "./tmp.csv";
     pSMM->LoadSky(dataset);
-    pSMM->LoadImage(picture);
+    image_properties property;
+    pSMM->LoadImage(picture, prop);
 }
 
 void MainWindow::on_pushButton_clicked()
