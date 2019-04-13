@@ -4,7 +4,6 @@
 
 #include "SkyMapMatching.h"
 #include <fstream>
-
 void SkyMapMatching::LoadSky(QString &f_name) {
     QCSVAdapter csv_sky(f_name);
     //int count = 0;
@@ -15,12 +14,32 @@ void SkyMapMatching::LoadSky(QString &f_name) {
 }
 
 void SkyMapMatching::LoadImage(QString &f_name) {
-    //Not completed now.
+    double focal_length = 12.0;//we should get many additional info from image.such as focus...
+    //we had better get those info from a struct image_property.
+
     QCSVAdapter csv_sky(f_name);
-    //int count = 0;
-    this->image_.stars_=csv_sky.getRecords();
-    this->image_.count_=this->sky_.stars_.size();
+    vector<StarPoint> stars = csv_sky.getRecords();
+    //TO DO:change the pixel to angular_distance...
+    //need the size of the picture...
+    double max_x=0,max_y=0;
+    for(StarPoint sp:stars){
+        max_x = max(max_x,sp.x);
+        max_y = max(max_y,sp.y);
+    }
+    for(size_t i=0;i<stars.size();i++){
+        stars[i].x *= 12/max_x;
+        stars[i].y *= 12/max_y;
+    }
+
+    this->image_.stars_ = stars;
+    this->image_.count_=this->image_.stars_.size();
     this->image_.RangeStandardization();
+
+    StarPoint center(0,this->image_.range_.first/2,this->image_.range_.second/2,0);
+    for(size_t i=0;i<this->image_.count_;i++){
+        this->image_.stars_[i].change_coordinate(center);
+    }
+
 }
 
 void SkyMapMatching::SelectTargetStar() {
@@ -89,11 +108,13 @@ bool similar_vector(vector<StarPoint> &vec1, vector<StarPoint> &vec2){
 }
 
 int SkyMapMatching::Check() {
-    vector<StarPoint> check_set = sky_.Subset(this->__matching_star,this->image_.range_.first,this->image_.range_.second);
+    //get the __matching_star's offset in check_set, which should be equal to offset of __target_star in sky_image.
+    StarPoint check_center = this->__matching_star;
+    check_center.x -= this->__target_star.x;
+    check_center.y -= this->__target_star.y;
+    vector<StarPoint> check_set = sky_.Subset(check_center,this->image_.range_.first,this->image_.range_.second);
     for(size_t i=0;i<check_set.size();i++){
         check_set[i].change_coordinate(this->__matching_star);
-//        check_set[i].x -= this->__matching_star.x;
-//        check_set[i].y -= this->__matching_star.y;
     }
 
     sort(check_set.begin(),check_set.end(),star_point_cmp);
