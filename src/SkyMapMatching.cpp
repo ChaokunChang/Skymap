@@ -14,8 +14,6 @@ void SkyMapMatching::LoadSky(QString &f_name) {
 }
 
 void SkyMapMatching::LoadImage(QString &f_name) {
-    double focal_length = 12.0;//we should get many additional info from image.such as focus...
-    //we had better get those info from a struct image_property.
 
     QCSVAdapter csv_sky(f_name);
     vector<StarPoint> stars = csv_sky.getRecords();
@@ -310,4 +308,12 @@ void Observation::RangeStandardization(){
         }
         this->range_ = {rx-lx,ry-ly};
     }
+}
+
+void SkyMapMatching::setFocalLength(double f)
+{
+    if(f!=0)
+        this->focal_length=f;
+    else
+        this->focal_length=12;
 }

@@ -56,6 +56,7 @@ class SkyMapMatching {
 private:
     StarPoint __target_star; //the chosen star in image. this variable stores its location in image.
     StarPoint __matching_star; //the result given by match algorithm, this variable stores its location in SkyMap.
+    double focal_length;
 
 public:
     const int LongitudeRange = 360;
@@ -78,7 +79,7 @@ public:
     void Match();
     int Check();
     int CheckAllCandidates();
-
+    void setFocalLength(double);
     StarPoint GetAnswer(){ return this->__matching_star;}
     StarPoint GetTargetStar(){ return this->__target_star;}
 

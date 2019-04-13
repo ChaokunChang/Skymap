@@ -27,6 +27,44 @@ void MainWindow::loadPicture(QString fileName)
     }
     else
     {
+        const char *photoPath = fileName.toStdString().c_str();
+        // Read the JPEG file into a buffer
+        FILE *fp = fopen(photoPath, "rb");
+        if (!fp) {
+            printf("Can't open file.\n");
+        }
+        fseek(fp, 0, SEEK_END);
+        unsigned long fsize = ftell(fp);
+        rewind(fp);
+        unsigned char *buf = new unsigned char[fsize];
+        if (fread(buf, 1, fsize, fp) != fsize) {
+            printf("Can't read file.\n");
+            delete[] buf;
+        }
+        fclose(fp);
+
+        // Parse EXIF
+        easyexif::EXIFInfo result;
+        int code = result.parseFrom(buf, fsize);
+        delete[] buf;
+        if (code) {
+            printf("Error parsing EXIF: code %d\n", code);
+        }
+        this->imageWidth=skyImg.width();
+        this->imageHeight=skyImg.height();
+        this->posX=result.GeoLocation.Longitude;
+        this->posY=result.GeoLocation.Latitude;
+        this->focus=result.FocalLength;
+        if(this->focus!=0)
+        {
+            this->ui->picFocusInput->setText(QString::number(this->focus));
+            this->ui->picFocusInput->setReadOnly(true);
+        }
+        if(this->posX!=0&&this->posY!=0)
+        {
+            this->ui->picPosXLabelDis->setText(QString::number(this->posX));
+            this->ui->picPosYLabelDis->setText(QString::number(this->posY));
+        }
         ui->starList->clear();
         ui->pushButton->blockSignals(true);
         ui->statusBar->showMessage(tr("请稍候……正在处理图片"));
@@ -62,6 +100,7 @@ void MainWindow::loadPicture(QString fileName)
     {
         QCoreApplication::processEvents();
     }
+    this->SMM.setFocalLength(this->focus);
     ui->statusBar->clearMessage();
     this->setAcceptDrops(true);
 }

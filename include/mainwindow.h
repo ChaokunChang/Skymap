@@ -18,6 +18,7 @@
 #include <QAbstractItemView>
 #include "ImageProcessing.h"
 #include "SkyMapMatching.h"
+#include "exif.h"
 
 namespace Ui {
 class MainWindow;
@@ -46,6 +47,8 @@ private:
     vector<StarPoint> starRecs;
     SkyMapMatching SMM;
     QImage skyImg;
+    int imageWidth,imageHeight;
+    double posX,posY,focus;
 };
 vector<StarPoint> loadStarPoint(QString);
 void initStarMapMatching(SkyMapMatching*);
