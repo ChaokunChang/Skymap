@@ -9,6 +9,7 @@
 #include<vector>
 #include<math.h>
 #include "MyFunctions.h"
+#include "Star.h"
 
 #define R0 2
 //#define Rn 15
@@ -66,6 +67,7 @@ public:
     StarPattern PartitionCounter[PartitionNumber];
 
     int FinalResult;
+    NoOptic(vector<StarPoint> &sky, vector<StarPoint> &obv);
 
     int ExeNoOptic();//总执行流程
 

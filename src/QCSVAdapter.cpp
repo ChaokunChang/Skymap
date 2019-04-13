@@ -21,7 +21,7 @@ std::vector<StarPoint> QCSVAdapter::getRecords()
         throw "File Not Found!";
     std::vector<StarPoint> starRecList;
     QTextStream in(&file);
-    while (!file.atEnd()) {
+    while (!in.atEnd()) {
             QString line = in.readLine();
             QStringList fields = line.split(',');
             StarPoint starRec(fields[0].toInt(),fields[1].toDouble(),fields[2].toDouble(),fields[3].toDouble());

@@ -89,6 +89,8 @@ StarPoint CSVAdapter::getSpecRecord(int key)
 	CSVFile.seekg(cur);
 	//throw std::exception("No Record match the provided key.");
 	cout<<"No record"<<endl;
+    StarPoint sp(-1,-1,-1,-1);
+    return sp;
 }
 
 void CSVAdapter::setCursorBegin()

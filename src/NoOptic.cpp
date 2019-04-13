@@ -4,12 +4,20 @@
 
 #include "NoOptic.h"
 
-
+NoOptic::NoOptic(vector<StarPoint> &sky, vector<StarPoint> &obv) {
+    for(int i=0;i<sky.size();i++){
+        this->SkyStars.push_back({sky[i].x,sky[i].y});
+    }
+    for(int i=0;i<obv.size();i++){
+        this->ImageStars.push_back({obv[i].x,obv[i].y});
+    }
+    FinalResult = -1;
+}
 
 int NoOptic::ExeNoOptic(){
     //第一步，处理导航星表SkyStars;
-    for(int i=0; i<SkyStars.size(); i++){
-        int main_star = i;
+    for(size_t i=0; i<SkyStars.size(); i++){
+        int main_star = int(i);
         vector<bool> eigen_vector;
         eigen_vector = GetEigenVector(main_star);
 

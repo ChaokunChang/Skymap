@@ -81,9 +81,9 @@ void TriangleMatching::ChooseAdjacentStars(vector<StarPoint> &obv_stars, vector<
 int TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, double edge1_edge2, double m1, double m2, double m3) {
     vector<int> Flag(__GuideStarNumber,0);
 
-    int group1 = center_edge1 / 0.02;
-    int group2 = center_edge2 / 0.02;
-    int group3 = edge1_edge2 / 0.02;
+    size_t group1 = size_t(center_edge1 / 0.02);
+    size_t group2 = size_t(center_edge2 / 0.02);
+    size_t group3 = size_t(edge1_edge2 / 0.02);
 
     map< int, vector<int> > StatStar;
     map< int, vector<int> >::iterator SS_iter;
@@ -91,12 +91,12 @@ int TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, d
     //扫描和标记组1中的星，把组中出现的星的flag参量标记为1，并记下与之相邻的另外一颗星。
 
     //使用map 数据结构存储毗邻星
-    for (int i = grouphead_[group1]; i < grouphead_[group1] + groupsize_[group1]; i++) {
+    for (size_t i = grouphead_[group1]; i < grouphead_[group1] + groupsize_[group1]; i++) {
         int s1, s2;
         s1 = stardata_[i].star1;
         s2 = stardata_[i].star2;
-        Flag[s1] = 1;
-        Flag[s2] = 1;
+        Flag[size_t(s1)] = 1;
+        Flag[size_t(s2)] = 1;
         SS_iter = StatStar.find(s1);
         if (SS_iter == StatStar.end()) {
             vector<int> v1;
@@ -120,23 +120,23 @@ int TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, d
     }
     //扫描标记组2中的星，如果该星已被标记为1，则标记为状态2；并记录与之毗邻的另一颗星；
     //（组1和组2为相同组的情况如何处理？是否需要特殊情况考虑呢？）
-    int MatchCnt = 0;
-    for (int i = grouphead_[group2]; i < grouphead_[group2] + groupsize_[group2]; i++) {
+    size_t MatchCnt = 0;
+    for (size_t i = grouphead_[group2]; i < grouphead_[group2] + groupsize_[group2]; i++) {
         int b1, b2;
         b1 = stardata_[i].star1;
         b2 = stardata_[i].star2;
-        if (Flag[b1] != 0) {
-            Flag[b1] = 2;
-            for (int j = 0; j < StatStar[b1].size(); j++) {
+        if (Flag[size_t(b1)] != 0) {
+            Flag[size_t(b1)] = 2;
+            for (size_t j = 0; j < StatStar[b1].size(); j++) {
                 matchgroup_[MatchCnt].star2 = b2; // modified
                 matchgroup_[MatchCnt].star1 = StatStar[b1][j];
                 matchgroup_[MatchCnt].middle_star = b1;
                 MatchCnt++;
             }
         }
-        if (Flag[b2] != 0) {
-            Flag[b2] = 2;
-            for (int j = 0; j < StatStar[b2].size(); j++) {
+        if (Flag[size_t(b2)] != 0) {
+            Flag[size_t(b2)] = 2;
+            for (size_t j = 0; j < StatStar[b2].size(); j++) {
                 matchgroup_[MatchCnt].star2 = b1; //modified
                 matchgroup_[MatchCnt].star1 = StatStar[b2][j];
                 matchgroup_[MatchCnt].middle_star = b2;
@@ -145,11 +145,11 @@ int TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, d
         }
     }
     //在标记组3中寻找可以符合条件的星对组成匹配三角形。使用栈存储成功匹配的编号；
-    for (int i = grouphead_[group3]; i < grouphead_[group3]+groupsize_[group3]; i++) {
+    for (size_t i = grouphead_[group3]; i < grouphead_[group3]+groupsize_[group3]; i++) {
         int c1,c2;
         c1 = stardata_[i].star1;
         c2 = stardata_[i].star2;
-        for (int j = 0; j < MatchCnt; j++) {
+        for (int j = 0; j < int(MatchCnt) ; j++) {
             if ((matchgroup_[j].star1 == c1 && matchgroup_[j].star2 == c2) || (matchgroup_[j].star1 == c2 && matchgroup_[j].star2 == c1)) {
                 //匹配成功，获得一组匹配三角形。标记j,或者直接输出j中的三个星的编号
                 __Candidate.push(j);

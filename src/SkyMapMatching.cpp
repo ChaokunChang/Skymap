@@ -61,6 +61,7 @@ void SkyMapMatching::SelectTargetStar(size_t target) {
 }
 
 int SkyMapMatching::TriangleModel() {
+    assert(this->image_.count_>=3);
     TriangleMatching TM(sky_.stars_.size(), 12.0, 0.02);
     TM.LoadData(sky_.stars_);
 
@@ -68,7 +69,8 @@ int SkyMapMatching::TriangleModel() {
     triangle.push_back(this->__target_star);
 
     double dis12,dis13,dis23;
-    while(true){
+    int round=0;
+    while(round++<100){
         TM.ChooseAdjacentStars(image_.stars_,triangle);
         dis12 = cal_dis(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y);
         dis13 = cal_dis(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y);
@@ -79,14 +81,38 @@ int SkyMapMatching::TriangleModel() {
     }
 
     int result_number = TM.MatchAlgorithm(dis12,dis13,dis23,triangle[0].magnitude,triangle[1].magnitude,triangle[2].magnitude);
-
     cout<<"Match Ended!"<<endl;
-    return result_number-1; //编号和index差1
+    return (result_number-1); //编号和index差1
+}
+
+int SkyMapMatching::NoOpticModel(){
+    NoOptic NOM(this->sky_.stars_,this->image_.stars_);
+    int result = NOM.ExeNoOptic();
+    cout<<"NoOptic Model end:"<<result-1<<endl;
+    return (result-1);
 }
 
 void SkyMapMatching::Match() {
-    int skymap_index = TriangleModel();
-    this->__matching_star = this->sky_.stars_[skymap_index];
+    int skymap_index1 = NoOpticModel();
+    if(skymap_index1 >= 0) {
+        printf("NoOptic Model Result: %d\n",skymap_index1);
+        this->candidate_.push_back(this->sky_.stars_[size_t(skymap_index1)]);
+    }
+    else printf("NoOptic Model cannot get answer.\n");
+    cout.flush();
+    fflush(stdin);
+    int skymap_index2 = TriangleModel();
+    if(skymap_index2 >= 0) printf("Triangle Model Result: %d \n",skymap_index2);
+    else printf("Triangle Model cannot get answer.\n");
+    cout.flush();
+    fflush(stdin);
+    if(skymap_index2>0) {
+        this->__matching_star = this->sky_.stars_[size_t(skymap_index2)];
+        this->candidate_.push_back(this->__matching_star);
+    }
+    else{
+        printf("No Model get answer.");
+    }
 }
 
 bool star_point_cmp(const StarPoint &s1, const StarPoint &s2){
@@ -147,9 +173,20 @@ int SkyMapMatching::Check() {
     cout<<loss<<endl;
     if(loss/len > 0.5) return -1;
     return this->__matching_star.index;
+}
 
-//    if(this->__matching_star.index == this->__target_star.index) return true;
-//    else return false;
+int SkyMapMatching::CheckAllCandidate(){
+    assert(this->candidate_.size()>0);
+    for(StarPoint sp:this->candidate_){
+        this->__matching_star = sp;
+        cout<<"Checking "<<sp.index<<" ("<<sp.x<<","<<sp.y<<") "<<sp.magnitude<<endl;
+        int pass = Check();
+        if(pass == -1){
+            cout<<"This candidate didn't pass checking"<<endl;
+        }else{
+            cout<<"Passed!"<<endl;
+        }
+    }
 }
 
 vector<StarPoint> SkyMap::Subset(StarPoint centre, double length, double width) {
@@ -188,19 +225,20 @@ void SkyMapMatching::GenerateSimImage(StarPoint centre, double length, double wi
     this->image_.centre_ = centre;
 
     cout<<"The Generated image is:"<<endl;
-    for(int i=0;i<stars.size();i++){
+    for(size_t i=0;i<stars.size();i++){
         cout<<stars[i].index<<": ("<<stars[i].x<<" , "<<stars[i].y<<")"<<endl;
     }
     cout<<"The number of stars is:"<<stars.size()<<endl;
     //this->image_.RangeStandardization();
 }
 
-vector<StarPoint> SkyMap::Subset(StarPoint centre, double image_ratio, int num=0) {
+vector<StarPoint> SkyMap::Subset(StarPoint centre, double image_ratio, int numi=0) {
     double upper_bound = 20;
     double lower_bound = 1;
     double length = (upper_bound+lower_bound)/2;
     vector<StarPoint> stars;
     double width;
+    size_t num = size_t(numi);
     while( abs(lower_bound-upper_bound)>0.01 ){
         width = length/image_ratio;
         stars = this->Subset(centre,length,width);
@@ -227,8 +265,8 @@ vector<StarPoint> SkyMap::Subset(StarPoint centre, double image_ratio, int num=0
 void SkyMapMatching::GenerateSimImage(StarPoint centre, double image_ratio, int num) {
     vector<StarPoint> stars = sky_.Subset(centre,image_ratio,num);
     if(!this->image_.stars_.empty()) this->image_.stars_.clear();
-    if(stars.size() == num) {
-        for(int i=0;i<stars.size();i++){
+    if(stars.size() == size_t(num)) {
+        for(size_t i=0;i<stars.size();i++){
             stars[i].change_coordinate(centre);
 //            stars[i].x -= centre.x;
 //            stars[i].y -= centre.y;
@@ -238,7 +276,7 @@ void SkyMapMatching::GenerateSimImage(StarPoint centre, double image_ratio, int 
         this->image_.centre_ = centre;
 
         cout<<"The Generated image is:"<<endl;
-        for(int i=0;i<stars.size();i++){
+        for(size_t i=0;i<stars.size();i++){
             cout<<stars[i].index<<": ("<<stars[i].x<<" , "<<stars[i].y<<")"<<endl;
         }
         cout<<"The number of stars is:"<<stars.size()<<endl;
@@ -257,7 +295,7 @@ void Observation::RangeStandardization(){
         return;
     }else{
         double lx = 10000.0,rx = -10000.0,ly = 10000.0,ry = -10000.0;
-        for(int i=0;i<stars_.size();i++){
+        for(size_t i=0;i<stars_.size();i++){
             lx = min(stars_[i].x,lx);
             rx = max(stars_[i].x,rx);
             ly = min(stars_[i].x,ly);

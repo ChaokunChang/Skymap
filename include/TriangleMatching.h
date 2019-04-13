@@ -27,7 +27,7 @@ struct StarPair
     int star2;
     double angular_distance;//四位有效数字存储，且小于对焦距d（d 可取12°）
 
-    StarPair(int s1, int s2, double dis):star1(s1),star2(s2),angular_distance(dis){};
+    StarPair(int s1, int s2, double dis):star1(s1),star2(s2),angular_distance(dis){}
 
 };
 
@@ -40,14 +40,14 @@ struct MatchPair {
 
 class TriangleMatching {
 private:
-    int __GuideStarNumber, __GroupNumber;
+    size_t __GuideStarNumber, __GroupNumber;
     double __Threshold, __GapWidth;
     //vector<StarPoint> __TargetTriangle;
     MatchPair __TargetTriangle;
     stack<int> __Candidate;
 public:
-    TriangleMatching(int starnum, double thres, double gap):__GuideStarNumber(starnum),
-                                                                        __Threshold(thres),__GapWidth(gap){ };
+    TriangleMatching(size_t starnum, double thres, double gap):__GuideStarNumber(starnum),
+                                                                        __Threshold(thres),__GapWidth(gap){ }
     vector<StarPair> stardata_;
     vector<MatchPair> matchgroup_;
     vector<int> grouphead_;
@@ -55,7 +55,7 @@ public:
     vector<int> groupsize_;
     void LoadData(vector<StarPoint> &stars);
 
-    double GetThreshold(){ return this->__Threshold;};
+    double GetThreshold(){ return this->__Threshold;}
 
     void ChooseAdjacentStars(vector<StarPoint> &obv_stars, vector<StarPoint> &triangle);
     vector<StarPoint> RandomAdjacentStars(vector<StarPoint> &obv_stars, int except);

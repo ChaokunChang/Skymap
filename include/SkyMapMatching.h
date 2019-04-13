@@ -13,8 +13,8 @@
 #include <map>
 #include "QCSVAdapter.h"
 #include "Star.h"
-//#include "ImageProcessing.h"
 #include "TriangleMatching.h"
+#include "NoOptic.h"
 #include "MyFunctions.h"
 
 using namespace std;
@@ -22,7 +22,7 @@ using namespace std;
 
 class SkyMap{
 public:
-    int count_;
+    size_t count_;
     pair<double,double> range_; //range_ = {length, width}
     StarPoint centre_;
     vector<StarPoint> stars_;
@@ -34,7 +34,7 @@ public:
 
 class Observation{
 public:
-    int count_;
+    size_t count_;
     pair<double,double> range_; //range_ = {length, width}
     StarPoint centre_;
     vector<StarPoint> stars_;
@@ -52,6 +52,7 @@ public:
     const int LatitudeRange = 180;
     SkyMap sky_;
     Observation image_;
+    vector<StarPoint> candidate_;
 
 public:
     void LoadSky(QString &f_name);
@@ -63,8 +64,10 @@ public:
     void SelectTargetStar();
     void SelectTargetStar(size_t);
     int TriangleModel();
+    int NoOpticModel();
     void Match();
     int Check();
+    int CheckAllCandidate();
 
     StarPoint GetAnswer(){ return this->__matching_star;}
     StarPoint GetTargetStar(){ return this->__target_star;}
