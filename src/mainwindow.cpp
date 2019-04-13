@@ -50,21 +50,23 @@ void MainWindow::loadPicture(QString fileName)
         if (code) {
             printf("Error parsing EXIF: code %d\n", code);
         }
-        this->imageWidth=skyImg.width();
-        this->imageHeight=skyImg.height();
         this->posX=result.GeoLocation.Longitude;
         this->posY=result.GeoLocation.Latitude;
         this->focus=result.FocalLength;
-        if(this->focus!=0)
+        if(abs(this->focus)>=EPSINON)
         {
             this->ui->picFocusInput->setText(QString::number(this->focus));
             this->ui->picFocusInput->setReadOnly(true);
         }
-        if(this->posX!=0&&this->posY!=0)
+        if(abs(this->posX)>=EPSINON&&abs(this->posY)>=EPSINON)
         {
             this->ui->picPosXLabelDis->setText(QString::number(this->posX));
             this->ui->picPosYLabelDis->setText(QString::number(this->posY));
         }
+
+        ui->picFocusInput->clear();
+        ui->picPosXLabelDis->clear();
+        ui->picPosYLabelDis->clear();
         ui->starList->clear();
         ui->pushButton->blockSignals(true);
         ui->statusBar->showMessage(tr("请稍候……正在处理图片"));
@@ -74,7 +76,7 @@ void MainWindow::loadPicture(QString fileName)
         QFuture<vector<StarPoint>> futureIP = QtConcurrent::run(loadStarPoint,fileName);
         while(!futureIP.isFinished())
         {
-            ui->statusBar->showMessage(tr("请稍候……正在处理图片")+LOADANI((int)timer.elapsed()));
+            ui->statusBar->showMessage(tr("请稍候……正在处理图片")+LOADANI(int(timer.elapsed())));
             QCoreApplication::processEvents();
         }
         this->starRecs = futureIP.result();
@@ -95,12 +97,12 @@ void MainWindow::loadPicture(QString fileName)
          ui->pushButton->blockSignals(false);
     }
     ui->statusBar->showMessage(tr("请稍候……正在加载星表"));
+    this->SMM.initPara(skyImg.width(),skyImg.height(),skyImg.width()*25.4/skyImg.logicalDpiX(),skyImg.height()*25.4/skyImg.logicalDpiY(),this->focus);
     QFuture<void> futureSMM = QtConcurrent::run(initStarMapMatching,&this->SMM);
     while(!futureSMM.isFinished())
     {
         QCoreApplication::processEvents();
     }
-    this->SMM.setFocalLength(this->focus);
     ui->statusBar->clearMessage();
     this->setAcceptDrops(true);
 }
@@ -154,7 +156,7 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
     QFuture<int> futureFMS = QtConcurrent::run(this,&MainWindow::findMatchingStar,item->text().section('-',0,0).toInt()-1);
     while(!futureFMS.isFinished())
     {
-        ui->statusBar->showMessage(tr("请稍候……正在寻找匹配")+LOADANI((int)timer.elapsed()));
+        ui->statusBar->showMessage(tr("请稍候……正在寻找匹配")+LOADANI(int(timer.elapsed())));
         QApplication::processEvents();
     }
     res=futureFMS.result();
@@ -192,4 +194,9 @@ void MainWindow::dropEvent(QDropEvent* event)
     //窗口部件放下一个对象时,调用该函数
     const QMimeData *qm=event->mimeData();//获取MIMEData
     this->loadPicture(qm->urls()[0].toLocalFile());//使用图片函数
+}
+
+void MainWindow::on_picFocusInput_editingFinished()
+{
+    this->focus=this->ui->picFocusInput->text().toDouble();
 }

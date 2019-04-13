@@ -36,6 +36,9 @@ class Observation{
 public:
     size_t count_;
     pair<double,double> range_; //range_ = {length, width}
+    int imageWidth,imageHeight;
+    double imageWidthL,imageHeightL;
+    double focal_length;
     StarPoint centre_;
     vector<StarPoint> stars_;
     Observation():count_(0),range_({0,0}){}
@@ -56,7 +59,7 @@ class SkyMapMatching {
 private:
     StarPoint __target_star; //the chosen star in image. this variable stores its location in image.
     StarPoint __matching_star; //the result given by match algorithm, this variable stores its location in SkyMap.
-    double focal_length;
+
 
 public:
     const int LongitudeRange = 360;
@@ -79,7 +82,7 @@ public:
     void Match();
     int Check();
     int CheckAllCandidates();
-    void setFocalLength(double);
+    void initPara(int,int,double,double,double);
     StarPoint GetAnswer(){ return this->__matching_star;}
     StarPoint GetTargetStar(){ return this->__target_star;}
 

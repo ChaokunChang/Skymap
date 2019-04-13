@@ -310,10 +310,14 @@ void Observation::RangeStandardization(){
     }
 }
 
-void SkyMapMatching::setFocalLength(double f)
+void SkyMapMatching::initPara(int w,int h,double wl,double hl,double f)
 {
+    this->image_.imageWidth=w;
+    this->image_.imageHeight=h;
+    this->image_.imageWidthL=wl;
+    this->image_.imageHeightL=hl;
     if(f!=0)
-        this->focal_length=f;
+        this->image_.focal_length=f;
     else
-        this->focal_length=12;
+        this->image_.focal_length=12;
 }
