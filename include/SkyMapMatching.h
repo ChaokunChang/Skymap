@@ -130,7 +130,7 @@ public:
     //void initPara(int,int,double,double,double);
     StarPoint GetAnswer(){ return this->__matching_star;}
     StarPoint GetTargetStar(){ return this->__target_star;}
-    Evaluation ExeSimulation(size_t model);
+    ModelEvaluation ExeSimulation(size_t model);
 
 };
 
