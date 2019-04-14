@@ -27,43 +27,47 @@ void MainWindow::loadPicture(QString fileName)
     }
     else
     {
-        const char *photoPath = fileName.toStdString().c_str();
-        // Read the JPEG file into a buffer
-        FILE *fp = fopen(photoPath, "rb");
-        if (!fp) {
-            printf("Can't open file.\n");
-        }
-        fseek(fp, 0, SEEK_END);
-        unsigned long fsize = ftell(fp);
-        rewind(fp);
-        unsigned char *buf = new unsigned char[fsize];
-        if (fread(buf, 1, fsize, fp) != fsize) {
-            printf("Can't read file.\n");
-            delete[] buf;
-        }
-        fclose(fp);
+        if(fileName.right(3).compare("jpg",Qt::CaseInsensitive)||fileName.right(3).compare("jpeg",Qt::CaseInsensitive))
+        {
+            const char *photoPath = fileName.toStdString().c_str();
+            // Read the JPEG file into a buffer
+            FILE *fp = fopen(photoPath, "rb");
+            if (!fp) {
+                printf("Can't open file.\n");
+            }
+            fseek(fp, 0, SEEK_END);
+            unsigned long fsize = ftell(fp);
+            rewind(fp);
+            unsigned char *buf = new unsigned char[fsize];
+            if (fread(buf, 1, fsize, fp) != fsize) {
+                printf("Can't read file.\n");
+                delete[] buf;
+            }
+            fclose(fp);
 
-        // Parse EXIF
-        easyexif::EXIFInfo result;
-        int code = result.parseFrom(buf, fsize);
-        delete[] buf;
-        if (code) {
-            printf("Error parsing EXIF: code %d\n", code);
+            // Parse EXIF
+            easyexif::EXIFInfo result;
+            int code = result.parseFrom(buf, fsize);
+            delete[] buf;
+            if (code) {
+                printf("Error parsing EXIF: code %d\n", code);
+            }
+            this->posX=result.GeoLocation.Longitude;
+            this->posY=result.GeoLocation.Latitude;
+            this->focus=result.FocalLength;
         }
-        this->posX=result.GeoLocation.Longitude;
-        this->posY=result.GeoLocation.Latitude;
-        this->focus=result.FocalLength;
+        else {
+            this->posX=0;
+            this->posY=0;
+            this->focus=0;
+        }
         if(abs(this->focus)>=EPSINON)
         {
             this->ui->picFocusInput->setText(QString::number(this->focus));
             this->ui->picFocusInput->setReadOnly(true);
         }
-        if(abs(this->posX)>=EPSINON&&abs(this->posY)>=EPSINON)
-        {
-            this->ui->picPosXLabelDis->setText(QString::number(this->posX));
-            this->ui->picPosYLabelDis->setText(QString::number(this->posY));
-        }
-
+        this->ui->picPosXLabelDis->setText(QString::number(this->posX));
+        this->ui->picPosYLabelDis->setText(QString::number(this->posY));
         ui->picFocusInput->clear();
         ui->picPosXLabelDis->clear();
         ui->picPosYLabelDis->clear();
