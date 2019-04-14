@@ -55,6 +55,7 @@ public:
     Observation():count_(0),range_({0,0}){}
     void RangeStandardization();
     void setProperties(image_properties prop);
+    void ContentSync();
 };
 
 struct Candidate{
@@ -136,7 +137,14 @@ public:
     StarPoint GetTargetStar(){ return this->__target_star;}
     ModelEvaluation TriangleModelSimulation(int round);
     ModelEvaluation NoOpticModelSimulation(int round);
-    ModelEvaluation ExeSimulation(size_t model=0,int round=100);
+    ModelEvaluation ExeSimulation(size_t model=0,int round=100,size_t missing=0,
+                                  size_t redundence=0,double deviation=0.0);
+    ModelEvaluation SimpleEvaluation(size_t model=0,int round=100);
+    ModelEvaluation RedundanceEvaluation(size_t model=0,int round=100,size_t add_num=3);
+    ModelEvaluation MissingEvaluation(size_t model=0,int round=100,size_t miss_num=3);
+    ModelEvaluation DeviationEvaluation(size_t model=0,int round=100,double off_rate=0.01);
+    ModelEvaluation ComprehensiveEvaluation(size_t model=0,int round=100,size_t missing=0,
+                                            size_t redundence=0,double deviation=0.0);
 
 };
 

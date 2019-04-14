@@ -40,15 +40,11 @@ void TriangleMatching::LoadData(vector<StarPoint> &stars) {
 }
 
 vector<StarPoint> TriangleMatching::RandomAdjacentStars(vector<StarPoint> &obv_stars, int except) {
-    int size = obv_stars.size();
-
-    struct timeb time_seed;
-    ftime(&time_seed);
-    srand(time_seed.time*1000 + time_seed.millitm);
-    int s1 = rand()%size;
-    while(s1 == except) s1 = rand()%size;
-    int s2 = rand()%size;
-    while(s2==except || s2 == s1) s2=rand()%size;
+    int size = int(obv_stars.size());
+    int s1 = random_int(0,size);
+    while(s1 == except) s1 = random_int(0,size);
+    int s2 = random_int(0,size);
+    while(s2==except || s2 == s1) s2=random_int(0,size);
 
 //    mt19937 rng;
 //    rng.seed(random_device()());

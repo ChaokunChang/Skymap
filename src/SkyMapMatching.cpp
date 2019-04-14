@@ -312,10 +312,12 @@ void SkyMapMatching::GenerateSimImage(StarPoint centre, double length, double wi
     }
     if(!this->image_.stars_.empty()) this->image_.stars_.clear();
 
-    this->image_.range_ = {length , width};
+    //this->image_.range_ = {length , width};
     this->image_.stars_.insert(this->image_.stars_.end(),stars.begin(),stars.end());
     this->image_.count_ = this->image_.stars_.size();
     this->image_.centre_ = centre;
+    image_properties prop(0,0,length,width,0.0);
+    this->image_.setProperties(prop);
 
     cout<<"The Generated image is:"<<endl;
     for(size_t i=0;i<stars.size();i++){
@@ -380,6 +382,8 @@ void SkyMapMatching::GenerateSimImage(StarPoint centre, double image_ratio, int 
         cout<<"Invalid Subset! You can try another ratio or center."<<endl;
     }
     this->image_.RangeStandardization();
+    this->image_.imageWidthL = this->image_.range_.first;
+    this->image_.imageHeightL = this->image_.range_.second;
 }
 
 void Observation::RangeStandardization(){
@@ -399,11 +403,8 @@ void Observation::RangeStandardization(){
 }
 
 StarPoint random_point(double l,double r,double u,double d){
-    struct timeb time_seed;
-    ftime(&time_seed);
-    srand(time_seed.time*1000 + time_seed.millitm);
-    double x = l + rand()/static_cast<double>(RAND_MAX/(r-l));
-    double y = d + rand()/static_cast<double>(RAND_MAX/(u-d));
+    double x = random_double(l,r);
+    double y = random_double(d,u);
     StarPoint sp(-1,x,y,-1);
     return sp;
 }
@@ -423,6 +424,7 @@ size_t central_star(vector<StarPoint> &stars){
 }
 
 ModelEvaluation SkyMapMatching::TriangleModelSimulation(int round){
+    //no different to ExeSimulation..
     cout<<round<<endl;
     assert(round>0);
     int succeed_num=0;
@@ -453,7 +455,8 @@ ModelEvaluation SkyMapMatching::NoOpticModelSimulation(int round){
     return eval;
 }
 
-ModelEvaluation SkyMapMatching::ExeSimulation(size_t model,int round){
+ModelEvaluation SkyMapMatching::SimpleEvaluation(size_t model, int round){
+    //simple test.
     cout<<round<<endl;
     assert(round>0);
     int succeed_num=0;
@@ -474,6 +477,183 @@ ModelEvaluation SkyMapMatching::ExeSimulation(size_t model,int round){
     double ans = (succeed_num+1.0)/(succeed_num+failed_num);
     ModelEvaluation eval(succeed_num+failed_num,ans,"Triangle Model");
     return eval;
+}
+
+void RandomMissing(vector<StarPoint> &stars, size_t miss_num){
+    assert(miss_num>=0 && miss_num<stars.size());
+    if(miss_num==0) return;
+    vector<size_t> missed(miss_num);
+    //for(size_t i=0;i<miss_num;i++) missed[i]=i;
+    random_shuffle(stars.begin(),stars.end());
+    while(miss_num-->0) stars.pop_back();
+}
+
+void Observation::ContentSync(){
+    this->count_ = this->stars_.size();
+}
+
+ModelEvaluation SkyMapMatching::MissingEvaluation(size_t model, int round, size_t miss_num){
+    //missing test.
+    cout<<round<<endl;
+    assert(round>0);
+    int succeed_num=0;
+    int failed_num = 0;
+    while(round-->0){
+        StarPoint center = random_point(- this->LatitudeRange/2,this->LatitudeRange/2,0.0,this->LongitudeRange);
+        this->GenerateSimImage(center,15.0,15.0);
+        //missing.....
+        RandomMissing(this->image_.stars_,miss_num);
+        this->image_.count_ -= miss_num;
+
+        size_t target = central_star(this->image_.stars_);
+        this->__target_star = this->image_.stars_[target];
+        this->Match(model);
+        if(this->CheckAllCandidates() == -1){
+            failed_num ++;
+        }
+        else {
+            succeed_num ++;
+        }
+    }
+    double ans = (succeed_num+1.0)/(succeed_num+failed_num);
+    ModelEvaluation eval(succeed_num+failed_num,ans,"Triangle Model");
+    return eval;
+}
+
+void RandomAddPoints(vector<StarPoint> &stars,double length, double width, size_t redundence_num){
+    assert(redundence_num>=0);
+    if(redundence_num==0) return;
+    while(redundence_num-->0){
+        StarPoint sp = random_point(-length/2,length/2,-width/2,width/2);
+        stars.push_back(sp);
+    }
+}
+
+ModelEvaluation SkyMapMatching::RedundanceEvaluation(size_t model, int round, size_t add_num){
+    //redundence test.
+    cout<<round<<endl;
+    assert(round>0);
+    int succeed_num=0;
+    int failed_num = 0;
+    while(round-->0){
+        StarPoint center = random_point(- this->LatitudeRange/2,this->LatitudeRange/2,0.0,this->LongitudeRange);
+        this->GenerateSimImage(center,15.0,15.0);
+
+        //adding new points.....
+        RandomAddPoints(this->image_.stars_,this->image_.imageWidthL,this->image_.imageHeightL,add_num);
+        this->image_.count_ += add_num;
+
+        size_t target = central_star(this->image_.stars_);
+        this->__target_star = this->image_.stars_[target];
+        this->Match(model);
+        if(this->CheckAllCandidates() == -1){
+            failed_num ++;
+        }
+        else {
+            succeed_num ++;
+        }
+    }
+    double ans = (succeed_num+1.0)/(succeed_num+failed_num);
+    ModelEvaluation eval(succeed_num+failed_num,ans,"Triangle Model");
+    return eval;
+}
+
+void RandomDiviation(vector<StarPoint> &stars, double off_rate, size_t type=0){
+    assert(off_rate>=0);
+    if(abs(off_rate)<1e-9) return;
+    if(type==1){
+        //diffusing from center...(the direction is definate,but offset is random(less or equal than off_rate).)
+        for(size_t i=0;i<stars.size();i++){
+            double randoff = random_double(0.0,off_rate);
+            stars[i].x *= (1+randoff);
+            stars[i].y *= (1+randoff);
+        }
+    }
+    else if(type==2){
+        //diffusing from center...(the direction and offset is definate.)
+        for(size_t i=0;i<stars.size();i++){
+            stars[i].x *= (1+off_rate);
+            stars[i].y *= (1+off_rate);
+        }
+    }
+    else{
+        //total random,random offset and random direction.
+        for(size_t i=0;i<stars.size();i++){
+            double randoffx = random_double(0.0,off_rate);
+            stars[i].x *= (1+randoffx);
+            double randoffy = random_double(0.0,off_rate);
+            stars[i].y *= (1+randoffy);
+        }
+    }
+}
+
+ModelEvaluation SkyMapMatching::DeviationEvaluation(size_t model, int round, double offset_rate){
+    //deviation test.
+    cout<<round<<endl;
+    assert(round>0);
+    int succeed_num=0;
+    int failed_num = 0;
+    while(round-->0){
+        StarPoint center = random_point(- this->LatitudeRange/2,this->LatitudeRange/2,0.0,this->LongitudeRange);
+        this->GenerateSimImage(center,15.0,15.0);
+
+        //give deviation.....
+        RandomDiviation(this->image_.stars_,offset_rate);
+
+        size_t target = central_star(this->image_.stars_);
+        this->__target_star = this->image_.stars_[target];
+        this->Match(model);
+        if(this->CheckAllCandidates() == -1){
+            failed_num ++;
+        }
+        else {
+            succeed_num ++;
+        }
+    }
+    double ans = (succeed_num+1.0)/(succeed_num+failed_num);
+    ModelEvaluation eval(succeed_num+failed_num,ans,"Triangle Model");
+    return eval;
+}
+
+ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, int round, size_t miss_num,
+                                                        size_t add_num, double offset_rate){
+    //comprehensive test.
+    cout<<round<<endl;
+    assert(round>0);
+    int succeed_num=0;
+    int failed_num = 0;
+    while(round-->0){
+        StarPoint center = random_point(- this->LatitudeRange/2,this->LatitudeRange/2,0.0,this->LongitudeRange);
+        this->GenerateSimImage(center,15.0,15.0);
+
+        //add noise....
+        cout<<"Adding noise..."<<endl;
+        RandomMissing(this->image_.stars_,miss_num);
+        this->image_.count_ -= miss_num;
+        RandomAddPoints(this->image_.stars_,this->image_.imageWidthL,this->image_.imageHeightL,add_num);
+        this->image_.count_ += add_num;
+        RandomDiviation(this->image_.stars_,offset_rate);
+
+        size_t target = central_star(this->image_.stars_);
+        this->__target_star = this->image_.stars_[target];
+        this->Match(model);
+        if(this->CheckAllCandidates() == -1){
+            failed_num ++;
+        }
+        else {
+            succeed_num ++;
+        }
+    }
+    double ans = (succeed_num+1.0)/(succeed_num+failed_num);
+    ModelEvaluation eval(succeed_num+failed_num,ans,"Triangle Model");
+    return eval;
+}
+
+ModelEvaluation SkyMapMatching::ExeSimulation(size_t model,int round,size_t miss_num,
+                                              size_t add_num,double off_rate){
+    //simple test.
+    ModelEvaluation eval=this->ComprehensiveEvaluation(model,round,miss_num,add_num,off_rate);
+    return eval;
     /*
     switch (model) {
     case 1:{
@@ -489,6 +669,9 @@ ModelEvaluation SkyMapMatching::ExeSimulation(size_t model,int round){
         return TriangleModelSimulation(round);
     }
     }*/
+
+    //test with missing noise
+
 }
 
 //void SkyMapMatching::initPara(int w,int h,double wl,double hl,double f)
