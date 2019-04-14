@@ -7,6 +7,7 @@
 void SkyMapMatching::LoadSky(QString &f_name) {
     QCSVAdapter csv_sky(f_name);
     //int count = 0;
+    if(!this->sky_.stars_.empty()) this->sky_.stars_.clear();
     this->sky_.stars_=csv_sky.getRecords();
     this->sky_.count_=this->sky_.stars_.size();
     this->sky_.range_ = {360,180};
@@ -264,6 +265,7 @@ int SkyMapMatching::Check() {
 int SkyMapMatching::CheckAllCandidates(){
     assert(this->candidates_.size()>0);
     int passnum = 0;
+    int re_index = -1;
     for(Candidate one:this->candidates_){
         StarPoint sp = one.star;
         this->__matching_star = sp;
@@ -273,10 +275,13 @@ int SkyMapMatching::CheckAllCandidates(){
             cout<<"This candidate didn't pass checking"<<endl;
         }else{
             cout<<"Passed!"<<endl;
+            re_index = sp.index;
             passnum++;
         }
     }
-    return passnum;
+    cout<<"total passed:"<<passnum<<endl;
+    return re_index;
+    //return passnum;
 }
 
 vector<StarPoint> SkyMap::Subset(StarPoint centre, double length, double width) {
@@ -304,8 +309,6 @@ void SkyMapMatching::GenerateSimImage(StarPoint centre, double length, double wi
     vector<StarPoint> stars = sky_.Subset(centre,length,width);
     for(size_t i=0;i<stars.size();i++){
         stars[i].change_coordinate(centre);
-//        stars[i].x -= centre.x;
-//        stars[i].y -= centre.y;
     }
     if(!this->image_.stars_.empty()) this->image_.stars_.clear();
 
@@ -395,7 +398,98 @@ void Observation::RangeStandardization(){
     }
 }
 
+StarPoint random_point(double l,double r,double u,double d){
+    struct timeb time_seed;
+    ftime(&time_seed);
+    srand(time_seed.time*1000 + time_seed.millitm);
+    double x = l + rand()/static_cast<double>(RAND_MAX/(r-l));
+    double y = d + rand()/static_cast<double>(RAND_MAX/(u-d));
+    StarPoint sp(-1,x,y,-1);
+    return sp;
+}
 
+size_t central_star(vector<StarPoint> &stars){
+    double min_dis = INT32_MAX;
+    size_t target = 0;
+    for(size_t i=0;i<stars.size();i++){
+        StarPoint s = stars[i];
+        double dis = pow(s.x,2)+pow(s.y,2);
+        if(dis<min_dis){
+            min_dis = dis;
+            target = i;
+        }
+    }
+    return target;
+}
+
+ModelEvaluation SkyMapMatching::TriangleModelSimulation(int round){
+    cout<<round<<endl;
+    assert(round>0);
+    int succeed_num=0;
+    int failed_num = 0;
+    while(round-->0){
+        StarPoint center = random_point(- this->LatitudeRange/2,this->LatitudeRange/2,0.0,this->LongitudeRange);
+        this->GenerateSimImage(center,15.0,15.0);
+        size_t target = central_star(this->image_.stars_);
+        this->__target_star = this->image_.stars_[target];
+        this->Match(1);
+        if(this->CheckAllCandidates() == -1){
+            failed_num ++;
+        }
+        else {
+            succeed_num ++;
+        }
+    }
+    double ans = (succeed_num+1.0)/(succeed_num+failed_num);
+    ModelEvaluation eval(succeed_num+failed_num,ans,"Triangle Model");
+    return eval;
+
+}
+
+ModelEvaluation SkyMapMatching::NoOpticModelSimulation(int round){
+    cout<<round<<endl;
+    assert(round>0);
+    ModelEvaluation eval;
+    return eval;
+}
+
+ModelEvaluation SkyMapMatching::ExeSimulation(size_t model,int round){
+    cout<<round<<endl;
+    assert(round>0);
+    int succeed_num=0;
+    int failed_num = 0;
+    while(round-->0){
+        StarPoint center = random_point(- this->LatitudeRange/2,this->LatitudeRange/2,0.0,this->LongitudeRange);
+        this->GenerateSimImage(center,15.0,15.0);
+        size_t target = central_star(this->image_.stars_);
+        this->__target_star = this->image_.stars_[target];
+        this->Match(model);
+        if(this->CheckAllCandidates() == -1){
+            failed_num ++;
+        }
+        else {
+            succeed_num ++;
+        }
+    }
+    double ans = (succeed_num+1.0)/(succeed_num+failed_num);
+    ModelEvaluation eval(succeed_num+failed_num,ans,"Triangle Model");
+    return eval;
+    /*
+    switch (model) {
+    case 1:{
+        return TriangleModelSimulation(round);
+        //break;
+    }
+    case 2:{
+        return NoOpticModelSimulation(round);
+        //break;
+    }
+    default:{
+        cout<<"Default evalution model: Triangle Model."<<endl;
+        return TriangleModelSimulation(round);
+    }
+    }*/
+}
 
 //void SkyMapMatching::initPara(int w,int h,double wl,double hl,double f)
 //{

@@ -73,6 +73,10 @@ public:
     string property;
     int round;
     double correctness;
+
+    ModelEvaluation():model_name("default"),property("default"),round(0),correctness(0){}
+    ModelEvaluation(int r,double c,string name="default",string prop="default"):model_name(name),property(prop),
+        round(r),correctness(c){}
 };
 
 class MissingEvaluation: public ModelEvaluation{
@@ -107,8 +111,8 @@ private:
 
 
 public:
-    const int LongitudeRange = 360;
-    const int LatitudeRange = 180;
+    const double LongitudeRange = 360;
+    const double LatitudeRange = 180;
     SkyMap sky_;
     Observation image_;
     vector<Candidate> candidates_;
@@ -130,7 +134,9 @@ public:
     //void initPara(int,int,double,double,double);
     StarPoint GetAnswer(){ return this->__matching_star;}
     StarPoint GetTargetStar(){ return this->__target_star;}
-    ModelEvaluation ExeSimulation(size_t model);
+    ModelEvaluation TriangleModelSimulation(int round);
+    ModelEvaluation NoOpticModelSimulation(int round);
+    ModelEvaluation ExeSimulation(size_t model=0,int round=100);
 
 };
 
