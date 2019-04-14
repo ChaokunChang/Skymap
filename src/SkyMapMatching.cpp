@@ -395,6 +395,8 @@ void Observation::RangeStandardization(){
     }
 }
 
+
+
 //void SkyMapMatching::initPara(int w,int h,double wl,double hl,double f)
 //{
 //    this->image_.imageWidth=w;

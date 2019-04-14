@@ -67,6 +67,39 @@ struct Candidate{
     //Candidate(string name,StarPoint sp):model_name(name),star(sp){}
 };
 
+class ModelEvaluation{
+public:
+    string model_name;
+    string property;
+    int round;
+    double correctness;
+};
+
+class MissingEvaluation: public ModelEvaluation{
+public:
+    double missing_rate;
+    int missing_num;
+};
+
+class DeviationEvaluation: public ModelEvaluation{
+public:
+    double deviation_rate;
+};
+
+class RedundanceEvaluation: public ModelEvaluation{
+public:
+    double redundance_rate;
+    int redundance_num;
+};
+
+template <class T>
+class NoiseEvaluation{
+    //Noise include missing noise,deviation noise,and redundance noise.
+public:
+    int total_round;
+    vector<T> tests;
+};
+
 class SkyMapMatching {
 private:
     StarPoint __target_star; //the chosen star in image. this variable stores its location in image.
@@ -97,6 +130,7 @@ public:
     //void initPara(int,int,double,double,double);
     StarPoint GetAnswer(){ return this->__matching_star;}
     StarPoint GetTargetStar(){ return this->__target_star;}
+    Evaluation ExeSimulation(size_t model);
 
 };
 
