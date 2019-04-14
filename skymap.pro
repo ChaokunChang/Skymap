@@ -54,7 +54,8 @@ HEADERS += \
     include\Star.h \
     include\TriangleMatching.h \
     include/QCSVAdapter.h \
-    include/exif.h
+    include/exif.h \
+    #include/ConsolColor.h
 
 FORMS += \
     form\mainwindow.ui

@@ -11,12 +11,12 @@
 #include "MyFunctions.h"
 #include "Star.h"
 
-#define R0 2
+const int R0=2;
 //#define Rn 15
-#define SightSize 15
-#define PartitionNumber 2800 //35 * 80
-#define StarNumber 6000
-#define Pi 3.1415926
+const int SightSize = 15;
+const int PartitionNumber = 2800; //35 * 80
+const int StarNumber = 6000;
+const double Pi = 3.1415926;
 
 using namespace std;
 
@@ -69,7 +69,7 @@ public:
     int FinalResult;
     NoOptic(vector<StarPoint> &sky, vector<StarPoint> &obv);
 
-    int ExeNoOptic();//总执行流程
+    int ExeNoOptic(int target);//总执行流程
 
     /* get the eigenvector */
     vector<bool> GetEigenVector(int StarNum);

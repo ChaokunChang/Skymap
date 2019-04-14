@@ -11,6 +11,7 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <sstream>
 #include "QCSVAdapter.h"
 #include "Star.h"
 #include "TriangleMatching.h"
@@ -90,7 +91,7 @@ public:
     void SelectTargetStar(int);
     int TriangleModel();
     int NoOpticModel();
-    void Match();
+    void Match(size_t model=0);
     int Check();
     int CheckAllCandidates();
     //void initPara(int,int,double,double,double);

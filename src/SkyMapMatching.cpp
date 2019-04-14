@@ -38,19 +38,16 @@ void SkyMapMatching::LoadImage(QString &f_name,image_properties property) {
     cout<<"Max_y:"<<max_y<<endl;
     cout<<" ImageWidthL:"<<property.imageWidthL<<endl;
     cout<<"ImageHeightL:"<<property.imageHeightL<<endl;
-    /*TODO
-     * get angle distance from image distance.
-     */
     for(size_t i=0;i<stars.size();i++){
         stars[i].x *= property.imageWidthL/property.imageWidth;
         stars[i].y *= property.imageHeightL/property.imageHeight;
         cout<<i<<"th:("<<stars[i].x<<","<<stars[i].y<<")"<<endl;
     }
-
+    if(!this->image_.stars_.empty()) this->image_.stars_.clear();
     this->image_.stars_ = stars;
     this->image_.count_=this->image_.stars_.size();
     this->image_.RangeStandardization();
-    cout<<"image range: ("<<this->image_.range_.first<<","<<this->image_.range_.second<<")"<<endl;
+    cout<<"image true range: ("<<this->image_.range_.first<<","<<this->image_.range_.second<<")"<<endl;
 
     StarPoint center(0,this->image_.range_.first/2,this->image_.range_.second/2,0);
     for(size_t i=0;i<this->image_.count_;i++){
@@ -79,19 +76,45 @@ void SkyMapMatching::SelectTargetStar(int target) {
 
 int SkyMapMatching::TriangleModel() {
     assert(this->image_.count_>=3);
+    cout<<"Belowing are all-possible angle_distance in this image."<<endl;
+    cout<<"focal_length:"<<this->image_.focal_length<<endl;
+    if(this->image_.focal_length>1e-9){
+        for(size_t i=0;i<this->image_.count_;i++){
+            for(size_t j=i+1;j<this->image_.count_;j++){
+                double angle_distance = getSpotAD(this->image_.stars_[i].x,this->image_.stars_[i].y,
+                                                  this->image_.stars_[j].x,this->image_.stars_[j].y,
+                                                  this->image_.focal_length);
+                string buf = to_string(i)+"--"+to_string(j)+" : "+to_string(angle_distance);
+                cout<<buf<<endl;
+            }
+        }
+    }else{
+        cout<<"There is no focal_length info from this image!"<<endl;
+    }
+
     TriangleMatching TM(sky_.stars_.size(), 12.0, 0.02);
     TM.LoadData(sky_.stars_);
 
     vector<StarPoint> triangle;
     triangle.push_back(this->__target_star);
 
-    double dis12,dis13,dis23;
+    double dis12=0.0,dis13=0.0,dis23=0.0;
     int round=0;
     while(round++<100){
         TM.ChooseAdjacentStars(image_.stars_,triangle);
-        dis12 = cal_dis(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y);
-        dis13 = cal_dis(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y);
-        dis23 = cal_dis(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y);
+        if(this->image_.focal_length > 1e-9){
+            dis12 = getSpotAD(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y,this->image_.focal_length);
+            dis13 = getSpotAD(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y,this->image_.focal_length);
+            dis23 = getSpotAD(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y,this->image_.focal_length);
+        }else {
+            double diagonal = sqrt(pow(this->image_.imageWidthL,2)+pow(this->image_.imageHeightL,2));
+            dis12 = 20*cal_dis(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y)/diagonal;
+            dis13 = 20*cal_dis(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y)/diagonal;
+            dis23 = 20*cal_dis(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y)/diagonal;
+        }
+
+        cout<<"dis12    "<<"dis13   "<<"dis23"<<endl;
+        cout<<dis12<<"  "<<dis13<<" "<<dis23<<endl;
         if(dis12 < TM.GetThreshold() && dis13 < TM.GetThreshold() && dis23 < TM.GetThreshold()) break;
         triangle.pop_back();
         triangle.pop_back();
@@ -107,35 +130,73 @@ int SkyMapMatching::TriangleModel() {
 
 int SkyMapMatching::NoOpticModel(){
     NoOptic NOM(this->sky_.stars_,this->image_.stars_);
-    int result = NOM.ExeNoOptic();
+    int result = NOM.ExeNoOptic(this->__target_star.index);
     cout<<"NoOptic Model end:"<<result<<endl;
     return (result);
 }
 
-void SkyMapMatching::Match() {
-    int skymap_index1 = NoOpticModel();
-    if(skymap_index1 >= 0) {
-        printf("NoOptic Model Result: %d\n",skymap_index1);
-        this->__matching_star = this->sky_.stars_[size_t(skymap_index1)];
-        Candidate one("NoOptic Model",this->__matching_star);
-        this->candidates_.push_back(one);
-    }
-    else printf("NoOptic Model cannot get answer.\n");
-    fflush(stdin);
-
-    int skymap_index2 = TriangleModel();
-    if(skymap_index2 >= 0) {
-        printf("Triangle Model Result: %d \n",skymap_index2);
-        this->__matching_star = this->sky_.stars_[size_t(skymap_index2)];
-        Candidate one("Triangle Model",this->__matching_star);
-        this->candidates_.push_back(one);
-    }
-    else printf("Triangle Model cannot get answer.\n");
-    fflush(stdin);
-
-    if(skymap_index1<=0 && skymap_index2<=0) {
-        printf("No Model get answer.\n");
+void SkyMapMatching::Match(size_t model) {
+    switch (model) {
+    case 1:{
+        int skymap_index2 = TriangleModel();
+        if(skymap_index2 >= 0) {
+            printf("Triangle Model Result: %d \n",skymap_index2);
+            this->__matching_star = this->sky_.stars_[size_t(skymap_index2)];
+            Candidate one("Triangle Model",this->__matching_star);
+            this->candidates_.push_back(one);
+        }
+        else printf("Triangle Model cannot get answer.\n");
         fflush(stdin);
+        break;
+    }
+    case 2:{
+        int skymap_index1 = NoOpticModel();
+        if(skymap_index1 >= 0) {
+            printf("NoOptic Model Result: %d\n",skymap_index1);
+            this->__matching_star = this->sky_.stars_[size_t(skymap_index1)];
+            Candidate one("NoOptic Model",this->__matching_star);
+            this->candidates_.push_back(one);
+        }
+        else printf("NoOptic Model cannot get answer.\n");
+        fflush(stdin);
+
+        int skymap_index2 = TriangleModel();
+        if(skymap_index2 >= 0) {
+            printf("Triangle Model Result: %d \n",skymap_index2);
+            this->__matching_star = this->sky_.stars_[size_t(skymap_index2)];
+            Candidate one("Triangle Model",this->__matching_star);
+            this->candidates_.push_back(one);
+        }
+        else printf("Triangle Model cannot get answer.\n");
+        fflush(stdin);
+        break;
+    }
+    default:{
+        int skymap_index1 = NoOpticModel();
+        if(skymap_index1 >= 0) {
+            printf("NoOptic Model Result: %d\n",skymap_index1);
+            this->__matching_star = this->sky_.stars_[size_t(skymap_index1)];
+            Candidate one("NoOptic Model",this->__matching_star);
+            this->candidates_.push_back(one);
+        }
+        else printf("NoOptic Model cannot get answer.\n");
+        fflush(stdin);
+
+        int skymap_index2 = TriangleModel();
+        if(skymap_index2 >= 0) {
+            printf("Triangle Model Result: %d \n",skymap_index2);
+            this->__matching_star = this->sky_.stars_[size_t(skymap_index2)];
+            Candidate one("Triangle Model",this->__matching_star);
+            this->candidates_.push_back(one);
+        }
+        else printf("Triangle Model cannot get answer.\n");
+        fflush(stdin);
+
+        if(skymap_index1<=0 && skymap_index2<=0) {
+            printf("No Model get answer.\n");
+            fflush(stdin);
+        }
+    }
     }
 }
 
@@ -192,15 +253,17 @@ int SkyMapMatching::Check() {
             loss += 1;
             j++;
         }
-        cout<<loss<<endl;
+        cout<<loss<<" ";
     }
-    cout<<loss<<endl;
+    cout<<endl;
+    cout<<"Finale Loss:"<<loss<<endl;
     if(loss/len > 0.5) return -1;
     return this->__matching_star.index;
 }
 
 int SkyMapMatching::CheckAllCandidates(){
     assert(this->candidates_.size()>0);
+    int passnum = 0;
     for(Candidate one:this->candidates_){
         StarPoint sp = one.star;
         this->__matching_star = sp;
@@ -210,8 +273,10 @@ int SkyMapMatching::CheckAllCandidates(){
             cout<<"This candidate didn't pass checking"<<endl;
         }else{
             cout<<"Passed!"<<endl;
+            passnum++;
         }
     }
+    return passnum;
 }
 
 vector<StarPoint> SkyMap::Subset(StarPoint centre, double length, double width) {

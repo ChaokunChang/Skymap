@@ -37,6 +37,7 @@ bool StarPoint::XInRange(StarPoint &center, double length) {
         if( (this->x < center.x) || (this->x>(center.x - length/2 + 360) ) ) return true;
     }else if( (this->x > center.x-length/2)&&(this->x < center.x+length/2) ) return true;
     else return false;
+    return false;
 }
 
 bool StarPoint::YInRange(StarPoint &center, double width) {

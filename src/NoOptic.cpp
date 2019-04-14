@@ -14,7 +14,7 @@ NoOptic::NoOptic(vector<StarPoint> &sky, vector<StarPoint> &obv) {
     FinalResult = -1;
 }
 
-int NoOptic::ExeNoOptic(){
+int NoOptic::ExeNoOptic(int target=-1){
     //第一步，处理导航星表SkyStars;
     for(size_t i=0; i<SkyStars.size(); i++){
         int main_star = int(i);
@@ -26,8 +26,10 @@ int NoOptic::ExeNoOptic(){
         e.star_index = main_star;
         StarEigens.push_back(e);
     }
-    int ms = GetMidStar();
-    if(Match(ms)) {
+    if(target == -1){
+        target = GetMidStar();
+    }
+    if(Match(target)) {
         cout<<"Find the appropriate star:"<<FinalResult<<endl;
         return FinalResult;
     }
