@@ -6,7 +6,7 @@
 
 vector<StarPoint> ImageProcessing::Process() {
     Mat srcimg, segimg;
-    vector<pair<double, double>> centroids;
+    vector<pair<pair<double, double>,double>> centroids;
 
     // read srcimg
     cout << "Reading image..." << endl;
@@ -22,7 +22,7 @@ vector<StarPoint> ImageProcessing::Process() {
 
     vector<StarPoint> recList;
     for (size_t i=0;i!=centroids.size();i++) {
-        StarPoint starRec(int(i),centroids[i].first,centroids[i].second,0);
+        StarPoint starRec(int(i),centroids[i].first.first,centroids[i].first.second,centroids[i].second);
         recList.push_back(starRec);
     }
     QCSVAdapter pic_csv(QString::fromStdString(this->__gen_picture));
