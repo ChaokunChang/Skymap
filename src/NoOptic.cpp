@@ -30,7 +30,7 @@ int NoOptic::ExeNoOptic(int target=-1){
         target = GetMidStar();
     }
     if(Match(target)) {
-        cout<<"Find the appropriate star:"<<FinalResult<<endl;
+        //cout<<"Find the appropriate star:"<<FinalResult<<endl;
         return FinalResult;
     }
     else cout<<"No appropriate star. Try another star to check."<<endl;

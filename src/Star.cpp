@@ -30,7 +30,7 @@ void StarPoint::change_coordinate(StarPoint new_center) {
     }
 }
 
-bool StarPoint::XInRange(StarPoint &center, double length) {
+bool StarPoint::XInRange(StarPoint center, double length) {
     if(center.x + length/2 > 360){
         if( (this->x > center.x) || (this->x<(center.x + length/2 - 360) ) ) return true;
     }else if(center.x - length/2 < 0){
@@ -40,12 +40,12 @@ bool StarPoint::XInRange(StarPoint &center, double length) {
     return false;
 }
 
-bool StarPoint::YInRange(StarPoint &center, double width) {
+bool StarPoint::YInRange(StarPoint center, double width) {
     if(abs(this->y-center.y) < width/2) return true;
     else return false;
 }
 
-bool StarPoint::InRange(StarPoint &center, double length, double width) {
-    if(XInRange(center,length) && YInRange(center,width)) return true;
+bool StarPoint::InRange(StarPoint center, double length, double width) {
+    if(this->XInRange(center,length) && this->YInRange(center,width)) return true;
     else return false;
 }

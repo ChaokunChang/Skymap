@@ -178,6 +178,10 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
    }
     ui->starList->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->starList->blockSignals(false);
+
+    ModelEvaluation eval = this->SMM.ExeSimulation(0,10);
+    cout<<"The Correctness: "<<eval.correctness<<endl;
+    ui->picFocusInput->setText(QString::number(eval.correctness,10,3));
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)
