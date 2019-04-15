@@ -39,7 +39,8 @@ SOURCES = \
     src\Star.cpp \
     src\TriangleMatching.cpp \
     src/QCSVAdapter.cpp \
-    src/exif.cpp
+    src/exif.cpp \
+    src/simdialog.cpp
 
 HEADERS += \
     include\mainwindow.h \
@@ -56,9 +57,11 @@ HEADERS += \
     include/QCSVAdapter.h \
     include/exif.h \
     #include/ConsolColor.h
+    include/simdialog.h
 
 FORMS += \
-    form\mainwindow.ui
+    form\mainwindow.ui \
+    form/simdialog.ui
 
 INCLUDEPATH = \
     include \

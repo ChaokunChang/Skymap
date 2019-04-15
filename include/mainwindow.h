@@ -19,6 +19,7 @@
 #include "ImageProcessing.h"
 #include "SkyMapMatching.h"
 #include "exif.h"
+#include "simdialog.h"
 #define EPSINON 1e-6
 namespace Ui {
 class MainWindow;
@@ -35,8 +36,10 @@ public:
 private slots:
     void on_starList_itemDoubleClicked(QListWidgetItem*);
     void on_pushButton_clicked();
-
     void on_picFocusInput_editingFinished();
+    void receiveData(evalArgs);
+
+    void on_simCheckBox_stateChanged(int arg1);
 
 protected:
     void dragEnterEvent(QDragEnterEvent*event);//拖动进入事件
@@ -45,12 +48,13 @@ protected:
 private:
     Ui::MainWindow *ui;
     void loadPicture(QString);
-    int findMatchingStar(int);
+    int findMatchingStar(int,int);
     vector<StarPoint> starRecs;
     SkyMapMatching SMM;
     QImage skyImg;
     double posX,posY,focus;
 };
 vector<StarPoint> loadStarPoint(QString);
-void initStarMapMatching(SkyMapMatching*,image_properties prop);
+void initStarMapMatching(SkyMapMatching*,image_properties);
+double evalStarMapMatching(SkyMapMatching*,int,evalArgs);
 #endif // MAINWINDOW_H

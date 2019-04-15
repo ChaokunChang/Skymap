@@ -30,6 +30,12 @@ struct image_properties{
     image_properties():imageWidth(0),imageHeight(0),
         imageWidthL(0.0),imageHeightL(0.0),focal_length(0.0){}
 };
+struct evalArgs{
+    int round;
+    int missing;
+    int redundance;
+    double deviation;
+};
 
 class SkyMap{
 public:
