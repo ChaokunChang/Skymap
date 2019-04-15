@@ -1,4 +1,5 @@
 #include "extraction.h"
+#include <math.h>
 
 using namespace std;
 using namespace cv;
@@ -14,7 +15,7 @@ vector<pair<int, int>> projection_row(Mat &segimg)
     pair<int, int> p;
 
     height = segimg.rows;
-    reduce(segimg, img, 1, REDUCE_SUM, CV_32S);
+    reduce(segimg, img, 1, CV_REDUCE_SUM, CV_32S);
 
     for (i = 0; i < height; )
     {
@@ -48,7 +49,7 @@ vector<pair<int, int>> projection_col(Mat &segimg)
     pair<int, int> p;
 
     width = segimg.cols;
-    reduce(segimg, img, 0, REDUCE_SUM, CV_32S);
+    reduce(segimg, img, 0, CV_REDUCE_SUM, CV_32S);
 
     for (i = 0; i < width; )
     {
@@ -104,42 +105,130 @@ double background_threshold(Mat &img)
     return Vth;
 }
 
+double local_background_threshold(Mat &img)
+{
+    // calculate the background threshold of an image
+    double mean = 0, stddev = 0, Vth;
+    pair<int, int> px, py;
+    vector<pair<int, int>> px_v, py_v;
+    int height = img.rows - LOCAL_BLOCK, width = img.cols - LOCAL_BLOCK;
+    int i, j, k;
+    long pixels = LOCAL_BLOCK * LOCAL_BLOCK * LOCAL_NUM;
+
+    // get mean and standard deviation of greyimg
+//    Mat meanimg, stddevimg;
+//    meanStdDev(img, meanimg, stddevimg);
+//    mean = meanimg.at<double>(0, 0);
+//    stddev = stddevimg.at<double>(0, 0);
+
+    // mean
+    for (i = 0; i < LOCAL_NUM; i++)
+    {
+        px.first = rand() % height;
+        px.second = px.first + LOCAL_BLOCK;
+        py.first = rand() % width;
+        py.second = py.first + LOCAL_BLOCK;
+        px_v.push_back(px);
+        py_v.push_back(py);
+        mean += block_sum(img, px, py, '1', 0);
+    }
+    mean /= pixels;
+
+    // stddev
+    for (i = 0; i < LOCAL_NUM; i++)
+        for (j = px_v[i].first; j < px_v[i].second; j++)
+            for (k = py_v[i].first; k < py_v[i].second; k++)
+                stddev += pow(img.at<uchar>(j, k) - mean, 2);
+    stddev = sqrt(stddev / (pixels - 1));
+
+    // threshold formula
+    Vth = mean + ALPHA * stddev;
+
+    return Vth;
+}
+
+Mat gradient_filter(Mat img)
+{
+    Mat dx, dy; // 1st derivative in x,y
+    Sobel(img, dx, CV_32F, 1,0);
+    Sobel(img, dy, CV_32F, 0,1);
+
+    Mat angle, mag;
+    cartToPolar(dx, dy, mag, angle);
+    int height = img.rows, width = img.cols;
+    for (int i = 0; i < height; i++)
+        for (int j = 0; j < width; j++)
+            if (mag.at<uchar>(i, j) < GRADIENT_MAX)
+                img.at<uchar>(i, j) = 0;
+
+    return img;
+}
+
+Mat mean_filter(Mat img)
+{
+    int length = img.rows, width = img.cols;
+    pair<int, int> px, py;
+    double threshold = MEAN_BLOCK * MEAN_BLOCK * MEAN_MAX;
+
+    // mean
+    for (int i = 0; i < length; i += MEAN_BLOCK)
+        for (int j = 0; j < width; j += MEAN_BLOCK)
+        {
+            px.first = i;
+            px.second = (i + MEAN_BLOCK < length) ? (i + MEAN_BLOCK) : length;
+            py.first = j;
+            py.second = (j + MEAN_BLOCK < width) ? (j + MEAN_BLOCK) : width;
+            if (block_sum(img, px, py, '1', 0) > threshold)
+                for (int m = px.first; m < px.second; m++)
+                    for (int n = py.first; n < py.second; n++)
+                        img.at<uchar>(m, n) = 0;
+        }
+
+    return img;
+}
+
 Mat preprocess_img(Mat &srcimg)
 {
     // source image -> grey image -> segmented by a certain threshold
-
     Mat greyimg, segimg;
     double Vth;
 
     // get greyimg
     if (srcimg.channels() == 3)
-        cvtColor(srcimg, greyimg, COLOR_BGR2GRAY);
+        cvtColor(srcimg, greyimg, CV_BGR2GRAY);
     else
         greyimg = srcimg;
 
-    // background threshold
-    Vth = background_threshold(greyimg);
+    // filter greyimg with different standard
+//    greyimg = gradient_filter(greyimg);
+    greyimg = mean_filter(greyimg);
 
-    // threshold segmentation
-    threshold(greyimg, segimg, Vth, 0, THRESH_TOZERO);
+    return greyimg;
+    // ignore the following threshold segmentation, the result is better
 
-    return segimg;
+    // background threshold segmentation
+//    Vth = local_background_threshold(greyimg);
+//    cout << "T: " << Vth << endl;
+//    threshold(greyimg, segimg, Vth, 0, THRESH_TOZERO);
+//    return segimg;
 }
 
-void print_vector(vector<pair<double, double>> &v)
+void print_vector(vector<pair<pair<double, double>, double>> &v)
 {
     // print a vector of pairs, and show its size
-
     long length = v.size();
-    long i;
-    cout << "[" << "(" << v[0].first << ", " << v[0].second << ")";
-    for (i = 1; i < length; i++)
+    if (length)
     {
-        cout << "," << endl;
-        cout << "(" << v[i].first << ", " << v[i].second << ")";
+        long i;
+        cout << "[" << "(" << v[0].first.first << ", " << v[0].first.second << ", " << v[0].second << ")";
+        for (i = 1; i < length; i++)
+        {
+            cout << "," << endl;
+            cout << "(" << v[i].first.first << ", " << v[i].first.second << ", " << v[i].second << ")";
+        }
+        cout << "]" << endl;
     }
-    cout << "]" << endl;
-    cout << "Size: " << v.size() << endl;
+    cout << "Size: " << length << endl;
 }
 
 int block_sum_weight(int i, int j, pair<int, int> &px, pair<int, int> &py, const char &multiple)
@@ -157,16 +246,11 @@ int block_sum_weight(int i, int j, pair<int, int> &px, pair<int, int> &py, const
     }
 }
 
-double block_sum(Mat &img, pair<int, int> &px, pair<int, int> &py, const char &multiple)
+double block_sum(Mat &img, pair<int, int> &px, pair<int, int> &py, const char &multiple, const double &T)
 {
     // calculate the weighted sum of a block
-
     double sum = 0;
     int i, j;
-    double T;
-
-    // threshold
-    T = background_threshold(img);
 
     for (i = px.first; i < px.second; i++)
         for (j = py.first; j < py.second; j++)
@@ -176,16 +260,17 @@ double block_sum(Mat &img, pair<int, int> &px, pair<int, int> &py, const char &m
     return sum;
 }
 
-vector<pair<double, double>> get_centroids(Mat &img)
+vector<pair<pair<double, double>, double>> get_centroids(Mat &img)
 {
     // locate the stars in an image, return a vector of coordinates
 
-    vector<pair<double, double>> centroids;
+    vector<pair<pair<double, double>, double>> centroids;
     vector<pair<int, int>> x, y;
-    pair<double, double> p;
+    pair<pair<double, double>, double> p;
     long length_x, length_y;
     int i, j;
-    double deno;
+
+    double T = background_threshold(img);
 
     // x projection: vertical range
     x = projection_row(img);
@@ -196,23 +281,24 @@ vector<pair<double, double>> get_centroids(Mat &img)
     // x, y size
     length_x = x.size();
     length_y = y.size();
+    cout << "Blocks: " << length_x << " x " << length_y << endl;
 
     for (i = 0 ; i < length_x; i++)
     {
         for (j = 0; j < length_y; j++)
         {
             // get denominator
-            deno = block_sum(img, x[i], y[j], '1');
-            if (deno == 0)
+            p.second = block_sum(img, x[i], y[j], '1', T);
+            if (p.second == 0)
                 continue;
 
             // get p.first
-            p.first = block_sum(img, x[i], y[j], 'x');
-            p.first = p.first / deno + x[i].first;
+            p.first.first = block_sum(img, x[i], y[j], 'x', T);
+            p.first.first = p.first.first / p.second + x[i].first;
 
             // get p.second
-            p.second = block_sum(img, x[i], y[j], 'y');
-            p.second = p.second / deno + y[j].first;
+            p.first.second = block_sum(img, x[i], y[j], 'y', T);
+            p.first.second = p.first.second / p.second + y[j].first;
 
             centroids.push_back(p);
         }
@@ -221,7 +307,7 @@ vector<pair<double, double>> get_centroids(Mat &img)
     return centroids;
 }
 
-Mat plot_centroids(Mat plotimg, vector<pair<double, double>> &centroids, const uchar color[])
+Mat plot_centroids(Mat plotimg, vector<pair<pair<double, double>, double>> &centroids, const uchar color[])
 {
     // mark the centroids in a 3-channel image
 
@@ -234,8 +320,8 @@ Mat plot_centroids(Mat plotimg, vector<pair<double, double>> &centroids, const u
     width = plotimg.cols;
     for (i = 0; i < length; i++)
     {
-        x = int(round(centroids[i].first));
-        y = int(round(centroids[i].second));
+        x = int(round(centroids[i].first.first));
+        y = int(round(centroids[i].first.second));
 
         // central point
         x = (x >= height)? (height - 1): x;
@@ -261,7 +347,7 @@ Mat plot_centroids(Mat plotimg, vector<pair<double, double>> &centroids, const u
     return plotimg;
 }
 
-Mat plot_centroids_white_background(Mat &img, vector<pair<double, double>> &centroids, const uchar color[])
+Mat plot_centroids_white_background(Mat &img, vector<pair<pair<double, double>, double>> &centroids, const uchar color[])
 {
     // plot the controids on a white background with the same size as img
 
@@ -274,7 +360,6 @@ Mat plot_centroids_white_background(Mat &img, vector<pair<double, double>> &cent
 Mat star_filter(Mat &img, const int &max, const double &footstep)
 {
     // filter stars under number max
-
     Mat filimg;
     int count = 0;
     long stars;
@@ -283,9 +368,9 @@ Mat star_filter(Mat &img, const int &max, const double &footstep)
     do
     {
         threshold(img, filimg, T, 0, THRESH_TOZERO);
-        T += footstep;
         stars = get_centroids(filimg).size();
-        cout << "Filtering stars " << ++count << ": " << stars << endl;
+        cout << ++count << " T: " << T << " " << stars << endl;
+        T += footstep;
     } while (stars > max);
 
     return filimg;
