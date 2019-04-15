@@ -4,6 +4,13 @@
 
 #include "SkyMapMatching.h"
 #include <fstream>
+
+SkyMapMatching::SkyMapMatching(){
+    struct timeb time_seed;
+    ftime(&time_seed);
+    srand(time_seed.time*1000 + time_seed.millitm);
+}
+
 void SkyMapMatching::LoadSky(QString &f_name) {
     QCSVAdapter csv_sky(f_name);
     //int count = 0;
@@ -24,7 +31,7 @@ void Observation::setProperties(image_properties prop){
 }
 
 void SkyMapMatching::LoadImage(QString &f_name,image_properties property) {
-
+    this->SIMULATE = false;
     QCSVAdapter csv_sky(f_name);
     vector<StarPoint> stars = csv_sky.getRecords();
     //TO DO:change the pixel to angular_distance...
@@ -79,21 +86,22 @@ int SkyMapMatching::TriangleModel() {
     assert(this->image_.count_>=3);
     cout<<"Belowing are all-possible angle_distance in this image."<<endl;
     cout<<"focal_length:"<<this->image_.focal_length<<endl;
-    if(this->image_.focal_length>1e-9){
+    if(this->image_.focal_length>1e-9 && this->image_.count_ <=50){
         for(size_t i=0;i<this->image_.count_;i++){
             for(size_t j=i+1;j<this->image_.count_;j++){
                 double angle_distance = getSpotAD(this->image_.stars_[i].x,this->image_.stars_[i].y,
                                                   this->image_.stars_[j].x,this->image_.stars_[j].y,
                                                   this->image_.focal_length);
-                string buf = to_string(i)+"--"+to_string(j)+" : "+to_string(angle_distance);
-                cout<<buf<<endl;
+                //string buf = to_string(i)+"--"+to_string(j)+" : "+to_string(angle_distance);
+                qDebug()<<QString::number(i)+"--"+QString::number(j)+" : "
+                          +QString::number(angle_distance)<<endl;
             }
         }
     }else{
         cout<<"There is no focal_length info from this image!"<<endl;
     }
 
-    TriangleMatching TM(sky_.stars_.size(), 12.0, 0.02);
+    TriangleMatching TM(sky_.stars_.size(), 15.0, 0.02);
     TM.LoadData(sky_.stars_);
 
     vector<StarPoint> triangle;
@@ -103,15 +111,16 @@ int SkyMapMatching::TriangleModel() {
     int round=0;
     while(round++<100){
         TM.ChooseAdjacentStars(image_.stars_,triangle);
-        if(this->image_.focal_length > 1e-9){
+        if(this->image_.focal_length <1e-9) this->image_.focal_length = 35;
+        if(!this->SIMULATE){
             dis12 = getSpotAD(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y,this->image_.focal_length);
             dis13 = getSpotAD(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y,this->image_.focal_length);
             dis23 = getSpotAD(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y,this->image_.focal_length);
         }else {
-            double diagonal = sqrt(pow(this->image_.imageWidthL,2)+pow(this->image_.imageHeightL,2));
-            dis12 = 20*cal_dis(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y)/diagonal;
-            dis13 = 20*cal_dis(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y)/diagonal;
-            dis23 = 20*cal_dis(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y)/diagonal;
+            //double diagonal = sqrt(pow(this->image_.imageWidthL,2)+pow(this->image_.imageHeightL,2));
+            dis12 = cal_dis(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y);
+            dis13 = cal_dis(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y);
+            dis23 = cal_dis(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y);
         }
 
         cout<<"dis12    "<<"dis13   "<<"dis23"<<endl;
@@ -131,7 +140,8 @@ int SkyMapMatching::TriangleModel() {
 
 int SkyMapMatching::NoOpticModel(){
     NoOptic NOM(this->sky_.stars_,this->image_.stars_);
-    int result = NOM.ExeNoOptic(this->__target_star.index);
+    //int result = NOM.ExeNoOptic(this->__target_star.index);
+    int result = NOM.ExeNoOptic( static_cast<int>(this->__image_target) );
     cout<<"NoOptic Model end:"<<result<<endl;
     return (result);
 }
@@ -227,17 +237,14 @@ int SkyMapMatching::Check() {
     check_center.y -= this->__target_star.y;
     vector<StarPoint> check_set = this->sky_.Subset(check_center,this->image_.range_.first,this->image_.range_.second);
     for(size_t i=0;i<check_set.size();i++){
-        check_set[i].change_coordinate(this->__matching_star);
+        check_set[i].change_coordinate(check_center);
     }
-
     sort(check_set.begin(),check_set.end(),star_point_cmp);
 
     vector<StarPoint> candidate_set(this->image_.stars_);
-    StarPoint new_centre = this->__target_star;
+    //StarPoint new_centre = this->__target_star;
     for(size_t i=0;i<candidate_set.size();i++){
-        candidate_set[i].change_coordinate(new_centre);
-//        s.x -= new_centre.x;
-//        s.y -= new_centre.y;
+        candidate_set[i].change_coordinate(this->__target_star);
     }
     sort(candidate_set.begin(),candidate_set.end(),star_point_cmp);
 
@@ -264,7 +271,7 @@ int SkyMapMatching::Check() {
 }
 
 int SkyMapMatching::CheckAllCandidates(){
-    assert(this->candidates_.size()>0);
+    if(this->candidates_.size()<=0) return -1;
     int passnum = 0;
     int re_index = -1;
     for(Candidate one:this->candidates_){
@@ -329,7 +336,7 @@ void SkyMapMatching::GenerateSimImage(StarPoint centre, double length, double wi
     for(size_t i=0;i<stars.size();i++){
         cout<<i<<"th--> "<<stars[i].index<<": ("<<stars[i].x<<" , "<<stars[i].y<<")"<<endl;
         //the index will change into image_id.
-        this->sky_.stars_[i].index = static_cast<int>(i);
+        //this->sky_.stars_[i].index = static_cast<int>(i);
     }
     //this->image_.RangeStandardization();
     cout<<endl;
@@ -568,7 +575,7 @@ ModelEvaluation SkyMapMatching::RedundanceEvaluation(size_t model, int round, si
 
 void RandomDiviation(vector<StarPoint> &stars, double off_rate, size_t type=0){
     assert(off_rate>=0);
-    if(abs(off_rate)<1e-9) return;
+    if(abs(off_rate)<=1e-9) return;
     if(type==1){
         //diffusing from center...(the direction is definate,but offset is random(less or equal than off_rate).)
         for(size_t i=0;i<stars.size();i++){
@@ -633,7 +640,7 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, int round,
     int succeed_num=0;
     int failed_num = 0;
     int r=0;
-    round = 5;
+    //round = 5;
     while(r<round){
         cout<<"--------------------------------------------------------------"<<endl;
         cout<<"-----------------------start:"<<r+1<<"th---------------------------"<<endl;
@@ -642,14 +649,25 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, int round,
         if(this->image_.count_>=3){
             //add noise....
             cout<<"@Adding noise..."<<endl;
+            if(miss_num>=this->image_.count_){
+                qDebug()<<"There is no enough stars to be deleted..."<<endl;
+                continue;
+            }
             RandomMissing(this->image_.stars_,miss_num);
             this->image_.count_ -= miss_num;
+
             RandomAddPoints(this->image_.stars_,this->image_.imageWidthL,this->image_.imageHeightL,add_num);
             this->image_.count_ += add_num;
+            if(this->image_.count_<=3){
+                qDebug()<<"Impossible after adding noise."<<endl;
+                continue;
+            }
             RandomDiviation(this->image_.stars_,offset_rate);
 
             size_t target = central_star(this->image_.stars_);
             this->__target_star = this->image_.stars_[target];
+            this->__image_target = target;
+
             cout<<"@Matching..."<<endl;
             this->Match(model);
             cout<<endl<<"@Checking..."<<endl;
@@ -673,8 +691,10 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, int round,
 
 ModelEvaluation SkyMapMatching::ExeSimulation(size_t model,int round,size_t miss_num,
                                               size_t add_num,double off_rate){
+    this->SIMULATE = true;
     //simple test.
     ModelEvaluation eval=this->ComprehensiveEvaluation(model,round,miss_num,add_num,off_rate);
+    this->SIMULATE = false;
     return eval;
     /*
     switch (model) {
@@ -693,17 +713,4 @@ ModelEvaluation SkyMapMatching::ExeSimulation(size_t model,int round,size_t miss
     }*/
 
     //test with missing noise
-
 }
-
-//void SkyMapMatching::initPara(int w,int h,double wl,double hl,double f)
-//{
-//    this->image_.imageWidth=w;
-//    this->image_.imageHeight=h;
-//    this->image_.imageWidthL=wl;
-//    this->image_.imageHeightL=hl;
-//    if(fabs(f)<1e-9)
-//        this->image_.focal_length=f;
-//    else
-//        this->image_.focal_length=12;
-//}

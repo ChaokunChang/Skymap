@@ -39,12 +39,17 @@ void TriangleMatching::LoadData(vector<StarPoint> &stars) {
 
 }
 
-vector<StarPoint> TriangleMatching::RandomAdjacentStars(vector<StarPoint> &obv_stars, int except) {
+bool explicit_pair(StarPoint s1, StarPoint s2){
+    if(cal_dis(s1.x,s1.y,s2.x,s2.y)<1e-6) return false;
+    else return true;
+}
+
+vector<StarPoint> TriangleMatching::RandomAdjacentStars(vector<StarPoint> &obv_stars, StarPoint except) {
     int size = int(obv_stars.size());
-    int s1 = random_int(0,size);
-    while(s1 == except) s1 = random_int(0,size);
-    int s2 = random_int(0,size);
-    while(s2==except || s2 == s1) s2=random_int(0,size);
+    size_t s1 = static_cast<size_t>(random_int(0,size));
+    while(!explicit_pair(except,obv_stars[s1])) s1 = static_cast<size_t>(random_int(0,size));
+    size_t s2 = static_cast<size_t>(random_int(0,size));
+    while((s1==s2)|| !explicit_pair(except,obv_stars[s2])) s2=static_cast<size_t>(random_int(0,size));
 
 //    mt19937 rng;
 //    rng.seed(random_device()());
@@ -61,7 +66,7 @@ vector<StarPoint> TriangleMatching::RandomAdjacentStars(vector<StarPoint> &obv_s
 }
 
 void TriangleMatching::ChooseAdjacentStars(vector<StarPoint> &obv_stars, vector<StarPoint> &triangle) {
-    vector<StarPoint> adjacent = RandomAdjacentStars(obv_stars, triangle[0].index);
+    vector<StarPoint> adjacent = RandomAdjacentStars(obv_stars, triangle[0]);
 
     triangle.insert(triangle.end(),adjacent.begin(),adjacent.end());
 
@@ -75,7 +80,7 @@ void TriangleMatching::ChooseAdjacentStars(vector<StarPoint> &obv_stars, vector<
 }
 
 int TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, double edge1_edge2, double m1, double m2, double m3) {
-    vector<int> Flag(__GuideStarNumber,0);
+    vector<int> Flag(__GuideStarNumber+5,0);
 
     size_t group1 = size_t(center_edge1 / 0.02);
     size_t group2 = size_t(center_edge2 / 0.02);

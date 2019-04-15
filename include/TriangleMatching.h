@@ -58,7 +58,7 @@ public:
     double GetThreshold(){ return this->__Threshold;}
 
     void ChooseAdjacentStars(vector<StarPoint> &obv_stars, vector<StarPoint> &triangle);
-    vector<StarPoint> RandomAdjacentStars(vector<StarPoint> &obv_stars, int except);
+    vector<StarPoint> RandomAdjacentStars(vector<StarPoint> &obv_stars, StarPoint except);
     int MatchAlgorithm(double center_edge1, double center_edge2, double edge1_edge2, double m1, double m2,double m3);
 
 };

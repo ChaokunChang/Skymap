@@ -15,6 +15,7 @@ NoOptic::NoOptic(vector<StarPoint> &sky, vector<StarPoint> &obv) {
 }
 
 int NoOptic::ExeNoOptic(int target=-1){
+    if(target == -1) return target;
     //第一步，处理导航星表SkyStars;
     for(size_t i=0; i<SkyStars.size(); i++){
         int main_star = int(i);

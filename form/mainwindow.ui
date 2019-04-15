@@ -86,6 +86,32 @@
                  <height>30</height>
                 </size>
                </property>
+               <property name="styleSheet">
+                <string notr="true">
+QPushButton {
+	border:2px groove gray;
+	border-radius:10px;
+	padding:2px 4px;
+	background-color:rgb(0,137,167);
+	color:white;
+}
+
+QPushButton:hover {
+    background-color: #81C7D4;
+    border-color: #444444;
+	color:black;
+}
+
+QPushButton:pressed {
+    background-color: #111111;
+    border-color: #333333;
+    color: yellow;
+}
+
+QPushButton:disabled {
+    color: #333333;
+}</string>
+               </property>
                <property name="text">
                 <string>打开图片</string>
                </property>
@@ -110,6 +136,27 @@
                  <width>80</width>
                  <height>0</height>
                 </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QComboBox {
+	border:2px groove gray;
+	border-radius:10px;
+	padding:2px 4px;
+    background-color: #81C7D4;
+    padding:1px 2em 1px 3px;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    border-left: 2px groove gray;
+}
+
+QComboBox::down-arrow {
+    width: 6px;
+    height: 6px;
+    background: #2E5C6E;
+}</string>
                </property>
                <item>
                 <property name="text">
@@ -149,6 +196,24 @@
                </property>
               </widget>
               <widget class="QCheckBox" name="simCheckBox">
+               <property name="styleSheet">
+                <string notr="true">QCheckBox::indicator {
+    background-color: #81C7D4;
+    2px groove gray;
+}
+
+QCheckBox::indicator::checked {
+    background-color: qradialgradient(cx:0.5, cy:0.5, fx:0.25, fy:0.15, radius:0.3, stop:0 #BBBBBB, stop:1 #111111);
+}
+
+QCheckBox::indicator:disabled {
+    background-color: #444444;
+}
+
+QCheckBox::indicator::checked:disabled{
+    background-color: qradialgradient(cx:0.5, cy:0.5, fx:0.25, fy:0.15, radius:0.3, stop:0 #BBBBBB, stop:1 #444444);
+}</string>
+               </property>
                <property name="text">
                 <string>仿真</string>
                </property>
@@ -327,6 +392,85 @@
            <property name="acceptDrops">
             <bool>false</bool>
            </property>
+           <property name="styleSheet">
+            <string notr="true">QScrollBar:vertical {
+    background: #111111;
+    width: 16px;
+    margin: 16px 0 16px 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #555555;
+    min-height: 16px;
+}
+
+QScrollBar::add-line:vertical {
+    background: #444444;
+    height: 16px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+    background: #444444;
+    height: 16px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QScrollBar:up-arrow:vertical, QScrollBar:down-arrow:vertical {
+    border: 2px solid #333333;
+    width: 6px;
+    height: 6px;
+    background: #5f5f5f;
+}
+
+QScrollBar:horizontal {
+    background: #111111;
+    height: 16px;
+    margin: 0 16px 0 16px;
+}
+
+QScrollBar::handle:horizontal {
+    background: #555555;
+    min-width: 16px;
+}
+
+QScrollBar::add-line:horizontal {
+    background: #444444;
+    width: 16px;
+    subcontrol-position: right;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:horizontal {
+    background: #444444;
+    width: 16px;
+    subcontrol-position: left;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: none;
+}
+
+QScrollBar:left-arrow:horizontal, QScrollBar:right-arrow:horizontal {
+    border: 2px solid #333333;
+    width: 6px;
+    height: 6px;
+    background: #5f5f5f;
+}
+QAbstractScrollArea, QLineEdit, QTextEdit, QAbstractSpinBox, QComboBox {
+	border:2px groove gray;
+	border-radius:10px;
+	padding:2px 4px;
+
+}</string>
+           </property>
            <property name="widgetResizable">
             <bool>true</bool>
            </property>
@@ -337,9 +481,9 @@
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
-              <width>393</width>
-              <height>291</height>
+              <y>2</y>
+              <width>383</width>
+              <height>281</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout">
@@ -389,6 +533,14 @@
              <width>200</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QLineEdit, QListView, QTreeView, QTableView, QAbstractSpinBox {
+	border:2px groove gray;
+	border-radius:10px;
+	padding:2px 4px;
+    background-color: #81C7D4;
+}</string>
            </property>
            <property name="horizontalScrollBarPolicy">
             <enum>Qt::ScrollBarAsNeeded</enum>
@@ -458,7 +610,7 @@
           <item row="0" column="4">
            <widget class="QLabel" name="starPosXLabel">
             <property name="text">
-             <string>坐标：赤经</string>
+             <string>赤经</string>
             </property>
            </widget>
           </item>

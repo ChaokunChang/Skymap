@@ -115,7 +115,8 @@ class SkyMapMatching {
 private:
     StarPoint __target_star; //the chosen star in image. this variable stores its location in image.
     StarPoint __matching_star; //the result given by match algorithm, this variable stores its location in SkyMap.
-
+    size_t __image_target;
+    bool SIMULATE;
 
 public:
     const double LongitudeRange = 360;
@@ -125,6 +126,9 @@ public:
     vector<Candidate> candidates_;
 
 public:
+    SkyMapMatching();
+    void SetSIM(){SIMULATE = true;}
+    void ResetSIM(){SIMULATE = false;}
     void LoadSky(QString &f_name);
     void LoadImage(QString &f_name,image_properties);
 

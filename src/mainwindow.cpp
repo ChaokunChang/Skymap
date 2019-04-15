@@ -168,7 +168,7 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
     QImage tImg = this->skyImg;
     QPainter painter(&tImg);
     painter.setPen(QPen(QColor(255, 255, 255), 2));
-    painter.drawEllipse(QPointF(ceil(x),ceil(y)), 10, 10);
+    painter.drawEllipse(QPointF(x,y), 10, 10);
     painter.end();
     ui->picDisplayArea->setPixmap(QPixmap::fromImage(tImg));
     int res;
@@ -191,14 +191,20 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
     else {
         QMessageBox matchingFailMsgBox;
         matchingFailMsgBox.setText(tr("匹配失败！"));
+        ui->starNoDisplay->clear();
+        ui->starNameDisplay->clear();
+        ui->starPosXDisplay->clear();
+        ui->starPosYDisplay->clear();
+        ui->starConsDisplay->clear();
+        ui->starDescriptionDisplay->clear();
         matchingFailMsgBox.exec();
    }
     ui->starList->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->starList->blockSignals(false);
 
-    ModelEvaluation eval = this->SMM.ExeSimulation(0,10);
-    cout<<"The Correctness: "<<eval.correctness<<endl;
-    ui->picFocusInput->setText(QString::number(eval.correctness,10,3));
+//    ModelEvaluation eval = this->SMM.ExeSimulation(0,10);
+//    cout<<"The Correctness: "<<eval.correctness<<endl;
+//    ui->picFocusInput->setText(QString::number(eval.correctness,10,3));
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)
@@ -247,6 +253,7 @@ void MainWindow::receiveData(evalArgs arg)
         QApplication::processEvents();
     }
     res=futureEval.result();
+    ui->statusBar->clearMessage();
     ui->starDescriptionDisplay->setText(QString::number(res));
 }
 
@@ -262,6 +269,12 @@ void MainWindow::on_simCheckBox_stateChanged(int arg1)
         ui->starPosYLabel->setText(tr("赤纬"));
         ui->starConsLabel->setText(tr("星座"));
         ui->starDescriptionLabel->setText(tr("描述"));
+        ui->starNoDisplay->clear();
+        ui->starNameDisplay->clear();
+        ui->starPosXDisplay->clear();
+        ui->starPosYDisplay->clear();
+        ui->starConsDisplay->clear();
+        ui->starDescriptionDisplay->clear();
     }
     else
     {
@@ -273,5 +286,11 @@ void MainWindow::on_simCheckBox_stateChanged(int arg1)
         ui->starPosYLabel->setText(tr("偏移量"));
         ui->starConsLabel->setText(tr("轮数"));
         ui->starDescriptionLabel->setText(tr("准确率"));
+        ui->starNoDisplay->clear();
+        ui->starNameDisplay->clear();
+        ui->starPosXDisplay->clear();
+        ui->starPosYDisplay->clear();
+        ui->starConsDisplay->clear();
+        ui->starDescriptionDisplay->clear();
     }
 }

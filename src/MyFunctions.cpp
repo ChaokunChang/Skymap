@@ -21,17 +21,18 @@ double getSpotAD(double x1, double y1, double x2, double y2, double f)
     return acos((x1*x2 + y1 * y2 + f * f) / sqrt((x1*x1 + y1 * y1 + f * f)*(x2*x2 + y2 * y2 + f * f)));
 }
 
+
 int random_int(int l,int r){
-    struct timeb time_seed;
-    ftime(&time_seed);
-    srand(time_seed.time*1000 + time_seed.millitm);
+//    struct timeb time_seed;
+//    ftime(&time_seed);
+//    srand(time_seed.time*1000 + time_seed.millitm);
     return l + rand()%(r-l);
 }
 
 double random_double(double l, double r){
-    struct timeb time_seed;
-    ftime(&time_seed);
-    srand(time_seed.time*1000 + time_seed.millitm);
+//    static struct timeb time_seed;
+//    ftime(&time_seed);
+//    srand(time_seed.time*1000 + time_seed.millitm);
     return l + rand()/static_cast<double>(RAND_MAX/(r-l));
 }
 
