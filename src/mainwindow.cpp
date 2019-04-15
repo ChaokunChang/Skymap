@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->setAttribute(Qt::WA_DeleteOnClose);
 }
 
 MainWindow::~MainWindow()
@@ -113,10 +114,10 @@ void MainWindow::loadPicture(QString fileName)
 }
 
 
-int MainWindow::findMatchingStar(int targetIndex)
+int MainWindow::findMatchingStar(int targetIndex,int algorithm)
 {
     this->SMM.SelectTargetStar(targetIndex);
-    this->SMM.Match();
+    this->SMM.Match(algorithm);
     return this->SMM.CheckAllCandidates();
 }
 
@@ -136,10 +137,26 @@ void initStarMapMatching(SkyMapMatching* pSMM, image_properties prop)
     pSMM->LoadImage(picture, prop);
 }
 
+double evalStarMapMatching(SkyMapMatching* pSMM,int algortithm,evalArgs arg)
+{
+    QString dataset = ":/Data/Data/skymaps.csv";
+    pSMM->LoadSky(dataset);
+    return pSMM->ExeSimulation(algortithm,arg.round,arg.missing,arg.redundance,arg.deviation).correctness;
+}
+
 void MainWindow::on_pushButton_clicked()
 {
-    QString fileName = QFileDialog::getOpenFileName(this,tr("打开图片"),"",tr("所有文件(*.*);;图片文件(*.jpg *.png *.bmp *.jpeg)"));
-    loadPicture(fileName);
+    if (ui->simCheckBox->checkState()==Qt::CheckState::Unchecked)
+    {
+        QString fileName = QFileDialog::getOpenFileName(this,tr("打开图片"),"",tr("所有文件(*.*);;图片文件(*.jpg *.png *.bmp *.jpeg)"));
+        loadPicture(fileName);
+    }
+    else
+    {
+        simDialog* sD = new simDialog();
+        connect(sD,SIGNAL(sendData(evalArgs)),this,SLOT(receiveData(evalArgs)));
+        sD->exec();
+    }
 }
 
 void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
@@ -159,7 +176,7 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
     timer.start();
     ui->starList->blockSignals(true);
     ui->statusBar->showMessage(tr("请稍候……正在寻找匹配"));
-    QFuture<int> futureFMS = QtConcurrent::run(this,&MainWindow::findMatchingStar,item->text().section('-',0,0).toInt()-1);
+    QFuture<int> futureFMS = QtConcurrent::run(this,&MainWindow::findMatchingStar,item->text().section('-',0,0).toInt()-1,ui->algorithmComboBox->currentIndex());
     while(!futureFMS.isFinished())
     {
         ui->statusBar->showMessage(tr("请稍候……正在寻找匹配")+LOADANI(int(timer.elapsed())));
@@ -209,4 +226,52 @@ void MainWindow::dropEvent(QDropEvent* event)
 void MainWindow::on_picFocusInput_editingFinished()
 {
     this->focus=this->ui->picFocusInput->text().toDouble();
+}
+
+void MainWindow::receiveData(evalArgs arg)
+{
+    QString dataset = ":/Data/Data/skymaps.csv";
+    this->SMM.LoadSky(dataset);
+    ui->starNoDisplay->setText(ui->algorithmComboBox->currentText());
+    ui->starNameDisplay->setText(QString::number(arg.missing));
+    ui->starPosXDisplay->setText(QString::number(arg.redundance));
+    ui->starPosYDisplay->setText(QString::number(arg.deviation));
+    ui->starConsDisplay->setText(QString::number(arg.round));
+    double res;
+    QElapsedTimer timer;
+    timer.start();
+    QFuture<double> futureEval = QtConcurrent::run(evalStarMapMatching,&this->SMM,ui->algorithmComboBox->currentIndex()+1,arg);
+    while(!futureEval.isFinished())
+    {
+        ui->statusBar->showMessage(tr("请稍候……正在进行仿真")+LOADANI(int(timer.elapsed())));
+        QApplication::processEvents();
+    }
+    res=futureEval.result();
+    ui->starDescriptionDisplay->setText(QString::number(res));
+}
+
+void MainWindow::on_simCheckBox_stateChanged(int arg1)
+{
+    if(arg1==0)
+    {
+        ui->pushButton->setText(tr("打开图片"));
+        ui->algorithmComboBox->insertItem(0,tr("综合"));
+        ui->starNoLabel->setText(tr("星编号"));
+        ui->starNameLabel->setText(tr("星名"));
+        ui->starPosXLabel->setText(tr("赤经"));
+        ui->starPosYLabel->setText(tr("赤纬"));
+        ui->starConsLabel->setText(tr("星座"));
+        ui->starDescriptionLabel->setText(tr("描述"));
+    }
+    else
+    {
+        ui->pushButton->setText(tr("开始仿真"));
+        ui->algorithmComboBox->removeItem(0);
+        ui->starNoLabel->setText(tr("算法"));
+        ui->starNameLabel->setText(tr("缺失数"));
+        ui->starPosXLabel->setText(tr("冗余数"));
+        ui->starPosYLabel->setText(tr("偏移量"));
+        ui->starConsLabel->setText(tr("轮数"));
+        ui->starDescriptionLabel->setText(tr("准确率"));
+    }
 }
