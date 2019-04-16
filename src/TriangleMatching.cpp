@@ -59,8 +59,8 @@ vector<StarPoint> TriangleMatching::RandomAdjacentStars(vector<StarPoint> &obv_s
 //    int s2 = u(rng);
 //    while(s2 == except || s2 == s1) s2 = u(rng);
 
-    cout<<"The chosen adjacent stars in Random method are:"<<endl;
-    cout<<"star'id in image: "<<s1<<" , "<<s2<<endl;
+    //cout<<"The chosen adjacent stars in Random method are:"<<endl;
+    //cout<<"star'id in image: "<<s1<<" , "<<s2<<endl;
 
     return {obv_stars[s1],obv_stars[s2]};
 }
@@ -73,13 +73,14 @@ void TriangleMatching::ChooseAdjacentStars(vector<StarPoint> &obv_stars, vector<
     __TargetTriangle.middle_star = triangle[0].index;
     __TargetTriangle.star1 = triangle[1].index;
     __TargetTriangle.star2 = triangle[2].index;
-    cout<<"The Target Triangle in image is:"<<endl;
-    cout<<"Centre,Adjacent1,Adjacent2: "<< __TargetTriangle.middle_star <<" , "<< __TargetTriangle.star1<<
-                                                " , "<< __TargetTriangle.star2 <<endl;
+    qDebug()<<"The Target Triangle in image is:";
+    qDebug()<<" Centre,Adjacent1,Adjacent2: "<< __TargetTriangle.middle_star <<" , "<< __TargetTriangle.star1<<
+                                                " , "<< __TargetTriangle.star2 ;
 
 }
 
 int TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, double edge1_edge2, double m1, double m2, double m3) {
+    if(!this->__Candidate.empty()) this->__Candidate.clear();
     vector<int> Flag(__GuideStarNumber+5,0);
 
     size_t group1 = size_t(center_edge1 / 0.02);
@@ -153,41 +154,41 @@ int TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, d
         for (int j = 0; j < int(MatchCnt) ; j++) {
             if ((matchgroup_[j].star1 == c1 && matchgroup_[j].star2 == c2) || (matchgroup_[j].star1 == c2 && matchgroup_[j].star2 == c1)) {
                 //匹配成功，获得一组匹配三角形。标记j,或者直接输出j中的三个星的编号
-                __Candidate.push(j);
+                __Candidate.push_back(j);
                 Flag[matchgroup_[j].middle_star] = 3;
             }
         }
     }
+//    for(size_t i=0;i<StatStar.size();i++) vector<int>().swap(StatStar[i]);
+    StatStar.clear();
 
+    return this->GetCandidate();
+}
+
+int TriangleMatching::GetCandidate(){
     int result=-1;
     if (__Candidate.empty()) {
-        cout << "Matching Failed"<<endl;
+        qDebug() << "Triangle No candidate.";
         //扩大组的范围，或换一组三角形匹配。
         return -1;
     }
     else {
         //从匹配成功的三角形中筛选出最终结果，需要结合星等数据选择，或者加入GPS等参考数据
         while (!__Candidate.empty()) {
-            int k = __Candidate.top();
+            int k = __Candidate.back();
             result = k;
-            __Candidate.pop();
+            __Candidate.pop_back();
             break;
         }
+        assert(result != -1);
+        qDebug() << "#Match(Triangle Model) succeed!";
+        //cout << "The answer'id in match group(all possible answer) is: "<<result << endl;
+        qDebug() <<"The matching triangle is: "<< matchgroup_[result].middle_star << " " << matchgroup_[result].star1 << " " << matchgroup_[result].star2;
+        qDebug() <<"And there are still "<<__Candidate.size()<<" candidates"<<endl;
+        string str="";
+        for(size_t i=0; i<__Candidate.size();i++) str+= to_string(__Candidate.at(i)) +" ";
+        qDebug()<<QString::fromStdString(str);
 
-        if (result == -1) {
-            cout << "Result == -1, Error!";
-            return -1;
-        } else{
-            cout << "Match succeed!"<<endl;
-            cout << "The answer'id in match group(all possible answer) is: "<<result << endl;
-            cout <<"The answer is(star'id in SkyMap): "<< matchgroup_[result].middle_star << " " << matchgroup_[result].star1 << " " << matchgroup_[result].star2 << endl;
-            cout <<"All candidates are:"<<endl;
-            while(!__Candidate.empty()){
-                int candidate = __Candidate.top();
-                cout<< matchgroup_[candidate].middle_star << " " << matchgroup_[candidate].star1 << " " << matchgroup_[candidate].star2 << endl;
-                __Candidate.pop();
-            }
-            return matchgroup_[result].middle_star;
-        }
+        return matchgroup_[static_cast<size_t>(result)].middle_star;
     }
 }

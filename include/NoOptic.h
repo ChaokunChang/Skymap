@@ -68,6 +68,7 @@ public:
 
     int FinalResult;
     NoOptic(vector<StarPoint> &sky, vector<StarPoint> &obv);
+    void LoadImage(vector<StarPoint> &obv);
 
     int ExeNoOptic(int target);//总执行流程
 

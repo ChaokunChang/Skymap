@@ -44,7 +44,7 @@ private:
     double __Threshold, __GapWidth;
     //vector<StarPoint> __TargetTriangle;
     MatchPair __TargetTriangle;
-    stack<int> __Candidate;
+    vector<int> __Candidate;
 public:
     TriangleMatching(size_t starnum, double thres, double gap):__GuideStarNumber(starnum),
                                                                         __Threshold(thres),__GapWidth(gap){ }
@@ -60,7 +60,7 @@ public:
     void ChooseAdjacentStars(vector<StarPoint> &obv_stars, vector<StarPoint> &triangle);
     vector<StarPoint> RandomAdjacentStars(vector<StarPoint> &obv_stars, StarPoint except);
     int MatchAlgorithm(double center_edge1, double center_edge2, double edge1_edge2, double m1, double m2,double m3);
-
+    int GetCandidate();
 };
 
 

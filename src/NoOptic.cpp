@@ -5,10 +5,18 @@
 #include "NoOptic.h"
 
 NoOptic::NoOptic(vector<StarPoint> &sky, vector<StarPoint> &obv) {
-    for(int i=0;i<sky.size();i++){
+    for(size_t i=0;i<sky.size();i++){
         this->SkyStars.push_back({sky[i].x,sky[i].y});
     }
-    for(int i=0;i<obv.size();i++){
+    for(size_t i=0;i<obv.size();i++){
+        this->ImageStars.push_back({obv[i].x,obv[i].y});
+    }
+    FinalResult = -1;
+}
+
+void NoOptic::LoadImage(vector<StarPoint> &obv){
+    if(!this->ImageStars.empty()) this->ImageStars.clear();
+    for(size_t i=0;i<obv.size();i++){
         this->ImageStars.push_back({obv[i].x,obv[i].y});
     }
     FinalResult = -1;

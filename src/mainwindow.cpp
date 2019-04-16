@@ -140,7 +140,7 @@ void initStarMapMatching(SkyMapMatching* pSMM, image_properties prop)
 double evalStarMapMatching(SkyMapMatching* pSMM,int algortithm,evalArgs arg)
 {
     QString dataset = ":/Data/Data/skymaps.csv";
-    pSMM->LoadSky(dataset);
+    if(pSMM->sky_.stars_.empty()) pSMM->LoadSky(dataset);
     return pSMM->ExeSimulation(algortithm,arg.round,arg.missing,arg.redundance,arg.deviation).correctness;
 }
 
@@ -237,7 +237,7 @@ void MainWindow::on_picFocusInput_editingFinished()
 void MainWindow::receiveData(evalArgs arg)
 {
     QString dataset = ":/Data/Data/skymaps.csv";
-    this->SMM.LoadSky(dataset);
+    if(this->SMM.sky_.stars_.empty()) this->SMM.LoadSky(dataset);
     ui->starNoDisplay->setText(ui->algorithmComboBox->currentText());
     ui->starNameDisplay->setText(QString::number(arg.missing));
     ui->starPosXDisplay->setText(QString::number(arg.redundance));

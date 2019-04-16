@@ -117,6 +117,8 @@ private:
     StarPoint __matching_star; //the result given by match algorithm, this variable stores its location in SkyMap.
     size_t __image_target;
     bool SIMULATE;
+    TriangleMatching *TM;
+    NoOptic *NOM;
 
 public:
     const double LongitudeRange = 360;

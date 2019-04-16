@@ -23,16 +23,14 @@ double getSpotAD(double x1, double y1, double x2, double y2, double f)
 
 
 int random_int(int l,int r){
-//    struct timeb time_seed;
-//    ftime(&time_seed);
-//    srand(time_seed.time*1000 + time_seed.millitm);
     return l + rand()%(r-l);
 }
 
+size_t random_size_t(size_t l, size_t r){
+    return static_cast<size_t>(random_int(static_cast<int>(l),static_cast<int>(r)));
+}
+
 double random_double(double l, double r){
-//    static struct timeb time_seed;
-//    ftime(&time_seed);
-//    srand(time_seed.time*1000 + time_seed.millitm);
     return l + rand()/static_cast<double>(RAND_MAX/(r-l));
 }
 
