@@ -9,12 +9,13 @@
 #include <algorithm>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unordered_map>
 #include <QDebug>
 
-double cal_dis(double x1,double y1,double x2,double y2);
-bool between(double target, double left, double right);
-double getSpotAD(double x1, double y1, double x2, double y2, double f);
-double random_double(double l, double r);
-int random_int(int l,int r);
-size_t random_size_t(size_t l, size_t r);
+double cal_dis(const double& x1,const double& y1,const double& x2,const double& y2);
+bool between(const double& target, const double& left, const double& right);
+double getSpotAD(const double& x1, const double& y1, const double& x2, const double& y2, const double& f);
+double random_double(const double& l, const double& r);
+int random_int(const int& l,const int& r);
+size_t random_size_t(const size_t& l,const size_t& r);
 #endif //SKYMAP_MYFUNCTIONS_H

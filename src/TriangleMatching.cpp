@@ -10,7 +10,7 @@ bool star_pair_compare(const StarPair &s1, const StarPair &s2){
 }
 
 void TriangleMatching::LoadData(vector<StarPoint> &stars) {
-
+    stardata_.clear();
     for(size_t i=0;i<stars.size();i++){
         StarPoint s1 = stars[i];
         for(size_t j=i+1;j<stars.size();j++){
@@ -23,7 +23,7 @@ void TriangleMatching::LoadData(vector<StarPoint> &stars) {
         }
     }
     sort(stardata_.begin(),stardata_.end(),star_pair_compare);
-    __GroupNumber = stardata_[stardata_.size()-1].angular_distance / __GapWidth;
+    __GroupNumber = 1 + stardata_[stardata_.size()-1].angular_distance / __GapWidth;
     grouphead_.resize(__GroupNumber,0);
     groupsize_.resize(__GroupNumber,0);
     grouptail_.resize(__GroupNumber,0);
@@ -36,15 +36,14 @@ void TriangleMatching::LoadData(vector<StarPoint> &stars) {
         grouphead_[i] = grouphead_[i - 1] + groupsize_[i - 1];
         grouptail_[i] = grouphead_[i]+groupsize_[i] ;
     }
-
+    StatStar.resize(stars.size()+1);
 }
 
-bool explicit_pair(StarPoint s1, StarPoint s2){
-    if(cal_dis(s1.x,s1.y,s2.x,s2.y)<1e-6) return false;
-    else return true;
+bool explicit_pair(StarPoint &s1, StarPoint &s2){
+    return cal_dis(s1.x,s1.y,s2.x,s2.y)>=1e-6;
 }
 
-vector<StarPoint> TriangleMatching::RandomAdjacentStars(vector<StarPoint> &obv_stars, StarPoint except) {
+vector<StarPoint> TriangleMatching::RandomAdjacentStars(vector<StarPoint> &obv_stars, StarPoint &except) {
     int size = int(obv_stars.size());
     size_t s1 = static_cast<size_t>(random_int(0,size));
     while(!explicit_pair(except,obv_stars[s1])) s1 = static_cast<size_t>(random_int(0,size));
@@ -87,8 +86,14 @@ int TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, d
     size_t group2 = size_t(center_edge2 / 0.02);
     size_t group3 = size_t(edge1_edge2 / 0.02);
 
-    map< int, vector<int> > StatStar;
-    map< int, vector<int> >::iterator SS_iter;
+//    map< int, vector<int> > StatStar;
+//    map< int, vector<int> >::iterator SS_iter;
+//    unordered_map<int, vector<int> > StatStar;
+//    unordered_map< int, vector<int> >::iterator SS_iter;
+
+    for (size_t i=0;i!=StatStar.size();i++) {
+        StatStar[i].clear();
+    }
 
     //扫描和标记组1中的星，把组中出现的星的flag参量标记为1，并记下与之相邻的另外一颗星。
 
@@ -99,26 +104,27 @@ int TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, d
         s2 = stardata_[i].star2;
         Flag[size_t(s1)] = 1;
         Flag[size_t(s2)] = 1;
-        SS_iter = StatStar.find(s1);
-        if (SS_iter == StatStar.end()) {
-            vector<int> v1;
-            v1.push_back(s2);
-            StatStar.insert(pair<int, vector<int> >(s1, v1));
-        }
-        else {
-            SS_iter->second.push_back(s2);
-        }
+//        SS_iter = StatStar.find(s1);
+//        if (SS_iter == StatStar.end()) {
+//            vector<int> v1;
+//            v1.push_back(s2);
+//            StatStar.insert(pair<int, vector<int> >(s1, v1));
+//        }
+//        else {
+//            SS_iter->second.push_back(s2);
+//        }
 
-        SS_iter=StatStar.find(s2);
-        if (SS_iter == StatStar.end()) {
-            vector<int> v2;
-            v2.push_back(s1);
-            StatStar.insert(pair<int, vector<int> >(s2, v2));
-        }
-        else {
-            SS_iter->second.push_back(s1);
-        }
-
+//        SS_iter=StatStar.find(s2);
+//        if (SS_iter == StatStar.end()) {
+//            vector<int> v2;
+//            v2.push_back(s1);
+//            StatStar.insert(pair<int, vector<int> >(s2, v2));
+//        }
+//        else {
+//            SS_iter->second.push_back(s1);
+//        }
+        StatStar[s1].push_back(s2);
+        StatStar[s2].push_back(s1);
     }
     //扫描标记组2中的星，如果该星已被标记为1，则标记为状态2；并记录与之毗邻的另一颗星；
     //（组1和组2为相同组的情况如何处理？是否需要特殊情况考虑呢？）
@@ -129,7 +135,7 @@ int TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, d
         b2 = stardata_[i].star2;
         if (Flag[size_t(b1)] != 0) {
             Flag[size_t(b1)] = 2;
-            for (size_t j = 0; j < StatStar[b1].size(); j++) {
+            for (size_t j = 0; j < StatStar[b1].size()&&MatchCnt < matchgroup_.size() ; j++) {
                 matchgroup_[MatchCnt].star2 = b2; // modified
                 matchgroup_[MatchCnt].star1 = StatStar[b1][j];
                 matchgroup_[MatchCnt].middle_star = b1;
@@ -138,7 +144,7 @@ int TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, d
         }
         if (Flag[size_t(b2)] != 0) {
             Flag[size_t(b2)] = 2;
-            for (size_t j = 0; j < StatStar[b2].size(); j++) {
+            for (size_t j = 0; j < StatStar[b2].size()&&MatchCnt < matchgroup_.size(); j++) {
                 matchgroup_[MatchCnt].star2 = b1; //modified
                 matchgroup_[MatchCnt].star1 = StatStar[b2][j];
                 matchgroup_[MatchCnt].middle_star = b2;
@@ -159,9 +165,12 @@ int TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, d
             }
         }
     }
-//    for(size_t i=0;i<StatStar.size();i++) vector<int>().swap(StatStar[i]);
-    StatStar.clear();
-
+//    for(SS_iter=StatStar.begin();SS_iter!=StatStar.end();SS_iter++){
+//        SS_iter->second.clear();
+//        vector<int>().swap(SS_iter->second);
+//    }
+    //StatStar.clear();
+//    map<int,vector<int>>().swap(StatStar);
     return this->GetCandidate();
 }
 

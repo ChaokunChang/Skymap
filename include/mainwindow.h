@@ -50,7 +50,7 @@ private:
     void loadPicture(QString);
     int findMatchingStar(int,int);
     vector<StarPoint> starRecs;
-    SkyMapMatching SMM;
+    SkyMapMatching* pSMM;
     QImage skyImg;
     double posX,posY,focus;
 };

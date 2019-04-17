@@ -31,7 +31,8 @@ struct StarPair
 
 };
 
-struct MatchPair {
+class MatchPair {
+public:
     int star1;
     int star2;
     int middle_star;
@@ -45,7 +46,11 @@ private:
     //vector<StarPoint> __TargetTriangle;
     MatchPair __TargetTriangle;
     vector<int> __Candidate;
+//    map< int, vector<int> > StatStar;
+//    map< int, vector<int> >::iterator SS_iter;
+    vector<vector<int> > StatStar;
 public:
+    TriangleMatching(){}
     TriangleMatching(size_t starnum, double thres, double gap):__GuideStarNumber(starnum),
                                                                         __Threshold(thres),__GapWidth(gap){ }
     vector<StarPair> stardata_;
@@ -58,7 +63,7 @@ public:
     double GetThreshold(){ return this->__Threshold;}
 
     void ChooseAdjacentStars(vector<StarPoint> &obv_stars, vector<StarPoint> &triangle);
-    vector<StarPoint> RandomAdjacentStars(vector<StarPoint> &obv_stars, StarPoint except);
+    vector<StarPoint> RandomAdjacentStars(vector<StarPoint> &obv_stars, StarPoint &except);
     int MatchAlgorithm(double center_edge1, double center_edge2, double edge1_edge2, double m1, double m2,double m3);
     int GetCandidate();
 };

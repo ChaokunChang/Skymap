@@ -16,10 +16,10 @@ struct StarPoint{
     StarPoint(int i,double x, double y,double mag):index(i),x(x),y(y),magnitude(mag){}
     double Distance(const StarPoint &s){ return cal_dis(x,y,s.x,s.y);}
     double Module(){ return  sqrt(pow(x,2)+pow(y,2));}
-    bool XInRange(StarPoint center, double length);
-    bool YInRange(StarPoint center, double width);
-    bool InRange(StarPoint center, double length, double width);
-    void change_coordinate(StarPoint new_center);
+    bool XInRange(const StarPoint &center, double length);
+    bool YInRange(const StarPoint &center, double width);
+    bool InRange(const StarPoint &center, double length, double width);
+    void change_coordinate(const StarPoint &new_center);
 };
 
 

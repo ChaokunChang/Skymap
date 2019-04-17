@@ -67,6 +67,7 @@ public:
     StarPattern PartitionCounter[PartitionNumber];
 
     int FinalResult;
+    NoOptic(){}
     NoOptic(vector<StarPoint> &sky, vector<StarPoint> &obv);
     void LoadImage(vector<StarPoint> &obv);
 

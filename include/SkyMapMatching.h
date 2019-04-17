@@ -45,8 +45,8 @@ public:
     vector<StarPoint> stars_;
     SkyMap():count_(0),range_({0,0}){}
 
-    vector<StarPoint> Subset(StarPoint centre, double length, double width); //generate image with given position and size;
-    vector<StarPoint> Subset(StarPoint centre, double image_ratio, int num); // generate image with centre and particular number of stars.
+    vector<StarPoint> Subset(const StarPoint &centre, double length, double width); //generate image with given position and size;
+    vector<StarPoint> Subset(const StarPoint &centre, double image_ratio, int num); // generate image with centre and particular number of stars.
 };
 
 class Observation{
@@ -58,9 +58,9 @@ public:
     double focal_length;
     StarPoint centre_;
     vector<StarPoint> stars_;
-    Observation():count_(0),range_({0,0}){}
+    Observation():count_(0),range_({0,0}),imageWidth(0),imageHeight(0),imageWidthL(0),imageHeightL(0),focal_length(0){}
     void RangeStandardization();
-    void setProperties(image_properties prop);
+    void setProperties(image_properties &prop);
     void ContentSync();
 };
 
@@ -117,8 +117,8 @@ private:
     StarPoint __matching_star; //the result given by match algorithm, this variable stores its location in SkyMap.
     size_t __image_target;
     bool SIMULATE;
-    TriangleMatching *TM;
-    NoOptic *NOM;
+    TriangleMatching* pTM=nullptr;
+    NoOptic* pNOM=nullptr;
 
 public:
     const double LongitudeRange = 360;
@@ -134,10 +134,10 @@ public:
     void LoadSky(QString &f_name);
     void LoadImage(QString &f_name,image_properties);
 
-    void GenerateSimImage(StarPoint centre, double length, double width); //generate image with given position and size;
-    void GenerateSimImage(StarPoint centre, double image_ratio, int num); // generate image with centre and particular number of stars.
+    void GenerateSimImage(const StarPoint &centre, const double &length, const double &width); //generate image with given position and size;
+    void GenerateSimImage(const StarPoint &centre, const double &image_ratio, const int &num); // generate image with centre and particular number of stars.
 
-    void SelectTargetStar();
+    size_t SelectTargetStar();
     void SelectTargetStar(int);
     int TriangleModel();
     int NoOpticModel();

@@ -9,6 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     this->setAttribute(Qt::WA_DeleteOnClose);
+    pSMM = new SkyMapMatching();
 }
 
 MainWindow::~MainWindow()
@@ -103,8 +104,8 @@ void MainWindow::loadPicture(QString fileName)
     }
     ui->statusBar->showMessage(tr("请稍候……正在加载星表"));
     image_properties prop(skyImg.width(),skyImg.height(),skyImg.width()*25.4/skyImg.logicalDpiX(),skyImg.height()*25.4/skyImg.logicalDpiY(),this->focus);
-    //this->SMM.initPara(skyImg.width(),skyImg.height(),skyImg.width()*25.4/skyImg.logicalDpiX(),skyImg.height()*25.4/skyImg.logicalDpiY(),this->focus);
-    QFuture<void> futureSMM = QtConcurrent::run(initStarMapMatching,&this->SMM,prop);
+    //this->pSMM->initPara(skyImg.width(),skyImg.height(),skyImg.width()*25.4/skyImg.logicalDpiX(),skyImg.height()*25.4/skyImg.logicalDpiY(),this->focus);
+    QFuture<void> futureSMM = QtConcurrent::run(initStarMapMatching,this->pSMM,prop);
     while(!futureSMM.isFinished())
     {
         QCoreApplication::processEvents();
@@ -116,9 +117,9 @@ void MainWindow::loadPicture(QString fileName)
 
 int MainWindow::findMatchingStar(int targetIndex,int algorithm)
 {
-    this->SMM.SelectTargetStar(targetIndex);
-    this->SMM.Match(algorithm);
-    return this->SMM.CheckAllCandidates();
+    this->pSMM->SelectTargetStar(targetIndex);
+    this->pSMM->Match(algorithm);
+    return this->pSMM->CheckAllCandidates();
 }
 
 vector<StarPoint> loadStarPoint(QString fileName)
@@ -140,7 +141,8 @@ void initStarMapMatching(SkyMapMatching* pSMM, image_properties prop)
 double evalStarMapMatching(SkyMapMatching* pSMM,int algortithm,evalArgs arg)
 {
     QString dataset = ":/Data/Data/skymaps.csv";
-    if(pSMM->sky_.stars_.empty()) pSMM->LoadSky(dataset);
+    //if(pSMM->sky_.stars_.empty())
+    pSMM->LoadSky(dataset);
     return pSMM->ExeSimulation(algortithm,arg.round,arg.missing,arg.redundance,arg.deviation).correctness;
 }
 
@@ -180,6 +182,7 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
     while(!futureFMS.isFinished())
     {
         ui->statusBar->showMessage(tr("请稍候……正在寻找匹配")+LOADANI(int(timer.elapsed())));
+        timer.restart();
         QApplication::processEvents();
     }
     res=futureFMS.result();
@@ -202,7 +205,7 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
     ui->starList->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->starList->blockSignals(false);
 
-//    ModelEvaluation eval = this->SMM.ExeSimulation(0,10);
+//    ModelEvaluation eval = this->pSMM->ExeSimulation(0,10);
 //    cout<<"The Correctness: "<<eval.correctness<<endl;
 //    ui->picFocusInput->setText(QString::number(eval.correctness,10,3));
 }
@@ -237,7 +240,8 @@ void MainWindow::on_picFocusInput_editingFinished()
 void MainWindow::receiveData(evalArgs arg)
 {
     QString dataset = ":/Data/Data/skymaps.csv";
-    if(this->SMM.sky_.stars_.empty()) this->SMM.LoadSky(dataset);
+    //if(this->pSMM->sky_.stars_.empty())
+    this->pSMM->LoadSky(dataset);
     ui->starNoDisplay->setText(ui->algorithmComboBox->currentText());
     ui->starNameDisplay->setText(QString::number(arg.missing));
     ui->starPosXDisplay->setText(QString::number(arg.redundance));
@@ -246,7 +250,7 @@ void MainWindow::receiveData(evalArgs arg)
     double res;
     QElapsedTimer timer;
     timer.start();
-    QFuture<double> futureEval = QtConcurrent::run(evalStarMapMatching,&this->SMM,ui->algorithmComboBox->currentIndex()+1,arg);
+    QFuture<double> futureEval = QtConcurrent::run(evalStarMapMatching,this->pSMM,ui->algorithmComboBox->currentIndex()+1,arg);
     while(!futureEval.isFinished())
     {
         ui->statusBar->showMessage(tr("请稍候……正在进行仿真")+LOADANI(int(timer.elapsed())));

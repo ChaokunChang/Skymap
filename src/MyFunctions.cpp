@@ -3,7 +3,7 @@
 //
 #include "MyFunctions.h"
 
-double cal_dis(double x1,double y1,double x2,double y2){
+double cal_dis(const double& x1,const double& y1,const double& x2,const double& y2){
     //return sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
     double dx = abs(x1-x2);
     double dy = abs(y1-y2);
@@ -11,27 +11,28 @@ double cal_dis(double x1,double y1,double x2,double y2){
     return sqrt( pow(dx,2) + pow(dy,2) );
 }
 
-bool between(double target, double left, double right){
+bool between(const double& target,const double& left,const double& right){
     if(target>=left && target<=right) return true;
     else return false;
 }
 
-double getSpotAD(double x1, double y1, double x2, double y2, double f)
+double getSpotAD(const double& x1,const double& y1,const double& x2,const double& y2,const double& f)
 {
     return acos((x1*x2 + y1 * y2 + f * f) / sqrt((x1*x1 + y1 * y1 + f * f)*(x2*x2 + y2 * y2 + f * f)));
 }
 
 
-int random_int(int l,int r){
+int random_int(const int& l,const int& r){
     return l + rand()%(r-l);
 }
 
-size_t random_size_t(size_t l, size_t r){
-    return static_cast<size_t>(random_int(static_cast<int>(l),static_cast<int>(r)));
+size_t random_size_t(const size_t& l,const size_t& r){
+    return size_t(random_int(int(l),int(r)));
 }
 
-double random_double(double l, double r){
-    return l + rand()/static_cast<double>(RAND_MAX/(r-l));
+double random_double(const double& l,const double& r){
+    return l + (double(rand())/RAND_MAX)*(r-l);
 }
+
 
 
