@@ -136,7 +136,7 @@ vector<StarPoint> loadStarPoint(QString fileName)
 
 void initStarMapMatching(SkyMapMatching* pSMM, image_properties prop)
 {
-    QString dataset = ":/Data/Data/skymaps.csv";
+    QString dataset = data_path;
     QString picture = "./tmp.csv";
     pSMM->LoadSky(dataset);
     image_properties property;
@@ -145,10 +145,12 @@ void initStarMapMatching(SkyMapMatching* pSMM, image_properties prop)
 
 double evalStarMapMatching(SkyMapMatching* pSMM,int algortithm,evalArgs arg)
 {
-    QString dataset = ":/Data/Data/skymaps.csv";
+    QString dataset = data_path;
     //if(pSMM->sky_.stars_.empty())
     pSMM->LoadSky(dataset);
-    return pSMM->ExeSimulation(algortithm,arg.round,arg.missing,arg.redundance,arg.deviation).correctness;
+    return pSMM->ExeSimulation(static_cast<size_t>(algortithm) ,static_cast<size_t>(arg.round),
+                               static_cast<size_t>(arg.missing),static_cast<size_t>(arg.redundance),
+                               arg.deviation).accuracy;
 }
 
 void MainWindow::on_pushButton_clicked()
@@ -244,7 +246,7 @@ void MainWindow::on_picFocusInput_editingFinished()
 
 void MainWindow::receiveData(evalArgs arg)
 {
-    QString dataset = ":/Data/Data/skymaps.csv";
+    QString dataset = data_path;
     //if(this->pSMM->sky_.stars_.empty())
     this->pSMM->LoadSky(dataset);
     ui->starNoDisplay->setText(ui->algorithmComboBox->currentText());

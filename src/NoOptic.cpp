@@ -149,6 +149,7 @@ size_t NoOptic::Match(size_t main_star,vector<StarPoint> &ImageStars){
         }
     }
     //结果可能不止一个，所以用一个vecotr存放初步结果
+    this->__Candidate.clear();
     for(size_t i=0; i<StarNumber; i++){
         if(StarCounter[i]==max_num) this->__Candidate.push_back(i);
     }

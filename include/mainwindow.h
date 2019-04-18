@@ -54,6 +54,8 @@ private:
     QImage skyImg;
     double posX,posY,focus;
 };
+//const QString data_path= ":/Data/Data/skymaps.csv";
+const QString data_path= ":/Data/Data/sky_table_loc.csv";
 vector<StarPoint> loadStarPoint(QString);
 void initStarMapMatching(SkyMapMatching*,image_properties);
 double evalStarMapMatching(SkyMapMatching*,int,evalArgs);

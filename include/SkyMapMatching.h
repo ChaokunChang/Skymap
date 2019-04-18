@@ -79,11 +79,11 @@ public:
     string model_name;
     string property;
     int round;
-    double correctness;
+    double accuracy;
 
-    ModelEvaluation():model_name("default"),property("default"),round(0),correctness(0){}
+    ModelEvaluation():model_name("default"),property("default"),round(0),accuracy(0){}
     ModelEvaluation(int r,double c,string name="default",string prop="default"):model_name(name),property(prop),
-        round(r),correctness(c){}
+        round(r),accuracy(c){}
 };
 
 class SkyMapMatching {
@@ -122,9 +122,9 @@ public:
     //void initPara(int,int,double,double,double);
     StarPoint GetAnswer(){ return this->__matching_star;}
     StarPoint GetTargetStar(){ return this->__target_star;}
-    ModelEvaluation ExeSimulation(size_t model=0,int round=100,size_t missing=0,
+    ModelEvaluation ExeSimulation(size_t model=0,size_t round=100,size_t missing=0,
                                   size_t redundence=0,double deviation=0.0);
-    ModelEvaluation ComprehensiveEvaluation(size_t model=0,int round=100,size_t missing=0,
+    ModelEvaluation ComprehensiveEvaluation(size_t model=0,size_t round=100,size_t missing=0,
                                             size_t redundence=0,double deviation=0.0);
 
 };

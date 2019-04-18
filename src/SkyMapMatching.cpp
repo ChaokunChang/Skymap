@@ -161,9 +161,9 @@ int SkyMapMatching::TriangleModel() {
         return -1;
     }
     pTM->MatchAlgorithm(dis12,dis13,dis23,triangle[0].magnitude,triangle[1].magnitude,triangle[2].magnitude);
-    int result_index = pTM->GetCandidate() - 1;
-    qDebug("Triangle Match Ended with %d!",result_index+1); //show id.
-    return (result_index); //编号和index差1
+    int result_index = pTM->GetCandidate();
+    qDebug("Triangle Match Ended with %d!",result_index); //show id.
+    return result_index; //编号和index差1
 }
 
 int SkyMapMatching::NoOpticModel(){
@@ -175,7 +175,7 @@ int SkyMapMatching::NoOpticModel(){
     if(pNOM->Match(this->__image_target,this->image_.stars_)>0){
         result = pNOM->GetCandidate();
     }
-    qDebug()<<"NoOptic Model Ended with "<<result+1; //show id.
+    qDebug()<<"NoOptic Model Ended with "<<result; //show id.
     return result;
 }
 
@@ -489,7 +489,7 @@ void RandomDiviation(vector<StarPoint> &stars, double off_rate, size_t type=0){
     }
 }
 
-ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, int round, size_t miss_num,
+ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, size_t round, size_t miss_num,
                                                         size_t add_num, double offset_rate){
     //comprehensive test.
     qDebug()<<endl<<endl<<endl;
@@ -498,11 +498,14 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, int round,
     assert(round>0);
     int succeed_num=0;
     int failed_num = 0;
-    int r=0;
+    size_t r=0;
     int counts=0;
     StarPoint center;
     double fl=15.0,fr=15.0;
     while(r<round){
+        if(r==63){
+            cout<<""<<endl;
+        }
         qDebug()<<"--------------------------------------------------------------";
         qDebug()<<"-----------------------start:"<<r+1<<"th---------------------------";
         center = random_point(0.0,this->LongitudeRange,- this->LatitudeRange/2,this->LatitudeRange/2);
@@ -550,7 +553,7 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, int round,
     return eval;
 }
 
-ModelEvaluation SkyMapMatching::ExeSimulation(size_t model,int round,size_t miss_num,
+ModelEvaluation SkyMapMatching::ExeSimulation(size_t model,size_t round,size_t miss_num,
                                               size_t add_num,double off_rate){
     this->SIMULATE = true;
     ModelEvaluation eval1=this->ComprehensiveEvaluation(model,round,miss_num,add_num,off_rate);
