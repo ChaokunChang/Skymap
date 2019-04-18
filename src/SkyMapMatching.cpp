@@ -82,6 +82,7 @@ size_t SkyMapMatching::SelectTargetStar() {
 }
 
 void SkyMapMatching::SelectTargetStar(int target) {
+    this->__image_target = size_t(target);
     this->__target_star = this->image_.stars_[size_t(target)];
 }
 
@@ -283,7 +284,7 @@ int SkyMapMatching::Check() {
         }
         str+=QString::number(loss)+" ";
     }
-    qDebug()<<str;
+    //qDebug()<<str;
     qDebug()<<"Finale Loss:"<<loss;
     if(loss/len > 0.5) return -1;
     return this->__matching_star.index;
