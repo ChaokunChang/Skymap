@@ -1,5 +1,5 @@
 # SkyMap
-Appveyor [![Build status](https://ci.appveyor.com/api/projects/status/2ko1b1n96t0h7eky?svg=true)](https://ci.appveyor.com/project/ZhaoWeicheng98/skymap)
+AppVeyor CI[![Build status](https://ci.appveyor.com/api/projects/status/rjrrxamd9rb5htlk?svg=true)](https://ci.appveyor.com/project/fdcck/skymap)
 ## Introduction
 This is a application which can recognize the stars
 in picture taken by people. 
