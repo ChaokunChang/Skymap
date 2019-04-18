@@ -21,12 +21,12 @@ const double Pi = 3.1415926;
 using namespace std;
 
 struct StarPattern{
-    int number;
-    vector<int> star_array;
+    size_t number;
+    vector<size_t> star_array;
 };
 
 struct EigenVecStruct{
-    int star_index;
+    size_t star_index;
     vector<bool> eigen_vec;
 };
 
@@ -59,24 +59,22 @@ class NoOptic{
     *************************************************************************************/
 public:
     /*变量区*/
-    vector< pair<double,double> > SkyStars; //导航星库中的星
-    vector< pair<double,double> > ImageStars; //观测星图中的星
+    //vector<StarPoint> &SkyStars; //导航星库中的星
+    //vector<StarPoint> &ImageStars; //观测星图中的星
     vector<EigenVecStruct> StarEigens;
-
-    //vector<StarPattern> GridStorage;//星模式序列存储
     StarPattern PartitionCounter[PartitionNumber];
 
     int FinalResult;
-    NoOptic(){}
-    NoOptic(vector<StarPoint> &sky, vector<StarPoint> &obv);
-    void LoadImage(vector<StarPoint> &obv);
+    vector<size_t> __Candidate;
 
-    int ExeNoOptic(int target);//总执行流程
+    NoOptic();
+    NoOptic(vector<StarPoint> &SkyStars);
 
+    size_t ExeNoOptic(size_t target,vector<StarPoint> &ImageStars);//总执行流程
+    int GetCandidate();
     /* get the eigenvector */
-    vector<bool> GetEigenVector(int StarNum);
-    int GetMidStar();
-    bool Match(int main_star);
+    vector<bool> GetEigenVector(size_t StarNum,vector<StarPoint> &SkyStars);
+    size_t Match(size_t main_star,vector<StarPoint> &ImageStars);
 
 };
 

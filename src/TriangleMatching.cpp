@@ -49,18 +49,6 @@ vector<StarPoint> TriangleMatching::RandomAdjacentStars(vector<StarPoint> &obv_s
     while(!explicit_pair(except,obv_stars[s1])) s1 = static_cast<size_t>(random_int(0,size));
     size_t s2 = static_cast<size_t>(random_int(0,size));
     while((s1==s2)|| !explicit_pair(except,obv_stars[s2])) s2=static_cast<size_t>(random_int(0,size));
-
-//    mt19937 rng;
-//    rng.seed(random_device()());
-//    uniform_int_distribution<int> u(0,size-1);
-//    int s1 = u(rng);
-//    while(s1 == except) s1 = u(rng);
-//    int s2 = u(rng);
-//    while(s2 == except || s2 == s1) s2 = u(rng);
-
-    //cout<<"The chosen adjacent stars in Random method are:"<<endl;
-    //cout<<"star'id in image: "<<s1<<" , "<<s2<<endl;
-
     return {obv_stars[s1],obv_stars[s2]};
 }
 
@@ -78,7 +66,7 @@ void TriangleMatching::ChooseAdjacentStars(vector<StarPoint> &obv_stars, vector<
 
 }
 
-int TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, double edge1_edge2, double m1, double m2, double m3) {
+void TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, double edge1_edge2, double m1, double m2, double m3) {
     if(!this->__Candidate.empty()) this->__Candidate.clear();
     vector<int> Flag(__GuideStarNumber+5,0);
 
@@ -165,13 +153,6 @@ int TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, d
             }
         }
     }
-//    for(SS_iter=StatStar.begin();SS_iter!=StatStar.end();SS_iter++){
-//        SS_iter->second.clear();
-//        vector<int>().swap(SS_iter->second);
-//    }
-    //StatStar.clear();
-//    map<int,vector<int>>().swap(StatStar);
-    return this->GetCandidate();
 }
 
 int TriangleMatching::GetCandidate(){
@@ -179,25 +160,22 @@ int TriangleMatching::GetCandidate(){
     if (__Candidate.empty()) {
         qDebug() << "Triangle No candidate.";
         //扩大组的范围，或换一组三角形匹配。
-        return -1;
     }
     else {
         //从匹配成功的三角形中筛选出最终结果，需要结合星等数据选择，或者加入GPS等参考数据
-        while (!__Candidate.empty()) {
-            int k = __Candidate.back();
-            result = k;
-            __Candidate.pop_back();
-            break;
-        }
-        assert(result != -1);
+        int k = __Candidate.back();
+        assert(k >= 0);
+        __Candidate.pop_back();
         qDebug() << "#Match(Triangle Model) succeed!";
         //cout << "The answer'id in match group(all possible answer) is: "<<result << endl;
-        qDebug() <<"The matching triangle is: "<< matchgroup_[result].middle_star << " " << matchgroup_[result].star1 << " " << matchgroup_[result].star2;
-        qDebug() <<"And there are still "<<__Candidate.size()<<" candidates"<<endl;
+        qDebug() <<"The matching triangle is: "<< matchgroup_[k].middle_star << " " << matchgroup_[k].star1 << " " << matchgroup_[k].star2;
+        qDebug() <<"And there are still "<<__Candidate.size()<<" candidates."<<endl;
+
         string str="";
         for(size_t i=0; i<__Candidate.size();i++) str+= to_string(__Candidate.at(i)) +" ";
         qDebug()<<QString::fromStdString(str);
 
-        return matchgroup_[static_cast<size_t>(result)].middle_star;
+        result =  matchgroup_[static_cast<size_t>(k)].middle_star;
     }
+    return result;
 }

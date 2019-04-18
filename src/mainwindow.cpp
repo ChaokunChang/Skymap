@@ -40,23 +40,28 @@ void MainWindow::loadPicture(QString fileName)
             fseek(fp, 0, SEEK_END);
             unsigned long fsize = ftell(fp);
             rewind(fp);
-            unsigned char *buf = new unsigned char[fsize];
+            unsigned char *buf = new unsigned char[fsize];easyexif::EXIFInfo result;
             if (fread(buf, 1, fsize, fp) != fsize) {
                 printf("Can't read file.\n");
                 delete[] buf;
             }
+            else
+                {
+                // Parse EXIF
+
+                int code = result.parseFrom(buf, fsize);
+                delete[] buf;
+                if (code) {
+                    printf("Error parsing EXIF: code %d\n", code);
+                }
+                this->posX=result.GeoLocation.Longitude;
+                this->posY=result.GeoLocation.Latitude;
+                this->focus=result.FocalLength;
+            }
             fclose(fp);
 
-            // Parse EXIF
-            easyexif::EXIFInfo result;
-            int code = result.parseFrom(buf, fsize);
-            delete[] buf;
-            if (code) {
-                printf("Error parsing EXIF: code %d\n", code);
-            }
-            this->posX=result.GeoLocation.Longitude;
-            this->posY=result.GeoLocation.Latitude;
-            this->focus=result.FocalLength;
+
+
         }
         else {
             this->posX=0;

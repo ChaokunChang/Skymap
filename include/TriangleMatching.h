@@ -55,16 +55,16 @@ public:
                                                                         __Threshold(thres),__GapWidth(gap){ }
     vector<StarPair> stardata_;
     vector<MatchPair> matchgroup_;
-    vector<int> grouphead_;
-    vector<int> grouptail_;
-    vector<int> groupsize_;
+    vector<size_t> grouphead_;
+    vector<size_t> grouptail_;
+    vector<size_t> groupsize_;
     void LoadData(vector<StarPoint> &stars);
 
     double GetThreshold(){ return this->__Threshold;}
 
     void ChooseAdjacentStars(vector<StarPoint> &obv_stars, vector<StarPoint> &triangle);
     vector<StarPoint> RandomAdjacentStars(vector<StarPoint> &obv_stars, StarPoint &except);
-    int MatchAlgorithm(double center_edge1, double center_edge2, double edge1_edge2, double m1, double m2,double m3);
+    void MatchAlgorithm(double center_edge1, double center_edge2, double edge1_edge2, double m1, double m2,double m3);
     int GetCandidate();
 };
 

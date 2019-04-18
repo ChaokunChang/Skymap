@@ -86,31 +86,6 @@ public:
         round(r),correctness(c){}
 };
 
-class MissingEvaluation: public ModelEvaluation{
-public:
-    double missing_rate;
-    int missing_num;
-};
-
-class DeviationEvaluation: public ModelEvaluation{
-public:
-    double deviation_rate;
-};
-
-class RedundanceEvaluation: public ModelEvaluation{
-public:
-    double redundance_rate;
-    int redundance_num;
-};
-
-template <class T>
-class NoiseEvaluation{
-    //Noise include missing noise,deviation noise,and redundance noise.
-public:
-    int total_round;
-    vector<T> tests;
-};
-
 class SkyMapMatching {
 private:
     StarPoint __target_star; //the chosen star in image. this variable stores its location in image.
@@ -147,14 +122,8 @@ public:
     //void initPara(int,int,double,double,double);
     StarPoint GetAnswer(){ return this->__matching_star;}
     StarPoint GetTargetStar(){ return this->__target_star;}
-    ModelEvaluation TriangleModelSimulation(int round);
-    ModelEvaluation NoOpticModelSimulation(int round);
     ModelEvaluation ExeSimulation(size_t model=0,int round=100,size_t missing=0,
                                   size_t redundence=0,double deviation=0.0);
-    ModelEvaluation SimpleEvaluation(size_t model=0,int round=100);
-    ModelEvaluation RedundanceEvaluation(size_t model=0,int round=100,size_t add_num=3);
-    ModelEvaluation MissingEvaluation(size_t model=0,int round=100,size_t miss_num=3);
-    ModelEvaluation DeviationEvaluation(size_t model=0,int round=100,double off_rate=0.01);
     ModelEvaluation ComprehensiveEvaluation(size_t model=0,int round=100,size_t missing=0,
                                             size_t redundence=0,double deviation=0.0);
 

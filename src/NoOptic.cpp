@@ -4,46 +4,44 @@
 
 #include "NoOptic.h"
 
-NoOptic::NoOptic(vector<StarPoint> &sky, vector<StarPoint> &obv) {
-    for(size_t i=0;i<sky.size();i++){
-        this->SkyStars.push_back({sky[i].x,sky[i].y});
-    }
-    for(size_t i=0;i<obv.size();i++){
-        this->ImageStars.push_back({obv[i].x,obv[i].y});
-    }
-    FinalResult = -1;
+NoOptic::NoOptic(){
+    //this->SkyStars = NULL;
+
 }
 
-void NoOptic::LoadImage(vector<StarPoint> &obv){
-    if(!this->ImageStars.empty()) this->ImageStars.clear();
-    for(size_t i=0;i<obv.size();i++){
-        this->ImageStars.push_back({obv[i].x,obv[i].y});
-    }
+NoOptic::NoOptic(vector<StarPoint> &sky) {
     FinalResult = -1;
-}
-
-int NoOptic::ExeNoOptic(int target=-1){
-    if(target == -1) return target;
-    //第一步，处理导航星表SkyStars;
-    for(size_t i=0; i<SkyStars.size(); i++){
-        int main_star = int(i);
+    for(size_t main_star=0; main_star<sky.size(); main_star++){
         vector<bool> eigen_vector;
-        eigen_vector = GetEigenVector(main_star);
+        eigen_vector = GetEigenVector(main_star,sky);
 
         EigenVecStruct e;
         e.eigen_vec = eigen_vector;
         e.star_index = main_star;
         StarEigens.push_back(e);
+
+        //建立星模式表；
+        for(size_t i=0;i<eigen_vector.size();i++){
+            if(eigen_vector[i]){
+                if(PartitionCounter[i].star_array.empty()) PartitionCounter[i].number = 0;
+                PartitionCounter[i].star_array.push_back(main_star);
+                PartitionCounter[i].number += 1;
+            }
+        }
+
     }
-    if(target == -1){
-        target = GetMidStar();
-    }
-    if(Match(target)) {
-        //cout<<"Find the appropriate star:"<<FinalResult<<endl;
-        return FinalResult;
-    }
-    else cout<<"No appropriate star. Try another star to check."<<endl;
-    return -1;
+}
+
+int NoOptic::GetCandidate(){
+    if(__Candidate.empty()) return -1;
+    int result = static_cast<int>(this->__Candidate.back());
+    __Candidate.pop_back();
+    return result;
+}
+
+size_t NoOptic::ExeNoOptic(size_t target,vector<StarPoint> &ImageStars){
+    //load image? -- do not need.
+    return Match(target,ImageStars);
 }
 
 bool check_dis(double dis){
@@ -57,7 +55,7 @@ bool is_above_line(double x1,double y1,double x2,double y2,double x3,double y3){
     return k>=kt;
 }
 
-int star_partition(double x, double y){
+size_t star_partition(double x, double y){
     int b1 = x*35/SightSize;
     int b2 = (y+180)*80/360;
     int par = b1*80+b2;
@@ -65,23 +63,18 @@ int star_partition(double x, double y){
     else return par;
 }
 
-vector<bool> NoOptic::GetEigenVector(int StarNum){
-    int x;
-    if(StarNum == 1310) {
-        x=0;
-    }
-    bool eigen_array[PartitionNumber]={false};
-    vector<bool> eigen_vec;
-    vector<int> AdjacentStars;
+vector<bool> NoOptic::GetEigenVector(size_t StarNum, vector<StarPoint> &SkyStars){
+    vector<bool> eigen_vec(PartitionNumber,false);
+    vector<size_t> AdjacentStars;
     vector<double> AdjacentDistances;
     vector<pair<double,double>> PolarCoordinates;
     double ref_dis=100000;
-    int ref_dis_id=0;
+    size_t ref_dis_id=0;
 
     //确定邻星
-    for(int i=0;i<SkyStars.size(); i++){
+    for(size_t i=0;i<SkyStars.size(); i++){
         if(i==StarNum) continue;
-        double dis = cal_dis(SkyStars[StarNum].first,SkyStars[StarNum].second,SkyStars[i].first,SkyStars[i].second);
+        double dis = cal_dis(SkyStars[StarNum].x,SkyStars[StarNum].y,SkyStars[i].x,SkyStars[i].y);
         if(check_dis(dis)){
             //将符合条件的邻星的编号存储到vector中，并记录最近的那颗星。
             if(dis<ref_dis && dis>R0) {
@@ -95,14 +88,13 @@ vector<bool> NoOptic::GetEigenVector(int StarNum){
     }
 
     //建立极坐标系
-    for(int i=0; i<AdjacentStars.size(); i++){
-        int id = AdjacentStars[i];
+    for(size_t i=0; i<AdjacentStars.size(); i++){
+        size_t id = AdjacentStars[i];
         double r,zeta,s;
         r = AdjacentDistances[i] / ref_dis;
-        s = cal_dis(SkyStars[id].first,SkyStars[id].second,SkyStars[ref_dis_id].first,SkyStars[ref_dis_id].second)/ref_dis;
+        s = cal_dis(SkyStars[id].x,SkyStars[id].y,SkyStars[ref_dis_id].x,SkyStars[ref_dis_id].y)/ref_dis;
         double tmp = (1+r*r-s*s)/(2*r);
         if(tmp>1){
-
             if(tmp>1.001) cout<<"error zeta!"<<endl;
             else tmp = 1;
         }
@@ -113,148 +105,52 @@ vector<bool> NoOptic::GetEigenVector(int StarNum){
         zeta = acos(tmp)*180/Pi;
         if(!(zeta <180 && zeta>-180)){
             if(zeta < -180 && zeta>-180.001) zeta = -180;
-            else if(zeta > 180 && zeta<1980.001) zeta = 180;
-            else x = -1;
+            else if(zeta > 180 && zeta<180.001) zeta = 180;
         }
         if(zeta < 0) zeta+=180;
-        if(!is_above_line(SkyStars[StarNum].first,SkyStars[StarNum].second,SkyStars[ref_dis_id].first,SkyStars[ref_dis_id].second,SkyStars[i].first,SkyStars[i].second)) zeta = -zeta;
+        if(!is_above_line(SkyStars[StarNum].x,SkyStars[StarNum].y,SkyStars[ref_dis_id].x,SkyStars[ref_dis_id].y,SkyStars[i].x,SkyStars[i].y)) zeta = -zeta;
         PolarCoordinates.push_back(pair<double,double>(r,zeta));
     }
-
     //判断vector中的邻星属于M*N的哪一个区域，并做相应的计数操作。
-    for(int i=0; i<AdjacentStars.size(); i++){
-        int id = AdjacentStars[i];
+    for(size_t i=0; i<PolarCoordinates.size(); i++){
         double r,zeta;
         r = PolarCoordinates[i].first;
         zeta = PolarCoordinates[i].second;
-        int pr = star_partition(r,zeta);
-
-        //创建eigenvector
-        eigen_array[pr] = true;
-
-        //建立星模式表；
-        if(PartitionCounter[pr].star_array.empty()) PartitionCounter[pr].number = 0;
-        PartitionCounter[pr].star_array.push_back(StarNum);
-        PartitionCounter[pr].number += 1;
-    }
-
-    for(int i=0; i<PartitionNumber; i++){
-        if(eigen_array[i]) eigen_vec.push_back(true);
-        else eigen_vec.push_back(false);
+        size_t pr = star_partition(r,zeta);
+        //创建eigen vector
+        eigen_vec[pr] = true;
     }
     return eigen_vec;
-
 }
 
-int NoOptic::GetMidStar(){
-    double x0=0.0,y0=0.0;
-    double min_dis=1000000;
-    int index;
-    for(int i=0; i<ImageStars.size(); i++){
-        double dis = cal_dis(x0,y0,ImageStars[i].first,ImageStars[i].second);
-        if(dis<min_dis) index = i;
-    }
-    return index;
-}
-
-bool Check(int id){
-    /*Ready to be completed.*/
-    return true;
-}
-
-bool NoOptic::Match(int main_star){
-    bool eigen_array[PartitionNumber]={false};
+size_t NoOptic::Match(size_t main_star,vector<StarPoint> &ImageStars){
     vector<bool> eigen_vec;
-    vector<int> AdjacentStars;
+    vector<size_t> AdjacentStars;
     vector<double> AdjacentDistances;
     vector<pair<double,double>> PolarCoordinates;
 
-    int StarCounter[StarNumber]={0};
-    double ref_dis=100000;
-    int ref_dis_id=0;
+    vector<size_t> StarCounter(StarNumber,0);
 
-    for(int i=0;i<ImageStars.size(); i++){
-        if(i==main_star) continue;
-        double dis = cal_dis(ImageStars[main_star].first,ImageStars[main_star].second,ImageStars[i].first,ImageStars[i].second);
-        if(check_dis(dis)){
-            //将符合条件的邻星的编号存储到vector中，并记录最近的那颗星。
-            if(dis<ref_dis && dis>R0) {
-                ref_dis = dis;
-                ref_dis_id = i;
+    vector<bool> image_e = GetEigenVector(main_star, ImageStars);
+    for(size_t i=0;i<image_e.size();i++){
+        if(image_e[i]){
+            for(size_t j=0;j<PartitionCounter[i].number;j++){
+                StarCounter[PartitionCounter[i].star_array[j]] += 1;
             }
-            AdjacentStars.push_back(i);
-            AdjacentDistances.push_back(dis);
         }
     }
-
-    //建立极坐标系
-    for(int i=0; i<AdjacentStars.size(); i++){
-        int x;
-        int id = AdjacentStars[i];
-        double r,zeta,s;
-        r = AdjacentDistances[i] / ref_dis;
-        s = cal_dis(ImageStars[id].first,ImageStars[id].second,ImageStars[ref_dis_id].first,ImageStars[ref_dis_id].second)/ref_dis;
-        double tmp = (1+r*r-s*s)/(2*r);
-        if(tmp>1){
-
-            if(tmp>1.001) cout<<"error zeta!"<<endl;
-            else tmp = 1;
-        }
-        if(tmp<-1){
-            if(tmp<-1.001) cout<<"error zeta!"<<endl;
-            else tmp = -1;
-        }
-        zeta = acos(tmp)*180/Pi;
-        if(!(zeta <180 && zeta>-180)){
-            if(zeta < -180 && zeta>-180.001) zeta = -180;
-            else if(zeta > 180 && zeta<1980.001) zeta = 180;
-            else x = -1;
-        }
-        if(zeta < 0) zeta+=180;
-        if(!is_above_line(ImageStars[main_star].first,ImageStars[main_star].second,ImageStars[ref_dis_id].first,ImageStars[ref_dis_id].second,ImageStars[i].first,ImageStars[i].second)) zeta = -zeta;
-        PolarCoordinates.push_back(pair<double,double>(r,zeta));
-    }
-
-    //判断vector中的邻星属于M*N的哪一个区域，并做相应的计数操作。
-    for(int i=0; i<AdjacentStars.size(); i++){
-        int id = AdjacentStars[i];
-        double r,zeta;
-        r = PolarCoordinates[i].first;
-        zeta = PolarCoordinates[i].second;
-        int pr = star_partition(r,zeta);
-
-        //创建eigenvector
-        eigen_array[pr] = true;
-
-        //处理计数器
-        for(int j=0; j<PartitionCounter[i].number; j++){
-            StarCounter[PartitionCounter[i].star_array[j]] += 1;
-        }
-
-    }
-
     //找出计数器的最大值
-    int max_counter=0;
-    int max_num=0;
-    for(int i=0; i<StarNumber; i++){
+    size_t max_counter=0;
+    size_t max_num=0;
+    for(size_t i=0; i<StarNumber; i++){
         if(StarCounter[i]>max_num){
             max_num=StarCounter[i];
             max_counter = i;
         }
     }
-
     //结果可能不止一个，所以用一个vecotr存放初步结果
-    vector<int> preliminary_results;
-    for(int i=0; i<StarNumber; i++){
-        if(StarCounter[i]==max_num) preliminary_results.push_back(i);
+    for(size_t i=0; i<StarNumber; i++){
+        if(StarCounter[i]==max_num) this->__Candidate.push_back(i);
     }
-
-    //进一步的检查
-    for(int i=0; i<preliminary_results.size(); i++){
-        if(Check(preliminary_results[i])) {
-            FinalResult = preliminary_results[i];
-            return true;
-        }
-    }
-    return false;
+    return __Candidate.size();
 }
