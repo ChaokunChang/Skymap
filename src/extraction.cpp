@@ -187,30 +187,41 @@ Mat mean_filter(Mat img)
     return img;
 }
 
-Mat preprocess_img(Mat &srcimg)
+Mat threshold_filter(Mat &greyimg)
 {
-    // source image -> grey image -> segmented by a certain threshold
-    Mat greyimg, segimg;
+    // background threshold segmentation
+    Mat segimg;
     double Vth;
 
+    Vth = local_background_threshold(greyimg);
+    cout << "T: " << Vth << endl;
+    threshold(greyimg, segimg, Vth, 0, THRESH_TOZERO);
+    return segimg;
+}
+
+Mat grey_img(Mat &img)
+{
     // get greyimg
-    if (srcimg.channels() == 3)
-        cvtColor(srcimg, greyimg, COLOR_BGR2GRAY);
+    if (img.channels() == 3)
+    {
+        Mat greyimg;
+        cvtColor(img, greyimg, CV_BGR2GRAY);
+        return greyimg;
+    }
     else
-        greyimg = srcimg;
+        return img;
+}
 
+Mat preprocess_img(Mat &greyimg, const string &filter)
+{
     // filter greyimg with different standard
-//    greyimg = gradient_filter(greyimg);
-    greyimg = mean_filter(greyimg);
-
-    return greyimg;
-    // ignore the following threshold segmentation, the result is better
-
-    // background threshold segmentation
-//    Vth = local_background_threshold(greyimg);
-//    cout << "T: " << Vth << endl;
-//    threshold(greyimg, segimg, Vth, 0, THRESH_TOZERO);
-//    return segimg;
+    if (filter == "gradient")
+        return gradient_filter(greyimg);
+    else
+    if (filter == "threshold")
+        return threshold_filter(greyimg);
+    else
+        return mean_filter(greyimg);
 }
 
 void print_vector(vector<pair<pair<double, double>, double>> &v)
