@@ -37,7 +37,7 @@ void SkyMapMatching::LoadImage(QString &f_name,image_properties property) {
     this->SIMULATE = false;
     QCSVAdapter csv_sky(f_name);
     vector<StarPoint> stars = csv_sky.getRecords();
-    if(property.focal_length<1e-6) property.focal_length = 4;
+    if(property.focal_length<1e-6) property.focal_length = 28;
     this->image_.setProperties(property);
     double max_x=0,max_y=0;
     for(StarPoint sp:stars){
@@ -122,7 +122,6 @@ int SkyMapMatching::TriangleModel() {
     }
     assert(this->image_.count_>=3);
     qDebug()<<"focal_length:";
-
     if(this->image_.focal_length>1e-6){
         qDebug()<<this->image_.focal_length;
         qDebug()<<"Belowing are all-possible angle_distance in this image.";
@@ -140,6 +139,9 @@ int SkyMapMatching::TriangleModel() {
     while(round++<100){
         pTM->ChooseAdjacentStars(this->image_.stars_,triangle);
         if(!this->SIMULATE){
+            //this->image_.focal_length = 1000;
+            qDebug("Info: %d  %d %.2f %.2f",this->image_.imageWidth,this->image_.imageHeight,this->image_.imageWidthL,this->image_.focal_length);
+            qDebug("Loc info: %.2f, %.2f, %.2f, %.2f ",triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y);
             dis12 = getSpotAD(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y,this->image_.focal_length);
             dis13 = getSpotAD(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y,this->image_.focal_length);
             dis23 = getSpotAD(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y,this->image_.focal_length);
