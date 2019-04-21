@@ -59,14 +59,11 @@ void MainWindow::loadPicture(QString fileName)
                 this->focus=result.FocalLength;
             }
             fclose(fp);
-
-
-
         }
         else {
             this->posX=0;
             this->posY=0;
-            this->focus=0;
+            this->focus=DEFAULT_FOCAL_LENGTH;
         }
         if(abs(this->focus)>=EPSINON)
         {
@@ -107,16 +104,23 @@ void MainWindow::loadPicture(QString fileName)
         }
          ui->pushButton->blockSignals(false);
     }
-    ui->statusBar->showMessage(tr("请稍候……正在加载星表"));
+    ui->starList->blockSignals(true);
+    ui->statusBar->showMessage(tr("请稍候……正在加载并处理星表"));
+    starNames=loadStarNames(name_path);
     image_properties prop(skyImg.width(),skyImg.height(),skyImg.width()*25.4/skyImg.logicalDpiX(),skyImg.height()*25.4/skyImg.logicalDpiY(),this->focus);
     //this->pSMM->initPara(skyImg.width(),skyImg.height(),skyImg.width()*25.4/skyImg.logicalDpiX(),skyImg.height()*25.4/skyImg.logicalDpiY(),this->focus);
-    QFuture<void> futureSMM = QtConcurrent::run(initStarMapMatching,this->pSMM,prop);
+    QElapsedTimer timer;
+    timer.start();
+    QFuture<vector<StarPoint> > futureSMM = QtConcurrent::run(initStarMapMatching,this->pSMM,prop);
     while(!futureSMM.isFinished())
     {
         QCoreApplication::processEvents();
+        ui->statusBar->showMessage(tr("请稍候……正在加载并处理星表")+LOADANI(int(timer.elapsed())));
     }
+    this->starMap=futureSMM.result();
     ui->statusBar->clearMessage();
     this->setAcceptDrops(true);
+    ui->starList->blockSignals(false);
 }
 
 
@@ -134,13 +138,14 @@ vector<StarPoint> loadStarPoint(QString fileName)
     return starRecs;
 }
 
-void initStarMapMatching(SkyMapMatching* pSMM, image_properties prop)
+vector<StarPoint> initStarMapMatching(SkyMapMatching* pSMM, image_properties prop)
 {
     QString dataset = data_path;
     QString picture = "./tmp.csv";
-    pSMM->LoadSky(dataset);
+    vector<StarPoint> ret=pSMM->LoadSky(dataset);
     image_properties property;
     pSMM->LoadImage(picture, prop);
+    return ret;
 }
 
 double evalStarMapMatching(SkyMapMatching* pSMM,int algortithm,evalArgs arg)
@@ -170,14 +175,21 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
 {
+    ui->picDisplayArea->setPixmap(QPixmap::fromImage(this->skyImg));
+    ui->starNoDisplay->clear();
+    ui->starNameDisplay->clear();
+    ui->starPosXDisplay->clear();
+    ui->starPosYDisplay->clear();
+    ui->starConsDisplay->clear();
+    ui->starDescriptionDisplay->clear();
     this->setAcceptDrops(false);
     double x=item->text().section('(',1,1).section(',',0,0).toDouble();
     double y=item->text().section(',',1,1).section(')',0,0).toDouble();
     this->ui->picDisplayScrollArea->ensureVisible(ceil(x),ceil(y));
     QImage tImg = this->skyImg;
     QPainter painter(&tImg);
-    painter.setPen(QPen(QColor(255, 255, 255), 2));
-    painter.drawEllipse(QPointF(x,y), 10, 10);
+    painter.setPen(QPen(QColor(255, 255, 255), 3));
+    painter.drawEllipse(QPointF(x,y), 8, 8);
     painter.end();
     ui->picDisplayArea->setPixmap(QPixmap::fromImage(tImg));
     int res;
@@ -197,16 +209,14 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
     if(res>=0)
     {
         ui->starNoDisplay->setText(QString::number(res));
+        ui->starNameDisplay->setText(starNames[res]);
+        ui->starPosXDisplay->setText(QString::number(starMap[res].x));
+        ui->starPosYDisplay->setText(QString::number(starMap[res].y));
+        ui->starConsDisplay->setText(QString::number(starMap[res].magnitude));
     }
     else {
         QMessageBox matchingFailMsgBox;
         matchingFailMsgBox.setText(tr("匹配失败！"));
-        ui->starNoDisplay->clear();
-        ui->starNameDisplay->clear();
-        ui->starPosXDisplay->clear();
-        ui->starPosYDisplay->clear();
-        ui->starConsDisplay->clear();
-        ui->starDescriptionDisplay->clear();
         matchingFailMsgBox.exec();
    }
     ui->starList->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -248,7 +258,6 @@ void MainWindow::receiveData(evalArgs arg)
 {
     QString dataset = data_path;
     //if(this->pSMM->sky_.stars_.empty())
-    this->pSMM->LoadSky(dataset);
     ui->starNoDisplay->setText(ui->algorithmComboBox->currentText());
     ui->starNameDisplay->setText(QString::number(arg.missing));
     ui->starPosXDisplay->setText(QString::number(arg.redundance));
@@ -278,7 +287,7 @@ void MainWindow::on_simCheckBox_stateChanged(int arg1)
         ui->starNameLabel->setText(tr("星名"));
         ui->starPosXLabel->setText(tr("赤经"));
         ui->starPosYLabel->setText(tr("赤纬"));
-        ui->starConsLabel->setText(tr("星座"));
+        ui->starConsLabel->setText(tr("亮度"));
         ui->starDescriptionLabel->setText(tr("描述"));
         ui->starNoDisplay->clear();
         ui->starNameDisplay->clear();
@@ -304,4 +313,19 @@ void MainWindow::on_simCheckBox_stateChanged(int arg1)
         ui->starConsDisplay->clear();
         ui->starDescriptionDisplay->clear();
     }
+}
+
+vector<QString> loadStarNames(QString fileName)
+{
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly))
+        throw "File Not Found!";
+    std::vector<QString> starNameList;
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+            QString line = in.readLine();
+            QStringList fields = line.split(',');
+            starNameList.push_back("SAO "+fields[1]);
+    }
+    return starNameList;
 }

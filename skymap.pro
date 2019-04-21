@@ -40,7 +40,8 @@ SOURCES = \
     src\TriangleMatching.cpp \
     src/QCSVAdapter.cpp \
     src/exif.cpp \
-    src/simdialog.cpp
+    src/simdialog.cpp \
+    src/RCFI.cpp
 
 HEADERS += \
     include\mainwindow.h \
@@ -57,7 +58,8 @@ HEADERS += \
     include/QCSVAdapter.h \
     include/exif.h \
     #include/ConsolColor.h
-    include/simdialog.h
+    include/simdialog.h \
+    include/RCFI.h
 
 FORMS += \
     form\mainwindow.ui \

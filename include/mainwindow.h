@@ -49,14 +49,16 @@ private:
     Ui::MainWindow *ui;
     void loadPicture(QString);
     int findMatchingStar(int,int);
-    vector<StarPoint> starRecs;
+    vector<StarPoint> starRecs,starMap;
+    vector<QString> starNames;
     SkyMapMatching* pSMM;
     QImage skyImg;
     double posX,posY,focus;
 };
-//const QString data_path= ":/Data/Data/skymaps.csv";
-const QString data_path= ":/Data/Data/sky_table_loc_SAO.csv";
+const QString name_path= ":/Data/Data/sky_table_name.csv";
+const QString data_path= ":/Data/Data/sky_table_loc.csv";
 vector<StarPoint> loadStarPoint(QString);
-void initStarMapMatching(SkyMapMatching*,image_properties);
+vector<StarPoint> initStarMapMatching(SkyMapMatching*,image_properties);
 double evalStarMapMatching(SkyMapMatching*,int,evalArgs);
+vector<QString> loadStarNames(QString);
 #endif // MAINWINDOW_H

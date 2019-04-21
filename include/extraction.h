@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <opencv2/imgproc/types_c.h>
 #include <vector>
 
 // macros
@@ -27,7 +28,9 @@ double background_threshold(Mat &img);
 double local_background_threshold(Mat &img);
 Mat gradient_filter(Mat img);
 Mat mean_filter(Mat img);
-Mat preprocess_img(Mat &srcimg);
+Mat threshold_filter(Mat &greyimg);
+Mat grey_img(Mat &img);
+Mat preprocess_img(Mat &greyimg, const string &filter);
 void print_vector(vector<pair<pair<double, double>, double>> &v);
 int block_sum_weight(int i, int j, pair<int, int> &px, pair<int, int> &py, const char &multiple);
 double block_sum(Mat &img, pair<int, int> &px, pair<int, int> &py, const char &multiple, const double &T);
