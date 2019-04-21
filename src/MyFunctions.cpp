@@ -3,6 +3,12 @@
 //
 #include "MyFunctions.h"
 
+
+double sacos(double x)
+{
+    return acos(std::min(1.0, std::max(-1.0, x)));
+}
+
 double cal_dis(const double& x1,const double& y1,const double& x2,const double& y2){
     //return sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
     double dx = abs(x1-x2);
@@ -18,7 +24,8 @@ bool between(const double& target,const double& left,const double& right){
 
 double getSpotAD(const double& x1,const double& y1,const double& x2,const double& y2,const double& f)
 {
-    return acos((x1*x2 + y1 * y2 + f * f) / sqrt((x1*x1 + y1 * y1 + f * f)*(x2*x2 + y2 * y2 + f * f)));
+    double ret=sacos((x1*x2 + y1 * y2 + f * f) / sqrt((x1*x1 + y1 * y1 + f * f)*(x2*x2 + y2 * y2 + f * f)));
+    return ret*180/M_PI;
 }
 
 
@@ -34,5 +41,20 @@ double random_double(const double& l,const double& r){
     return l + (double(rand())/RAND_MAX)*(r-l);
 }
 
+double getSphereAD(double x1, double y1, double x2, double y2)
+{
+    double ret=sacos((pow(cos(x1*M_PI/180),2)*pow(cos(x2*M_PI/180),2) + cos(x1*M_PI/180)*sin(y1*M_PI/180)*cos(x2*M_PI/180)*sin(y2*M_PI/180) + sin(x1*M_PI/180)*sin(x2*M_PI/180)));
+    return ret*180/M_PI;
+}
 
+double getSphereAngle(double x0, double y0, double x1, double y1, double x2, double y2)
+{
+    double ret=sacos((pow(getSphereAD(x0, y0, x1, y1)*M_PI/180,2) + pow(getSphereAD(x0, y0, x2, y2)*M_PI/180,2) - pow(getSphereAD(x1, y1, x2, y2)*M_PI/180,2)) / 2 * getSphereAD(x0, y0, x1, y1)*M_PI/180*getSphereAD(x0, y0, x2, y2)*M_PI/180);
+    return ret*180/M_PI;
+}
 
+double getSpotAngle(double x0, double y0, double x1, double y1, double x2, double y2,double focal_length)
+{
+    double ret=sacos((pow(getSpotAD(x0, y0, x1, y1,focal_length)*M_PI/180,2) + pow(getSpotAD(x0, y0, x2, y2,focal_length)*M_PI/180,2) - pow(getSpotAD(x1, y1, x2, y2,focal_length)*M_PI/180,2)) / 2 * getSpotAD(x0, y0, x1, y1,focal_length)*M_PI/180*getSpotAD(x0, y0, x2, y2,focal_length)*M_PI/180);
+    return ret*180/M_PI;
+}

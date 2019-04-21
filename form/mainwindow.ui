@@ -170,12 +170,12 @@ QComboBox::down-arrow {
                </item>
                <item>
                 <property name="text">
-                 <string>径向环向匹配</string>
+                 <string>无标定参数匹配</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>无标定参数匹配</string>
+                 <string>径向环向匹配</string>
                 </property>
                </item>
               </widget>
@@ -645,7 +645,7 @@ QAbstractScrollArea, QLineEdit, QTextEdit, QAbstractSpinBox, QComboBox {
           <item row="1" column="0">
            <widget class="QLabel" name="starConsLabel">
             <property name="text">
-             <string>星座</string>
+             <string>亮度</string>
             </property>
            </widget>
           </item>

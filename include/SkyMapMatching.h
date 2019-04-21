@@ -16,8 +16,10 @@
 #include "Star.h"
 #include "TriangleMatching.h"
 #include "NoOptic.h"
+#include "RCFI.h"
 #include "MyFunctions.h"
-
+#define PIXEL_LENGTH 1.5e-6
+#define DEFAULT_FOCAL_LENGTH 4e-3
 using namespace std;
 struct image_properties{
     int imageWidth;
@@ -94,6 +96,7 @@ private:
     bool SIMULATE;
     TriangleMatching* pTM=nullptr;
     NoOptic* pNOM=nullptr;
+    RCFI* pRCFI=nullptr;
 
 public:
     const double LongitudeRange = 360;
@@ -106,8 +109,8 @@ public:
     SkyMapMatching();
     void SetSIM(){SIMULATE = true;}
     void ResetSIM(){SIMULATE = false;}
-    void LoadSky(QString &f_name);
-    void LoadImage(QString &f_name,image_properties);
+    vector<StarPoint> LoadSky(QString &f_name);
+    vector<StarPoint> LoadImage(QString &f_name,image_properties);
 
     void GenerateSimImage(const StarPoint &centre, const double &length, const double &width); //generate image with given position and size;
     void GenerateSimImage(const StarPoint &centre, const double &image_ratio, const int &num); // generate image with centre and particular number of stars.
@@ -116,6 +119,7 @@ public:
     void SelectTargetStar(int);
     int TriangleModel();
     int NoOpticModel();
+    int RCFIModel();
     void Match(size_t model=0);
     int Check();
     int CheckAllCandidates();

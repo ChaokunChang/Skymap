@@ -54,4 +54,3 @@ int QCSVAdapter::appendNewRecord(StarPoint starRec)
     out << starRec.index << ',' << starRec.x << ',' << starRec.y << ',' << starRec.magnitude << "\n";
 	return 0;
 }
-
