@@ -14,7 +14,7 @@ SkyMapMatching::SkyMapMatching(){
 }
 
 
-void SkyMapMatching::LoadSky(QString &f_name) {
+vector<StarPoint> SkyMapMatching::LoadSky(QString &f_name) {
     QCSVAdapter csv_sky(f_name);
     //int count = 0;
     if(!this->sky_.stars_.empty()) this->sky_.stars_.clear();
@@ -22,6 +22,12 @@ void SkyMapMatching::LoadSky(QString &f_name) {
     this->sky_.count_=this->sky_.stars_.size();
     this->sky_.range_ = {360,180};
     this->sky_.centre_ = StarPoint(-1,180.0,0,0);
+    if(pRCFI==nullptr)
+    {
+        pRCFI = new RCFI(this->sky_.stars_,10,200,this->image_.focal_length);
+        pRCFI->init();
+    }
+    return this->sky_.stars_;
 }
 
 void Observation::setProperties(image_properties &prop){
@@ -33,7 +39,7 @@ void Observation::setProperties(image_properties &prop){
     this->range_ = {prop.imageWidthL,prop.imageHeightL};
 }
 
-void SkyMapMatching::LoadImage(QString &f_name,image_properties property) {
+vector<StarPoint> SkyMapMatching::LoadImage(QString &f_name,image_properties property) {
     this->SIMULATE = false;
     QCSVAdapter csv_sky(f_name);
     vector<StarPoint> stars = csv_sky.getRecords();
@@ -49,8 +55,8 @@ void SkyMapMatching::LoadImage(QString &f_name,image_properties property) {
     qDebug()<<" ImageWidthL:"<<property.imageWidthL;
     qDebug()<<"ImageHeightL:"<<property.imageHeightL;
     for(size_t i=0;i<stars.size();i++){
-        stars[i].x *= property.imageWidthL/property.imageWidth;
-        stars[i].y *= property.imageHeightL/property.imageHeight;
+        stars[i].x *= PIXEL_LENGTH/property.imageWidth;
+        stars[i].y *= PIXEL_LENGTH/property.imageHeight;
         //qDebug()<<i<<"th:("<<stars[i].x<<","<<stars[i].y<<")";
     }
     if(!this->image_.stars_.empty()) this->image_.stars_.clear();
@@ -63,7 +69,7 @@ void SkyMapMatching::LoadImage(QString &f_name,image_properties property) {
     for(size_t i=0;i<this->image_.count_;i++){
         this->image_.stars_[i].change_coordinate(center);
     }
-
+    return this->image_.stars_;
 }
 
 size_t SkyMapMatching::SelectTargetStar() {
@@ -172,11 +178,15 @@ int SkyMapMatching::NoOpticModel(){
         pNOM = new NoOptic(this->sky_.stars_);
     }
     int result = -1;
-    if(pNOM->Match(this->__image_target,this->image_.stars_)>0){
+    if(pNOM->Match(this->__image_target,this->image_.stars_)>=0){
         result = pNOM->GetCandidate();
     }
     qDebug()<<"NoOptic Model Ended with "<<result; //show id.
     return result;
+}
+
+int SkyMapMatching::RCFIModel(){
+    return this->SIMULATE?pRCFI->efind(this->image_.stars_,this->__target_star):pRCFI->find(this->image_.stars_,this->__target_star);
 }
 
 void SkyMapMatching::Match(size_t model) {
@@ -203,6 +213,16 @@ void SkyMapMatching::Match(size_t model) {
         else printf("NoOptic Model cannot get answer.\n");
         break;
     }
+    case 3:{
+        int skymap_index3 = RCFIModel();
+        if(skymap_index3 >= 0) {
+            this->__matching_star = this->sky_.stars_[size_t(skymap_index3)];
+            Candidate one("RCFI Model",this->__matching_star);
+            this->candidates_.push_back(one);
+        }
+        else printf("RCFI Model cannot get answer.\n");
+        break;
+    }
     default:{
         int skymap_index1 = NoOpticModel();
         if(skymap_index1 >= 0) {
@@ -222,7 +242,15 @@ void SkyMapMatching::Match(size_t model) {
         }
         else qDebug("Triangle Model cannot get answer.\n");
 
-        if(skymap_index1<=0 && skymap_index2<=0) {
+        int skymap_index3 = RCFIModel();
+        if(skymap_index3 >= 0) {
+            this->__matching_star = this->sky_.stars_[size_t(skymap_index3)];
+            Candidate one("RCFI Model",this->__matching_star);
+            this->candidates_.push_back(one);
+        }
+        else printf("RCFI Model cannot get answer.\n");
+
+        if(skymap_index1<0 && skymap_index2<0 && skymap_index3<0) {
             qDebug("No Model get answer.\n");
         }
     }

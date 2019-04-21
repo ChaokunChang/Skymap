@@ -14,7 +14,7 @@ vector<StarPoint> ImageProcessing::Process() {
 
     // segmentation
     cout << "Preprocessing image..." << endl;
-    segimg = preprocess_img(srcimg);
+    segimg = preprocess_img(srcimg,"threshold");
 
     // centroids
     cout << "Get centroids of stars..." << endl;
