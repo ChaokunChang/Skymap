@@ -205,7 +205,7 @@ Mat grey_img(Mat &img)
     if (img.channels() == 3)
     {
         Mat greyimg;
-        cvtColor(img, greyimg, BGR2GRAY);
+        cvtColor(img, greyimg, CV_BGR2GRAY);
         return greyimg;
     }
     else
