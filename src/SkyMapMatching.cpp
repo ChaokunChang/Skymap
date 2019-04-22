@@ -22,11 +22,6 @@ vector<StarPoint> SkyMapMatching::LoadSky(QString &f_name) {
     this->sky_.count_=this->sky_.stars_.size();
     this->sky_.range_ = {360,180};
     this->sky_.centre_ = StarPoint(-1,180.0,0,0);
-    if(pRCFI==nullptr)
-    {
-        pRCFI = new RCFI(this->sky_.stars_,10,200,this->image_.focal_length);
-        pRCFI->init();
-    }
     return this->sky_.stars_;
 }
 
@@ -178,7 +173,7 @@ int SkyMapMatching::NoOpticModel(){
         pNOM = new NoOptic(this->sky_.stars_);
     }
     int result = -1;
-    if(pNOM->Match(this->__image_target,this->image_.stars_)>=0){
+    if(pNOM->Match(this->__image_target,this->image_.stars_)>0){
         result = pNOM->GetCandidate();
     }
     qDebug()<<"NoOptic Model Ended with "<<result; //show id.
@@ -186,6 +181,10 @@ int SkyMapMatching::NoOpticModel(){
 }
 
 int SkyMapMatching::RCFIModel(){
+    if(pRCFI==nullptr)
+    {
+        pRCFI = new RCFI(this->sky_.stars_,10,200,this->image_.focal_length);
+    }
     return this->SIMULATE?pRCFI->efind(this->image_.stars_,this->__target_star):pRCFI->find(this->image_.stars_,this->__target_star);
 }
 
@@ -557,7 +556,7 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, size_t rou
             RandomDiviation(this->image_.stars_,offset_rate);
 
             this->__image_target=this->SelectTargetStar();
-            qDebug()<<"The Target star(skymap's index):<--"<<this->__target_star.index<<"-->";
+            qDebug()<<"The Target star(skymap's index):<--"<<this->__target_star.index<<" "<<this->__target_star.x<<','<<this->__target_star.y<<" -->";
             qDebug()<<"@Matching...";
             this->Match(model);
             qDebug()<<"@Checking...";
