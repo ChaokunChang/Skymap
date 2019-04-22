@@ -2,5 +2,6 @@
     <qresource prefix="/Data">
         <file>Data/skymaps.csv</file>
         <file>Data/sky_table_loc_SAO.csv</file>
+        <file>Data/sky_table_name_SAO.csv</file>
     </qresource>
 </RCC>

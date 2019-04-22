@@ -151,8 +151,7 @@ vector<StarPoint> initStarMapMatching(SkyMapMatching* pSMM, image_properties pro
 double evalStarMapMatching(SkyMapMatching* pSMM,int algortithm,evalArgs arg)
 {
     QString dataset = data_path;
-    //if(pSMM->sky_.stars_.empty())
-    pSMM->LoadSky(dataset);
+    if(pSMM->sky_.stars_.empty()) pSMM->LoadSky(dataset);
     return pSMM->ExeSimulation(static_cast<size_t>(algortithm) ,static_cast<size_t>(arg.round),
                                static_cast<size_t>(arg.missing),static_cast<size_t>(arg.redundance),
                                arg.deviation).accuracy;

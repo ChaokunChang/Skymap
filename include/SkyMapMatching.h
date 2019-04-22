@@ -117,9 +117,11 @@ public:
 
     size_t SelectTargetStar();
     void SelectTargetStar(int);
+
     int TriangleModel();
     int NoOpticModel();
     int RCFIModel();
+
     void Match(size_t model=0);
     int Check();
     int CheckAllCandidates();
