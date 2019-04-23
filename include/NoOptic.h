@@ -11,11 +11,6 @@
 #include "MyFunctions.h"
 #include "Star.h"
 
-const int R0=2;
-//#define Rn 15
-const int SightSize = 15;
-const int PartitionNumber = 2800; //35 * 80
-const int StarNumber = 6000;
 const double Pi = 3.1415926;
 
 using namespace std;
@@ -28,6 +23,23 @@ struct StarPattern{
 struct EigenVecStruct{
     size_t star_index;
     vector<bool> eigen_vec;
+};
+
+struct NoOpticPara{
+
+    double UpperLimit;
+    double LowerLimit;
+    double LowerAdjacent;
+
+    size_t RadialPartition;
+    size_t CirclePartition;
+    size_t PartitionNumber; //35 * 80 (radial * circular)
+    NoOpticPara():UpperLimit(15.0),LowerLimit(1.0),LowerAdjacent(2.0),RadialPartition(35),
+                  CirclePartition(80),PartitionNumber(2800){}
+    NoOpticPara(double ul=15.0,double ll=1.0,double la=2.0,size_t rp=35,size_t cp=80):
+        UpperLimit(ul),LowerLimit(ll),
+        LowerAdjacent(la),RadialPartition(rp),CirclePartition(cp),PartitionNumber(rp*cp){}
+
 };
 
 class NoOptic{
@@ -59,16 +71,27 @@ class NoOptic{
     *************************************************************************************/
 public:
     /*变量区*/
-    //vector<StarPoint> &SkyStars; //导航星库中的星
-    //vector<StarPoint> &ImageStars; //观测星图中的星
-    vector<EigenVecStruct> StarEigens;
-    StarPattern PartitionCounter[PartitionNumber];
+    double LowerAdjacent;
+    double UpperLimit;
+    double LowerLimit;
+    size_t RadialPartition;
+    size_t CirclePartition;
+    size_t PartitionNumber; //35 * 80 (radial * circular)
+    size_t StarNumber;
 
-    int FinalResult;
+    vector<EigenVecStruct> StarEigens;
+    vector<StarPattern> PartitionCounter;
+
+    size_t CandidateNum;
     vector<size_t> __Candidate;
+
+
+public:
+    size_t star_partition(double x, double y);
 
     NoOptic();
     NoOptic(vector<StarPoint> &SkyStars);
+    NoOptic(vector<StarPoint> &SkyStars, NoOpticPara para);
 
     size_t ExeNoOptic(size_t target,vector<StarPoint> &ImageStars);//总执行流程
     int GetCandidate();

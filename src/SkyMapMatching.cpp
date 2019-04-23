@@ -172,10 +172,21 @@ int SkyMapMatching::TriangleModel() {
 int SkyMapMatching::NoOpticModel(){
     if(pNOM==nullptr)
     {
-        pNOM = new NoOptic(this->sky_.stars_);
+        NoOpticPara para(15.0,1e-6,0.6,160,80);
+        pNOM = new NoOptic(this->sky_.stars_,para);
     }
+    if(NOM_mode==NULL) NOM_mode = 0;
     int result = -1;
+    //static vector<size_t> all_redundant;
     if(pNOM->Match(this->__image_target,this->image_.stars_)>0){
+        //qDebug("All candidates in NoOptic result: %d",pNOM->CandidateNum);
+//        if(pNOM->CandidateNum>1){
+//            all_redundant.push_back(pNOM->CandidateNum);
+//        }
+//        QString output=QString::number(all_redundant.size())+": ";
+//        for(size_t i=0;i<all_redundant.size();i++) output+=" "+QString::number(all_redundant.at(i));
+//        qDebug()<<output;
+
         result = pNOM->GetCandidate();
     }
     qDebug()<<"NoOptic Model Ended with "<<result; //show id.
@@ -186,7 +197,7 @@ int SkyMapMatching::RCFIModel(){
     if(pRCFI==nullptr)
     {
         pRCFI = new RCFI(this->sky_.stars_,10,200,this->image_.focal_length);
-        pRCFI->init();
+        //pRCFI->init();
     }
     return this->SIMULATE?pRCFI->efind(this->image_.stars_,this->__target_star):pRCFI->find(this->image_.stars_,this->__target_star);
 }
@@ -213,6 +224,14 @@ void SkyMapMatching::Match(size_t model) {
             this->candidates_.push_back(one);
         }
         else printf("NoOptic Model cannot get answer.\n");
+        size_t maxnum = 0;
+        if(NOM_mode==1){
+            while(pNOM->CandidateNum>0 && maxnum++<20){
+                int id = pNOM->GetCandidate();
+                Candidate one("NoOptic Model",this->sky_.stars_[size_t(id)]);
+                this->candidates_.push_back(one);
+            }
+        }
         break;
     }
     case 3:{
@@ -559,7 +578,7 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, size_t rou
             RandomDiviation(this->image_.stars_,offset_rate);
 
             this->__image_target=this->SelectTargetStar();
-            qDebug()<<"The Target star(skymap's index):<--"<<this->__target_star.index<<"-->";
+            qDebug()<<"The Target star(skymap's index):<--"<<this->__target_star.index<<" "<<this->__target_star.x<<','<<this->__target_star.y<<" -->";
             qDebug()<<"@Matching...";
             this->Match(model);
             qDebug()<<"@Checking...";
@@ -586,7 +605,47 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, size_t rou
 ModelEvaluation SkyMapMatching::ExeSimulation(size_t model,size_t round,size_t miss_num,
                                               size_t add_num,double off_rate){
     this->SIMULATE = true;
+    string output;
+    size_t sround = round;
+    round = 300;
+    if(model == 2){
+        output="All result:\n";
+//        for(size_t i=0;i<10;i++){
+//            qDebug("$$$$$$$$$$$$$$$$%d th: LowerAdjacent: %.2f",i+1,0.1*i);
+//            delete pNOM;
+//            pNOM=nullptr;
+//            double la = 0.1*i;
+//            NoOpticPara para(15.0,1e-6,  la  ,35,80);
+//            pNOM = new NoOptic(this->sky_.stars_,para);
+//            ModelEvaluation eval1=this->ComprehensiveEvaluation(model,round,miss_num,add_num,off_rate);
+//            output += "LowerAdjacent=" + to_string(la) +":"+ to_string(eval1.accuracy)+"\n";
+//            cout<<output<<endl;
+//            cout.flush();
+//        }
+
+//        for(size_t i=11;i<=20;i++){
+//            for(size_t j=1;j<=10;j++){
+//                delete pNOM;
+//                pNOM=nullptr;
+//                size_t cp=i*10,rp=j*10;
+//                NoOpticPara para(15.0,1e-6,0.5,rp,cp);
+//                pNOM = new NoOptic(this->sky_.stars_,para);
+//                ModelEvaluation eval1=this->ComprehensiveEvaluation(model,round,miss_num,add_num,off_rate);
+//                output += "CP=" + to_string(cp)+" and "+"CP="+to_string(rp) +":"+ to_string(eval1.accuracy)+"\n";
+//                cout<<output<<endl;
+//                cout.flush();
+//            }
+//        }
+
+    }
+
+    delete pNOM;
+    pNOM = nullptr;
+    round = sround;
     ModelEvaluation eval1=this->ComprehensiveEvaluation(model,round,miss_num,add_num,off_rate);
     this->SIMULATE = false;
+    cout<<output<<endl;
+    qDebug()<<QString::fromStdString(output)<<endl;
+    qDebug("End.");
     return eval1;
 }

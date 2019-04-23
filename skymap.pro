@@ -41,7 +41,8 @@ SOURCES = \
     src/QCSVAdapter.cpp \
     src/exif.cpp \
     src/simdialog.cpp \
-    src/RCFI.cpp
+    src/RCFI.cpp \
+    form/modedialog.cpp
 
 HEADERS += \
     include\mainwindow.h \
@@ -59,11 +60,13 @@ HEADERS += \
     include/exif.h \
     #include/ConsolColor.h
     include/simdialog.h \
-    include/RCFI.h
+    include/RCFI.h \
+    form/modedialog.h
 
 FORMS += \
     form\mainwindow.ui \
-    form/simdialog.ui
+    form/simdialog.ui \
+    form/modedialog.ui
 
 INCLUDEPATH = \
     include \
