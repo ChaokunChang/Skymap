@@ -15,7 +15,7 @@ void TriangleMatching::LoadData(vector<StarPoint> &stars) {
         StarPoint s1 = stars[i];
         for(size_t j=i+1;j<stars.size();j++){
             StarPoint s2 = stars[j];
-            double dis = cal_dis(s1.x,s1.y,s2.x,s2.y);
+            double dis = getSphereAD(s1.x,s1.y,s2.x,s2.y);
             if(dis < __Threshold){
                 StarPair sp(s1.index, s2.index, dis);
                 stardata_.push_back(sp);
@@ -40,7 +40,7 @@ void TriangleMatching::LoadData(vector<StarPoint> &stars) {
 }
 
 bool explicit_pair(StarPoint &s1, StarPoint &s2){
-    return cal_dis(s1.x,s1.y,s2.x,s2.y)>=1e-6;
+    return getSphereAD(s1.x,s1.y,s2.x,s2.y)>=1e-6;
 }
 
 vector<StarPoint> TriangleMatching::RandomAdjacentStars(vector<StarPoint> &obv_stars, StarPoint &except) {

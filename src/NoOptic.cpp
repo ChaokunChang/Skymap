@@ -117,7 +117,7 @@ vector<bool> NoOptic::GetEigenVector(size_t StarNum, vector<StarPoint> &SkyStars
     //确定邻星
     for(size_t i=0;i<SkyStars.size(); i++){
         if(i==StarNum) continue;
-        double dis = cal_dis(SkyStars[StarNum].x,SkyStars[StarNum].y,SkyStars[i].x,SkyStars[i].y);
+        double dis = getSphereAD(SkyStars[StarNum].x,SkyStars[StarNum].y,SkyStars[i].x,SkyStars[i].y);
         if(dis < UpperLimit && dis > LowerLimit){
             //将符合条件的邻星的编号存储到vector中，并记录最近的那颗星。
             if(dis<ref_dis && dis>LowerAdjacent) {
@@ -135,7 +135,7 @@ vector<bool> NoOptic::GetEigenVector(size_t StarNum, vector<StarPoint> &SkyStars
         size_t id = AdjacentStars[i];
         double r,zeta,s;
         r = AdjacentDistances[i] / ref_dis;
-        s = cal_dis(SkyStars[id].x,SkyStars[id].y,SkyStars[ref_dis_id].x,SkyStars[ref_dis_id].y)/ref_dis;
+        s = getSphereAD(SkyStars[id].x,SkyStars[id].y,SkyStars[ref_dis_id].x,SkyStars[ref_dis_id].y)/ref_dis;
         double tmp = (1+r*r-s*s)/(2*r);
         if(tmp>1){
             if(tmp>1.001) cout<<"error zeta!"<<endl;

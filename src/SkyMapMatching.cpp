@@ -147,9 +147,9 @@ int SkyMapMatching::TriangleModel() {
             dis13 = getSpotAD(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y,this->image_.focal_length);
             dis23 = getSpotAD(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y,this->image_.focal_length);
         }else {
-            dis12 = cal_dis(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y);
-            dis13 = cal_dis(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y);
-            dis23 = cal_dis(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y);
+            dis12 = getSphereAD(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y);
+            dis13 = getSphereAD(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y);
+            dis23 = getSphereAD(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y);
         }
         if(dis12 < thresh && dis13 < thresh && dis23 < thresh){
             qDebug()<<"dis12    "<<"dis13   "<<"dis23";
