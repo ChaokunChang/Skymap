@@ -43,7 +43,9 @@ double random_double(const double& l,const double& r){
 
 double getSphereAD(double x1, double y1, double x2, double y2)
 {
-    double ret=sacos((pow(cos(x1*M_PI/180),2)*pow(cos(x2*M_PI/180),2) + cos(x1*M_PI/180)*sin(y1*M_PI/180)*cos(x2*M_PI/180)*sin(y2*M_PI/180) + sin(x1*M_PI/180)*sin(x2*M_PI/180)));
+    double cosX1=cos(x1*M_PI/180),cosY1=cos(y1*M_PI/180),sinX1=sin(x1*M_PI/180),sinY1=sin(y1*M_PI/180);
+    double cosX2=cos(x2*M_PI/180),cosY2=cos(y2*M_PI/180),sinX2=sin(x2*M_PI/180),sinY2=sin(y2*M_PI/180);
+    double ret=acos((cosX1*cosY1*cosX2*cosY2 + cosX1*sinY1*cosX2*sinY2 + sinX1*sinX2));
     return ret*180/M_PI;
 }
 

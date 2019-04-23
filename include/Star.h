@@ -18,6 +18,7 @@ struct StarPoint{
     double Module(){ return  sqrt(pow(x,2)+pow(y,2));}
     bool XInRange(const StarPoint &center, double length);
     bool YInRange(const StarPoint &center, double width);
+    bool PlaneInRange(const StarPoint &center, double length, double width);
     bool InRange(const StarPoint &center, double length, double width);
     void change_coordinate(const StarPoint &new_center);
 };

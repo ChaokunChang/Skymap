@@ -27,7 +27,7 @@ void TriangleMatching::LoadData(vector<StarPoint> &stars) {
     grouphead_.resize(__GroupNumber,0);
     groupsize_.resize(__GroupNumber,0);
     grouptail_.resize(__GroupNumber,0);
-    matchgroup_.resize(__GroupNumber);
+    matchgroup_.resize(2*stars.size()+1);
     for(StarPair sp:stardata_){
         int id = sp.angular_distance / __GapWidth;
         groupsize_[id] ++;
@@ -92,25 +92,6 @@ void TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, 
         s2 = stardata_[i].star2;
         Flag[size_t(s1)] = 1;
         Flag[size_t(s2)] = 1;
-//        SS_iter = StatStar.find(s1);
-//        if (SS_iter == StatStar.end()) {
-//            vector<int> v1;
-//            v1.push_back(s2);
-//            StatStar.insert(pair<int, vector<int> >(s1, v1));
-//        }
-//        else {
-//            SS_iter->second.push_back(s2);
-//        }
-
-//        SS_iter=StatStar.find(s2);
-//        if (SS_iter == StatStar.end()) {
-//            vector<int> v2;
-//            v2.push_back(s1);
-//            StatStar.insert(pair<int, vector<int> >(s2, v2));
-//        }
-//        else {
-//            SS_iter->second.push_back(s1);
-//        }
         StatStar[s1].push_back(s2);
         StatStar[s2].push_back(s1);
     }

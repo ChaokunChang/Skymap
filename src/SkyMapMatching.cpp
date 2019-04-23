@@ -172,7 +172,8 @@ int SkyMapMatching::TriangleModel() {
 int SkyMapMatching::NoOpticModel(){
     if(pNOM==nullptr)
     {
-        NoOpticPara para(15.0,1e-6,0.6,160,80);
+        //NoOpticPara para(15.0,1e-6,0.6,160,80);
+        NoOpticPara para(15.0,1e-6,0.6,30,80);
         pNOM = new NoOptic(this->sky_.stars_,para);
     }
     if(NOM_mode==NULL) NOM_mode = 0;
@@ -214,10 +215,17 @@ void SkyMapMatching::Match(size_t model) {
 
         }
         else printf("Triangle Model cannot get answer.\n");
+        while((skymap_index2=this->pTM->GetCandidate())){
+            if(skymap_index2 == -1) break;
+            this->__matching_star = this->sky_.stars_[size_t(skymap_index2)];
+            Candidate one("Triangle Model",this->__matching_star);
+            this->candidates_.push_back(one);
+        }
         break;
     }
     case 2:{
         int skymap_index1 = NoOpticModel();
+        //NOM_mode = 1;
         if(skymap_index1 >= 0) {
             this->__matching_star = this->sky_.stars_[size_t(skymap_index1)];
             Candidate one("NoOptic Model",this->__matching_star);
@@ -304,10 +312,10 @@ int SkyMapMatching::Check() {
     check_center.x -= this->__target_star.x;
     check_center.y -= this->__target_star.y;
     vector<StarPoint> check_set = this->sky_.Subset(check_center,this->image_.range_.first,this->image_.range_.second);
-    for(size_t i=0;i<check_set.size();i++){
-        check_set[i].change_coordinate(check_center);
-//        check_set[i].change_coordinate(this->__matching_star);
-    }
+//    for(size_t i=0;i<check_set.size();i++){
+//        check_set[i].change_coordinate(check_center);
+////        check_set[i].change_coordinate(this->__matching_star);
+//    }
     sort(check_set.begin(),check_set.end(),star_point_cmp);
 
     vector<StarPoint> candidate_set(this->image_.stars_);
@@ -385,9 +393,10 @@ void SkyMapMatching::GenerateSimImage(const StarPoint &centre, const double &len
     }
     if(!this->image_.stars_.empty()) this->image_.stars_.clear();
     this->image_.stars_=this->sky_.Subset(centre,length,width);
-    for (size_t i=0;i!=this->image_.stars_.size();i++) {
-        this->image_.stars_[i].change_coordinate(centre);
-    }
+//    for (size_t i=0;i!=this->image_.stars_.size();i++) {
+//        this->image_.stars_[i].change_coordinate(centre);
+//    }
+
     this->image_.count_ = this->image_.stars_.size();
     this->image_.centre_ = centre;
     image_properties prop(0,0,length,width,0.0);
@@ -433,9 +442,9 @@ void SkyMapMatching::GenerateSimImage(const StarPoint &centre, const double &ima
     vector<StarPoint> stars = sky_.Subset(centre,image_ratio,num);
     if(!this->image_.stars_.empty()) this->image_.stars_.clear();
     if(stars.size() == size_t(num)) {
-        for(size_t i=0;i<stars.size();i++){
-            stars[i].change_coordinate(centre);
-        }
+//        for(size_t i=0;i<stars.size();i++){
+//            stars[i].change_coordinate(centre);
+//        }
         this->image_.stars_.insert(this->image_.stars_.end(),stars.begin(),stars.end());
         this->image_.count_ = this->image_.stars_.size();
         this->image_.centre_ = centre;
@@ -597,7 +606,7 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, size_t rou
         qDebug()<<"--------------------------------------------------------------";
         qDebug("Retry Counts:%d",counts);
     }
-    double ans = (succeed_num+1.0)/(succeed_num+failed_num);
+    double ans = (succeed_num)/(succeed_num+failed_num);
     ModelEvaluation eval(succeed_num+failed_num,ans,"Triangle Model");
     return eval;
 }
@@ -606,9 +615,9 @@ ModelEvaluation SkyMapMatching::ExeSimulation(size_t model,size_t round,size_t m
                                               size_t add_num,double off_rate){
     this->SIMULATE = true;
     string output;
-    size_t sround = round;
-    round = 300;
     if(model == 2){
+        size_t sround = round;
+        round = 300;
         output="All result:\n";
 //        for(size_t i=0;i<10;i++){
 //            qDebug("$$$$$$$$$$$$$$$$%d th: LowerAdjacent: %.2f",i+1,0.1*i);
@@ -636,12 +645,12 @@ ModelEvaluation SkyMapMatching::ExeSimulation(size_t model,size_t round,size_t m
 //                cout.flush();
 //            }
 //        }
-
+        delete pNOM;
+        pNOM = nullptr;
+        round = sround;
     }
 
-    delete pNOM;
-    pNOM = nullptr;
-    round = sround;
+
     ModelEvaluation eval1=this->ComprehensiveEvaluation(model,round,miss_num,add_num,off_rate);
     this->SIMULATE = false;
     cout<<output<<endl;
