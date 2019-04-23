@@ -610,7 +610,7 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, size_t rou
         qDebug()<<"--------------------------------------------------------------";
         qDebug("Retry Counts:%d",counts);
     }
-    double ans = (succeed_num)/(succeed_num+failed_num);
+    double ans = (succeed_num)*1.0/(succeed_num+failed_num);
     ModelEvaluation eval(succeed_num+failed_num,ans,"Triangle Model");
     return eval;
 }

@@ -273,7 +273,7 @@ void MainWindow::receiveData(evalArgs arg)
     }
     res=futureEval.result();
     ui->statusBar->clearMessage();
-    ui->starDescriptionDisplay->setText(QString::number(res));
+    ui->starDescriptionDisplay->setText(QString::number(res*100)+"%");
 }
 
 void MainWindow::on_simCheckBox_stateChanged(int arg1)

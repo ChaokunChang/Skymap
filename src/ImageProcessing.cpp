@@ -5,16 +5,18 @@
 #include "ImageProcessing.h"
 
 vector<StarPoint> ImageProcessing::Process() {
-    Mat srcimg, segimg;
+    Mat srcimg, segimg,grayimg;
     vector<pair<pair<double, double>,double>> centroids;
 
     // read srcimg
     cout << "Reading image..." << endl;
     srcimg = read_img(this->__raw_picture);
 
+    grayimg = grey_img(srcimg);
+
     // segmentation
     cout << "Preprocessing image..." << endl;
-    segimg = preprocess_img(srcimg,"gradient");
+    segimg = preprocess_img(grayimg,"mean");
 
     // centroids
     cout << "Get centroids of stars..." << endl;
