@@ -186,8 +186,11 @@ int SkyMapMatching::RCFIModel(){
         pRCFI = new RCFI(this->sky_.stars_,12,600,this->image_.focal_length);
     }
     if(this->SIMULATE)
-        pRCFI->focal_length=0;
-    return pRCFI->find(this->image_.stars_,this->__target_star);
+        return pRCFI->sfind(this->image_.stars_,this->__target_star);
+    else {
+        return pRCFI->find(this->image_.stars_,this->__target_star);
+    }
+
 }
 
 void SkyMapMatching::Match(size_t model) {
