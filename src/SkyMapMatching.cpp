@@ -38,7 +38,7 @@ vector<StarPoint> SkyMapMatching::LoadImage(QString &f_name,image_properties pro
     this->SIMULATE = false;
     QCSVAdapter csv_sky(f_name);
     vector<StarPoint> stars = csv_sky.getRecords();
-    if(property.focal_length<1e-6) property.focal_length = 4;
+    if(property.focal_length<1e-6) property.focal_length = 28;
     this->image_.setProperties(property);
     double max_x=0,max_y=0;
     for(StarPoint sp:stars){
@@ -123,7 +123,6 @@ int SkyMapMatching::TriangleModel() {
     }
     assert(this->image_.count_>=3);
     qDebug()<<"focal_length:";
-
     if(this->image_.focal_length>1e-6){
         qDebug()<<this->image_.focal_length;
         qDebug()<<"Belowing are all-possible angle_distance in this image.";
@@ -141,13 +140,16 @@ int SkyMapMatching::TriangleModel() {
     while(round++<100){
         pTM->ChooseAdjacentStars(this->image_.stars_,triangle);
         if(!this->SIMULATE){
+            //this->image_.focal_length = 1000;
+            qDebug("Info: %d  %d %.2f %.2f",this->image_.imageWidth,this->image_.imageHeight,this->image_.imageWidthL,this->image_.focal_length);
+            qDebug("Loc info: %.2f, %.2f, %.2f, %.2f ",triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y);
             dis12 = getSpotAD(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y,this->image_.focal_length);
             dis13 = getSpotAD(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y,this->image_.focal_length);
             dis23 = getSpotAD(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y,this->image_.focal_length);
         }else {
-            dis12 = cal_dis(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y);
-            dis13 = cal_dis(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y);
-            dis23 = cal_dis(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y);
+            dis12 = getSphereAD(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y);
+            dis13 = getSphereAD(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y);
+            dis23 = getSphereAD(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y);
         }
         if(dis12 < thresh && dis13 < thresh && dis23 < thresh){
             qDebug()<<"dis12    "<<"dis13   "<<"dis23";
@@ -170,10 +172,22 @@ int SkyMapMatching::TriangleModel() {
 int SkyMapMatching::NoOpticModel(){
     if(pNOM==nullptr)
     {
-        pNOM = new NoOptic(this->sky_.stars_);
+        //NoOpticPara para(15.0,1e-6,0.6,160,80);
+        NoOpticPara para(15.0,1e-6,0.6,30,80);
+        pNOM = new NoOptic(this->sky_.stars_,para);
     }
+    if(NOM_mode==NULL) NOM_mode = 0;
     int result = -1;
+    //static vector<size_t> all_redundant;
     if(pNOM->Match(this->__image_target,this->image_.stars_)>0){
+        //qDebug("All candidates in NoOptic result: %d",pNOM->CandidateNum);
+//        if(pNOM->CandidateNum>1){
+//            all_redundant.push_back(pNOM->CandidateNum);
+//        }
+//        QString output=QString::number(all_redundant.size())+": ";
+//        for(size_t i=0;i<all_redundant.size();i++) output+=" "+QString::number(all_redundant.at(i));
+//        qDebug()<<output;
+
         result = pNOM->GetCandidate();
     }
     qDebug()<<"NoOptic Model Ended with "<<result; //show id.
@@ -205,16 +219,31 @@ void SkyMapMatching::Match(size_t model) {
 
         }
         else printf("Triangle Model cannot get answer.\n");
+        while((skymap_index2=this->pTM->GetCandidate())){
+            if(skymap_index2 == -1) break;
+            this->__matching_star = this->sky_.stars_[size_t(skymap_index2)];
+            Candidate one("Triangle Model",this->__matching_star);
+            this->candidates_.push_back(one);
+        }
         break;
     }
     case 2:{
         int skymap_index1 = NoOpticModel();
+        //NOM_mode = 1;
         if(skymap_index1 >= 0) {
             this->__matching_star = this->sky_.stars_[size_t(skymap_index1)];
             Candidate one("NoOptic Model",this->__matching_star);
             this->candidates_.push_back(one);
         }
         else printf("NoOptic Model cannot get answer.\n");
+        size_t maxnum = 0;
+        if(NOM_mode==1){
+            while(pNOM->CandidateNum>0 && maxnum++<20){
+                int id = pNOM->GetCandidate();
+                Candidate one("NoOptic Model",this->sky_.stars_[size_t(id)]);
+                this->candidates_.push_back(one);
+            }
+        }
         break;
     }
     case 3:{
@@ -287,10 +316,10 @@ int SkyMapMatching::Check() {
     check_center.x -= this->__target_star.x;
     check_center.y -= this->__target_star.y;
     vector<StarPoint> check_set = this->sky_.Subset(check_center,this->image_.range_.first,this->image_.range_.second);
-    for(size_t i=0;i<check_set.size();i++){
-        check_set[i].change_coordinate(check_center);
-//        check_set[i].change_coordinate(this->__matching_star);
-    }
+//    for(size_t i=0;i<check_set.size();i++){
+//        check_set[i].change_coordinate(check_center);
+////        check_set[i].change_coordinate(this->__matching_star);
+//    }
     sort(check_set.begin(),check_set.end(),star_point_cmp);
 
     vector<StarPoint> candidate_set(this->image_.stars_);
@@ -368,9 +397,10 @@ void SkyMapMatching::GenerateSimImage(const StarPoint &centre, const double &len
     }
     if(!this->image_.stars_.empty()) this->image_.stars_.clear();
     this->image_.stars_=this->sky_.Subset(centre,length,width);
-    for (size_t i=0;i!=this->image_.stars_.size();i++) {
-        this->image_.stars_[i].change_coordinate(centre);
-    }
+//    for (size_t i=0;i!=this->image_.stars_.size();i++) {
+//        this->image_.stars_[i].change_coordinate(centre);
+//    }
+
     this->image_.count_ = this->image_.stars_.size();
     this->image_.centre_ = centre;
     image_properties prop(0,0,length,width,0.0);
@@ -416,9 +446,9 @@ void SkyMapMatching::GenerateSimImage(const StarPoint &centre, const double &ima
     vector<StarPoint> stars = sky_.Subset(centre,image_ratio,num);
     if(!this->image_.stars_.empty()) this->image_.stars_.clear();
     if(stars.size() == size_t(num)) {
-        for(size_t i=0;i<stars.size();i++){
-            stars[i].change_coordinate(centre);
-        }
+//        for(size_t i=0;i<stars.size();i++){
+//            stars[i].change_coordinate(centre);
+//        }
         this->image_.stars_.insert(this->image_.stars_.end(),stars.begin(),stars.end());
         this->image_.count_ = this->image_.stars_.size();
         this->image_.centre_ = centre;
@@ -580,7 +610,7 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, size_t rou
         qDebug()<<"--------------------------------------------------------------";
         qDebug("Retry Counts:%d",counts);
     }
-    double ans = (succeed_num+1.0)/(succeed_num+failed_num);
+    double ans = (succeed_num)/(succeed_num+failed_num);
     ModelEvaluation eval(succeed_num+failed_num,ans,"Triangle Model");
     return eval;
 }
@@ -588,7 +618,47 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, size_t rou
 ModelEvaluation SkyMapMatching::ExeSimulation(size_t model,size_t round,size_t miss_num,
                                               size_t add_num,double off_rate){
     this->SIMULATE = true;
+    string output;
+    if(model == 2){
+        size_t sround = round;
+        round = 300;
+        output="All result:\n";
+//        for(size_t i=0;i<10;i++){
+//            qDebug("$$$$$$$$$$$$$$$$%d th: LowerAdjacent: %.2f",i+1,0.1*i);
+//            delete pNOM;
+//            pNOM=nullptr;
+//            double la = 0.1*i;
+//            NoOpticPara para(15.0,1e-6,  la  ,35,80);
+//            pNOM = new NoOptic(this->sky_.stars_,para);
+//            ModelEvaluation eval1=this->ComprehensiveEvaluation(model,round,miss_num,add_num,off_rate);
+//            output += "LowerAdjacent=" + to_string(la) +":"+ to_string(eval1.accuracy)+"\n";
+//            cout<<output<<endl;
+//            cout.flush();
+//        }
+
+//        for(size_t i=11;i<=20;i++){
+//            for(size_t j=1;j<=10;j++){
+//                delete pNOM;
+//                pNOM=nullptr;
+//                size_t cp=i*10,rp=j*10;
+//                NoOpticPara para(15.0,1e-6,0.5,rp,cp);
+//                pNOM = new NoOptic(this->sky_.stars_,para);
+//                ModelEvaluation eval1=this->ComprehensiveEvaluation(model,round,miss_num,add_num,off_rate);
+//                output += "CP=" + to_string(cp)+" and "+"CP="+to_string(rp) +":"+ to_string(eval1.accuracy)+"\n";
+//                cout<<output<<endl;
+//                cout.flush();
+//            }
+//        }
+        delete pNOM;
+        pNOM = nullptr;
+        round = sround;
+    }
+
+
     ModelEvaluation eval1=this->ComprehensiveEvaluation(model,round,miss_num,add_num,off_rate);
     this->SIMULATE = false;
+    cout<<output<<endl;
+    qDebug()<<QString::fromStdString(output)<<endl;
+    qDebug("End.");
     return eval1;
 }

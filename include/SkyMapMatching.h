@@ -18,6 +18,7 @@
 #include "NoOptic.h"
 #include "RCFI.h"
 #include "MyFunctions.h"
+
 #define PIXEL_LENGTH 1.5e-6
 #define DEFAULT_FOCAL_LENGTH 4e-3
 using namespace std;
@@ -104,6 +105,7 @@ public:
     SkyMap sky_;
     Observation image_;
     vector<Candidate> candidates_;
+    int NOM_mode;
 
 public:
     SkyMapMatching();
@@ -117,12 +119,15 @@ public:
 
     size_t SelectTargetStar();
     void SelectTargetStar(int);
+
     int TriangleModel();
     int NoOpticModel();
     int RCFIModel();
+
     void Match(size_t model=0);
     int Check();
     int CheckAllCandidates();
+
     //void initPara(int,int,double,double,double);
     StarPoint GetAnswer(){ return this->__matching_star;}
     StarPoint GetTargetStar(){ return this->__target_star;}

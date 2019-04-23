@@ -15,7 +15,7 @@ void TriangleMatching::LoadData(vector<StarPoint> &stars) {
         StarPoint s1 = stars[i];
         for(size_t j=i+1;j<stars.size();j++){
             StarPoint s2 = stars[j];
-            double dis = cal_dis(s1.x,s1.y,s2.x,s2.y);
+            double dis = getSphereAD(s1.x,s1.y,s2.x,s2.y);
             if(dis < __Threshold){
                 StarPair sp(s1.index, s2.index, dis);
                 stardata_.push_back(sp);
@@ -27,7 +27,7 @@ void TriangleMatching::LoadData(vector<StarPoint> &stars) {
     grouphead_.resize(__GroupNumber,0);
     groupsize_.resize(__GroupNumber,0);
     grouptail_.resize(__GroupNumber,0);
-    matchgroup_.resize(__GroupNumber);
+    matchgroup_.resize(2*stars.size()+1);
     for(StarPair sp:stardata_){
         int id = sp.angular_distance / __GapWidth;
         groupsize_[id] ++;
@@ -40,7 +40,7 @@ void TriangleMatching::LoadData(vector<StarPoint> &stars) {
 }
 
 bool explicit_pair(StarPoint &s1, StarPoint &s2){
-    return cal_dis(s1.x,s1.y,s2.x,s2.y)>=1e-6;
+    return getSphereAD(s1.x,s1.y,s2.x,s2.y)>=1e-6;
 }
 
 vector<StarPoint> TriangleMatching::RandomAdjacentStars(vector<StarPoint> &obv_stars, StarPoint &except) {
@@ -92,25 +92,6 @@ void TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, 
         s2 = stardata_[i].star2;
         Flag[size_t(s1)] = 1;
         Flag[size_t(s2)] = 1;
-//        SS_iter = StatStar.find(s1);
-//        if (SS_iter == StatStar.end()) {
-//            vector<int> v1;
-//            v1.push_back(s2);
-//            StatStar.insert(pair<int, vector<int> >(s1, v1));
-//        }
-//        else {
-//            SS_iter->second.push_back(s2);
-//        }
-
-//        SS_iter=StatStar.find(s2);
-//        if (SS_iter == StatStar.end()) {
-//            vector<int> v2;
-//            v2.push_back(s1);
-//            StatStar.insert(pair<int, vector<int> >(s2, v2));
-//        }
-//        else {
-//            SS_iter->second.push_back(s1);
-//        }
         StatStar[s1].push_back(s2);
         StatStar[s2].push_back(s1);
     }
