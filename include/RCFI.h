@@ -8,9 +8,10 @@ struct RCandidate{
     int idx;
     int rconf;
     int cconf;
+    int nconf;
     bool operator<(RCandidate that)
     {
-        return rconf>that.rconf||(rconf==that.rconf&&cconf<that.cconf)||(rconf==that.rconf&&cconf==that.cconf&&idx<that.idx);
+        return rconf>that.rconf||(rconf==that.rconf&&cconf<that.cconf)||(rconf==that.rconf&&cconf==that.cconf&&nconf>that.nconf);
     }
 };
 
@@ -21,14 +22,15 @@ public:
 	~RCFI();
 	void init();
     void load();
-    int find(std::vector<StarPoint>,StarPoint);
-    int efind(std::vector<StarPoint>,StarPoint);
+    int find(std::vector<StarPoint>&,StarPoint);
+    int sfind(std::vector<StarPoint>&,StarPoint);
+    double focal_length;
 private:
     std::vector<StarPoint> NavStarTable;
 	std::vector<std::set<int>> RadiusFeatureTable;
 	std::map<int,int> CyclicFeatureTable;
+    std::map<int,int> NeighbourSizeTable;
 	double Rr;
-	int Nq;
-    double focal_length;
+    int Nq;
 };
 
