@@ -183,9 +183,11 @@ int SkyMapMatching::NoOpticModel(){
 int SkyMapMatching::RCFIModel(){
     if(pRCFI==nullptr)
     {
-        pRCFI = new RCFI(this->sky_.stars_,10,200,this->image_.focal_length);
+        pRCFI = new RCFI(this->sky_.stars_,12,600,this->image_.focal_length);
     }
-    return this->SIMULATE?pRCFI->efind(this->image_.stars_,this->__target_star):pRCFI->find(this->image_.stars_,this->__target_star);
+    if(this->SIMULATE)
+        pRCFI->focal_length=0;
+    return pRCFI->find(this->image_.stars_,this->__target_star);
 }
 
 void SkyMapMatching::Match(size_t model) {
@@ -528,7 +530,7 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, size_t rou
     size_t r=0;
     int counts=0;
     StarPoint center;
-    double fl=15.0,fr=15.0;
+    double fl=30.0,fr=30.0;
     while(r<round){
         if(r==63){
             cout<<""<<endl;
@@ -556,7 +558,7 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(size_t model, size_t rou
             RandomDiviation(this->image_.stars_,offset_rate);
 
             this->__image_target=this->SelectTargetStar();
-            qDebug()<<"The Target star(skymap's index):<--"<<this->__target_star.index<<" "<<this->__target_star.x<<','<<this->__target_star.y<<" -->";
+            qDebug()<<"The Target star(skymap's index):<--"<<this->__target_star.index<<" "<<this->sky_.stars_[this->__target_star.index].x<<','<<this->sky_.stars_[this->__target_star.index].y<<" -->";
             qDebug()<<"@Matching...";
             this->Match(model);
             qDebug()<<"@Checking...";

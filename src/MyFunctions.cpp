@@ -43,18 +43,18 @@ double random_double(const double& l,const double& r){
 
 double getSphereAD(double x1, double y1, double x2, double y2)
 {
-    double ret=sacos((pow(cos(x1*M_PI/180),2)*pow(cos(x2*M_PI/180),2) + cos(x1*M_PI/180)*sin(y1*M_PI/180)*cos(x2*M_PI/180)*sin(y2*M_PI/180) + sin(x1*M_PI/180)*sin(x2*M_PI/180)));
+    double ret=sacos((cos(x1*M_PI/180)*cos(y1*M_PI/180)*cos(x2*M_PI/180)*cos(y2*M_PI/180) + cos(x1*M_PI/180)*sin(y1*M_PI/180)*cos(x2*M_PI/180)*sin(y2*M_PI/180) + sin(x1*M_PI/180)*sin(x2*M_PI/180)));
     return ret*180/M_PI;
 }
 
 double getSphereAngle(double x0, double y0, double x1, double y1, double x2, double y2)
 {
     double ret=sacos((pow(getSphereAD(x0, y0, x1, y1)*M_PI/180,2) + pow(getSphereAD(x0, y0, x2, y2)*M_PI/180,2) - pow(getSphereAD(x1, y1, x2, y2)*M_PI/180,2)) / 2 * getSphereAD(x0, y0, x1, y1)*M_PI/180*getSphereAD(x0, y0, x2, y2)*M_PI/180);
-    return ret*180/M_PI;
+    return ((y1-y0)/(x1-x0)<(y2-y0)/(x2-x0))?ret*180/M_PI:(ret*180/M_PI+180);
 }
 
 double getSpotAngle(double x0, double y0, double x1, double y1, double x2, double y2,double focal_length)
 {
     double ret=sacos((pow(getSpotAD(x0, y0, x1, y1,focal_length)*M_PI/180,2) + pow(getSpotAD(x0, y0, x2, y2,focal_length)*M_PI/180,2) - pow(getSpotAD(x1, y1, x2, y2,focal_length)*M_PI/180,2)) / 2 * getSpotAD(x0, y0, x1, y1,focal_length)*M_PI/180*getSpotAD(x0, y0, x2, y2,focal_length)*M_PI/180);
-    return ret*180/M_PI;
+    return ((y1-y0)/(x1-x0)<(y2-y0)/(x2-x0))?ret*180/M_PI:(ret*180/M_PI+180);
 }
