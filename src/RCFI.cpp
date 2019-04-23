@@ -240,3 +240,93 @@ int RCFI::find(std::vector<StarPoint>& ObserveStarTable,StarPoint target)
         return canStar[0].idx;
     }
 }
+
+int RCFI::sfind(std::vector<StarPoint>& ObserveStarTable,StarPoint target)
+{
+    std::map<int, int> starMap;
+    std::vector<StarPoint> neighbour;
+    for (std::vector<StarPoint>::iterator it = ObserveStarTable.begin(); it != ObserveStarTable.end(); it++)
+    {
+        if (it->index != target.index && getSpotAD(it->x, it->y, target.x, target.y,focal_length) <= Rr)
+        {
+            std::set<int> tmpSet = RadiusFeatureTable[(int)(getSphereAD(it->x, it->y, target.x, target.y) / (Rr/Nq))];
+            neighbour.push_back(*it);
+            for (std::set<int>::iterator its = tmpSet.begin(); its != tmpSet.end(); its++)
+            {
+                if (starMap.find(*its) != starMap.end())
+                {
+                    starMap[*its]++;
+                }
+                else
+                {
+                    starMap.insert(std::pair<int, int>(*its, 1));
+                }
+            }
+        }
+    }
+    qDebug()<<"successfully get radius feature."<<endl;
+    std::vector<RCandidate> canStar;
+    if(starMap.empty())
+        return -1;
+    for (std::map<int, int>::iterator itm = starMap.begin(); itm != starMap.end(); itm++)
+    {
+        canStar.push_back({itm->first,itm->second,256,NeighbourSizeTable[itm->first]});
+    }
+    double minAngle = 500;
+    StarPoint minPosStar;
+    for (std::vector<StarPoint>::iterator its = neighbour.begin(); its != neighbour.end(); its++)
+    {
+        for (std::vector<StarPoint>::iterator itp = neighbour.begin(); itp != neighbour.end(); itp++)
+        {
+            if(its!=itp)
+            {
+                double tminAngle = abs(getSphereAngle(target.x, target.y, its->x, its->y, itp->x, itp->y));
+                if (tminAngle < minAngle)
+                {
+                    minAngle=tminAngle;
+                    minPosStar = ((its->y - target.y) / (its->x - target.x)) < ((itp->y - target.y) / (itp->x - target.x)) ? *its : *itp;
+                }
+            }
+
+        }
+    }
+    qDebug()<<"successfully min pos star"<<minPosStar.index<<"."<<endl;
+    int cf = 0;
+    int tmpArr[8] = { 0 };
+    for (std::vector<StarPoint>::iterator its = neighbour.begin(); its != neighbour.end(); its++)
+    {
+        if (its->index != minPosStar.index)
+        {
+            int tidx=(int)(getSphereAngle(target.x, target.y, its->x, its->y, minPosStar.x, minPosStar.y) /45);
+            if (tmpArr[tidx] == 0)
+            {
+                tmpArr[tidx] = 1;
+            }
+        }
+    }
+    for (int i = 0; i != 8; i++)
+    {
+        int t = 0;
+        for (int j = i; j != i + 8; j++)
+        {
+            t += tmpArr[j % 8] * pow(2, j - i);
+        }
+        cf = std::max(cf, t);
+    }
+    for (std::vector<RCandidate>::iterator it = canStar.begin(); it != canStar.end(); it++)
+    {
+        if (CyclicFeatureTable.find(it->idx) != CyclicFeatureTable.end())
+        {
+            it->cconf=abs(CyclicFeatureTable.find(it->idx)->second-cf);
+        }
+    }
+    qDebug()<<"successfully get cyclic feature."<<endl;
+    sort(canStar.begin(),canStar.end());
+    if(canStar.empty())
+    {
+        return -1;
+    }
+    else {
+        return canStar[0].idx;
+    }
+}

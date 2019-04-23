@@ -23,7 +23,7 @@ public:
 	void init();
     void load();
     int find(std::vector<StarPoint>&,StarPoint);
-    int efind(std::vector<StarPoint>&,StarPoint);
+    int sfind(std::vector<StarPoint>&,StarPoint);
     double focal_length;
 private:
     std::vector<StarPoint> NavStarTable;
