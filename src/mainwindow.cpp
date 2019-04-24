@@ -2,14 +2,18 @@
 #include "ui_mainwindow.h"
 #define LOADANI(i) loading[((i)/100)%4]
 static QStringList loading={"",".","..","..."};
-
+static QStringList AN={"三角匹配","无标定参数","径向环向特征","Log-Polar"};
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     this->setAttribute(Qt::WA_DeleteOnClose);
+    qApp->setWindowIcon(QIcon(":/Data/Data/skymap_logo.ico"));
     pSMM = new SkyMapMatching();
+    connect(ui->open,SIGNAL(triggered()),this,SLOT(on_openButton_clicked()));
+    connect(ui->quit,SIGNAL(triggered()),qApp,SLOT(quit()));
+    connect(ui->about,SIGNAL(triggered()),this,SLOT(showAboutDialog()));
 }
 
 MainWindow::~MainWindow()
@@ -24,11 +28,15 @@ void MainWindow::loadPicture(QString fileName)
     if(this->skyImg.isNull())
     {
         QMessageBox skyImgNullMsgBox;
+        skyImgNullMsgBox.setWindowTitle(tr("错误"));
         skyImgNullMsgBox.setText(tr("无效的图片！"));
         skyImgNullMsgBox.exec();
     }
     else
     {
+        ui->focalLengthInput->clear();
+        ui->posXDisplay->clear();
+        ui->posYDisplay->clear();
         if(fileName.right(3).compare("jpg",Qt::CaseInsensitive)||fileName.right(3).compare("jpeg",Qt::CaseInsensitive))
         {
             const char *photoPath = fileName.toStdString().c_str();
@@ -67,16 +75,14 @@ void MainWindow::loadPicture(QString fileName)
         }
         if(abs(this->focus)>=EPSINON)
         {
-            this->ui->picFocusInput->setText(QString::number(this->focus));
-            this->ui->picFocusInput->setReadOnly(true);
+            this->ui->focalLengthInput->setText(QString::number(this->focus));
+            this->ui->focalLengthInput->setReadOnly(true);
         }
-        this->ui->picPosXLabelDis->setText(QString::number(this->posX));
-        this->ui->picPosYLabelDis->setText(QString::number(this->posY));
-        ui->picFocusInput->clear();
-        ui->picPosXLabelDis->clear();
-        ui->picPosYLabelDis->clear();
+        this->ui->posXDisplay->setText(QString::number(this->posX));
+        this->ui->posYDisplay->setText(QString::number(this->posY));
         ui->starList->clear();
-        ui->pushButton->blockSignals(true);
+        ui->openButton->blockSignals(true);
+        ui->evalButton->blockSignals(true);
         ui->statusBar->showMessage(tr("请稍候……正在处理图片"));
         ui->picDisplayArea->setPixmap(QPixmap::fromImage(this->skyImg));
         QElapsedTimer timer;
@@ -91,6 +97,7 @@ void MainWindow::loadPicture(QString fileName)
         if(this->starRecs.empty())
         {
             QMessageBox unableFindStarMsgBox;
+            unableFindStarMsgBox.setWindowTitle(tr("错误"));
             unableFindStarMsgBox.setText(tr("无法找到星点！"));
             unableFindStarMsgBox.exec();
         }
@@ -102,7 +109,7 @@ void MainWindow::loadPicture(QString fileName)
                 ui->starList->addItem(item);
             }
         }
-         ui->pushButton->blockSignals(false);
+         ui->openButton->blockSignals(false);
     }
     ui->starList->blockSignals(true);
     ui->statusBar->showMessage(tr("请稍候……正在加载并处理星表"));
@@ -121,12 +128,15 @@ void MainWindow::loadPicture(QString fileName)
     ui->statusBar->clearMessage();
     this->setAcceptDrops(true);
     ui->starList->blockSignals(false);
+    ui->evalButton->blockSignals(true);
+    ui->tabWidget->setCurrentIndex(0);
 }
 
 
-int MainWindow::findMatchingStar(int targetIndex,int algorithm)
+int MainWindow::findMatchingStar(int targetIndex)
 {
     this->pSMM->SelectTargetStar(targetIndex);
+    getAlgorithm();
     this->pSMM->Match(algorithm);
     return this->pSMM->CheckAllCandidates();
 }
@@ -148,28 +158,19 @@ vector<StarPoint> initStarMapMatching(SkyMapMatching* pSMM, image_properties pro
     return ret;
 }
 
-double evalStarMapMatching(SkyMapMatching* pSMM,int algortithm,evalArgs arg)
+double MainWindow::evalStarMapMatching(evalArgs arg)
 {
     QString dataset = data_path;
     if(pSMM->sky_.stars_.empty()) pSMM->LoadSky(dataset);
-    return pSMM->ExeSimulation(static_cast<size_t>(algortithm) ,static_cast<size_t>(arg.round),
+    return pSMM->ExeSimulation(algorithm,static_cast<size_t>(arg.round),
                                static_cast<size_t>(arg.missing),static_cast<size_t>(arg.redundance),
                                arg.deviation).accuracy;
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_openButton_clicked()
 {
-    if (ui->simCheckBox->checkState()==Qt::CheckState::Unchecked)
-    {
-        QString fileName = QFileDialog::getOpenFileName(this,tr("打开图片"),"",tr("所有文件(*.*);;图片文件(*.jpg *.png *.bmp *.jpeg)"));
-        loadPicture(fileName);
-    }
-    else
-    {
-        simDialog* sD = new simDialog();
-        connect(sD,SIGNAL(sendData(evalArgs)),this,SLOT(receiveData(evalArgs)));
-        sD->exec();
-    }
+    QString fileName = QFileDialog::getOpenFileName(this,tr("打开图片"),"",tr("所有文件(*.*);;图片文件(*.jpg *.png *.bmp *.jpeg)"));
+    loadPicture(fileName);
 }
 
 void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
@@ -196,7 +197,8 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
     timer.start();
     ui->starList->blockSignals(true);
     ui->statusBar->showMessage(tr("请稍候……正在寻找匹配"));
-    QFuture<int> futureFMS = QtConcurrent::run(this,&MainWindow::findMatchingStar,item->text().section('-',0,0).toInt()-1,ui->algorithmComboBox->currentIndex());
+    getAlgorithm();
+    QFuture<int> futureFMS = QtConcurrent::run(this,&MainWindow::findMatchingStar,item->text().section('-',0,0).toInt()-1);
     while(!futureFMS.isFinished())
     {
         ui->statusBar->showMessage(tr("请稍候……正在寻找匹配")+LOADANI(int(timer.elapsed())));
@@ -215,15 +217,12 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
     }
     else {
         QMessageBox matchingFailMsgBox;
+        matchingFailMsgBox.setWindowTitle(tr("错误"));
         matchingFailMsgBox.setText(tr("匹配失败！"));
         matchingFailMsgBox.exec();
    }
     ui->starList->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->starList->blockSignals(false);
-
-//    ModelEvaluation eval = this->pSMM->ExeSimulation(0,10);
-//    cout<<"The Correctness: "<<eval.correctness<<endl;
-//    ui->picFocusInput->setText(QString::number(eval.correctness,10,3));
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)
@@ -248,16 +247,32 @@ void MainWindow::dropEvent(QDropEvent* event)
     this->loadPicture(qm->urls()[0].toLocalFile());//使用图片函数
 }
 
-void MainWindow::on_picFocusInput_editingFinished()
+vector<QString> loadStarNames(QString fileName)
 {
-    this->focus=this->ui->picFocusInput->text().toDouble();
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly))
+        throw "File Not Found!";
+    std::vector<QString> starNameList;
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+            QString line = in.readLine();
+            QStringList fields = line.split(',');
+            starNameList.push_back("SAO "+fields[1]);
+    }
+    return starNameList;
 }
 
-void MainWindow::receiveData(evalArgs arg)
+void MainWindow::on_focalLengthInput_editingFinished()
+{
+    this->focus=this->ui->focalLengthInput->text().toDouble();
+}
+
+void MainWindow::on_evalButton_clicked()
 {
     QString dataset = data_path;
-    //if(this->pSMM->sky_.stars_.empty())
-    ui->starNoDisplay->setText(ui->algorithmComboBox->currentText());
+    evalArgs arg={ui->roundInput->text().toInt(),ui->missingInput->text().toInt(),ui->redundanceInput->text().toInt(),ui->deviationInput->text().toDouble()};
+    getAlgorithm();
+    ui->starNoDisplay->setText(algorithmNames.join(','));
     ui->starNameDisplay->setText(QString::number(arg.missing));
     ui->starPosXDisplay->setText(QString::number(arg.redundance));
     ui->starPosYDisplay->setText(QString::number(arg.deviation));
@@ -265,7 +280,8 @@ void MainWindow::receiveData(evalArgs arg)
     double res;
     QElapsedTimer timer;
     timer.start();
-    QFuture<double> futureEval = QtConcurrent::run(evalStarMapMatching,this->pSMM,ui->algorithmComboBox->currentIndex()+1,arg);
+    getAlgorithm();
+    QFuture<double> futureEval = QtConcurrent::run(this,&MainWindow::evalStarMapMatching,arg);
     while(!futureEval.isFinished())
     {
         ui->statusBar->showMessage(tr("请稍候……正在进行仿真")+LOADANI(int(timer.elapsed())));
@@ -276,12 +292,11 @@ void MainWindow::receiveData(evalArgs arg)
     ui->starDescriptionDisplay->setText(QString::number(res*100)+"%");
 }
 
-void MainWindow::on_simCheckBox_stateChanged(int arg1)
+void MainWindow::on_tabWidget_currentChanged(int index)
 {
-    if(arg1==0)
+    if(index==0)
     {
-        ui->pushButton->setText(tr("打开图片"));
-        ui->algorithmComboBox->insertItem(0,tr("综合"));
+        ui->infoGroupBox->setTitle(tr("星点信息"));
         ui->starNoLabel->setText(tr("星编号"));
         ui->starNameLabel->setText(tr("星名"));
         ui->starPosXLabel->setText(tr("赤经"));
@@ -297,8 +312,7 @@ void MainWindow::on_simCheckBox_stateChanged(int arg1)
     }
     else
     {
-        ui->pushButton->setText(tr("开始仿真"));
-        ui->algorithmComboBox->removeItem(0);
+        ui->infoGroupBox->setTitle(tr("算法验证"));
         ui->starNoLabel->setText(tr("算法"));
         ui->starNameLabel->setText(tr("缺失数"));
         ui->starPosXLabel->setText(tr("冗余数"));
@@ -314,17 +328,40 @@ void MainWindow::on_simCheckBox_stateChanged(int arg1)
     }
 }
 
-vector<QString> loadStarNames(QString fileName)
+void MainWindow::getAlgorithm()
 {
-    QFile file(fileName);
-    if (!file.open(QIODevice::ReadOnly))
-        throw "File Not Found!";
-    std::vector<QString> starNameList;
-    QTextStream in(&file);
-    while (!in.atEnd()) {
-            QString line = in.readLine();
-            QStringList fields = line.split(',');
-            starNameList.push_back("SAO "+fields[1]);
+    algorithmNames.clear();
+    algorithm[0]=ui->TMCheckbox->isChecked();
+    algorithm[1]=ui->NOMCheckbox->isChecked();
+    algorithm[2]=ui->RCFICheckbox->isChecked();
+    algorithm[3]=ui->LPFICheckbox->isChecked();
+    for(int i=0;i!=4;i++)
+    {
+        if(algorithm[i])
+        {
+            algorithmNames.push_back(AN[i]);
+        }
     }
-    return starNameList;
+}
+
+void MainWindow::showAboutDialog()
+{
+    QMessageBox aboutMsgBox;
+    aboutMsgBox.setWindowTitle(tr("关于"));
+    aboutMsgBox.setText(tr("    星图识别 版本：1.1\n \
+    Copyright (C) 2019  常朝坤 赵伟丞 陈中钰\n \
+\n \
+    This program is free software: you can redistribute it and/or modify\n \
+    it under the terms of the GNU General Public License as published by\n \
+    the Free Software Foundation, either version 3 of the License, or\n \
+    (at your option) any later version.\n \
+\n \
+    This program is distributed in the hope that it will be useful,\n \
+    but WITHOUT ANY WARRANTY; without even the implied warranty of\n \
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n \
+    GNU General Public License for more details.\n \
+\n \
+    You should have received a copy of the GNU General Public License\n \
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.\n"));
+    aboutMsgBox.exec();
 }

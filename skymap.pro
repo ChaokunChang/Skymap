@@ -23,7 +23,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-CONFIG += c++11
+CONFIG += c++17
 
 SOURCES = \
     src\main.cpp \
@@ -40,9 +40,7 @@ SOURCES = \
     src\TriangleMatching.cpp \
     src/QCSVAdapter.cpp \
     src/exif.cpp \
-    src/simdialog.cpp \
-    src/RCFI.cpp \
-    form/modedialog.cpp
+    src/RCFI.cpp
 
 HEADERS += \
     include\mainwindow.h \
@@ -59,14 +57,11 @@ HEADERS += \
     include/QCSVAdapter.h \
     include/exif.h \
     #include/ConsolColor.h
-    include/simdialog.h \
     include/RCFI.h \
-    form/modedialog.h
+    include/commonhelper.h
 
 FORMS += \
-    form\mainwindow.ui \
-    form/simdialog.ui \
-    form/modedialog.ui
+    form\mainwindow.ui
 
 INCLUDEPATH = \
     include \

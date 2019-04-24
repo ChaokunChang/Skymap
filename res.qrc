@@ -3,5 +3,8 @@
         <file>Data/skymaps.csv</file>
         <file>Data/sky_table_loc_SAO.csv</file>
         <file>Data/sky_table_name_SAO.csv</file>
+        <file>Data/ElegantDark.qss</file>
+        <file>Data/skymap_logo.ico</file>
     </qresource>
+    <qresource prefix="/"/>
 </RCC>

@@ -79,13 +79,13 @@ struct Candidate{
 
 class ModelEvaluation{
 public:
-    string model_name;
+    bool* model;
     string property;
     int round;
     double accuracy;
 
-    ModelEvaluation():model_name("default"),property("default"),round(0),accuracy(0){}
-    ModelEvaluation(int r,double c,string name="default",string prop="default"):model_name(name),property(prop),
+    ModelEvaluation():property("default"),round(0),accuracy(0){}
+    ModelEvaluation(int r,double c,bool* model,string prop="default"):model(model),property(prop),
         round(r),accuracy(c){}
 };
 
@@ -124,16 +124,16 @@ public:
     int NoOpticModel();
     int RCFIModel();
 
-    void Match(size_t model=0);
+    void Match(bool*);
     int Check();
     int CheckAllCandidates();
 
     //void initPara(int,int,double,double,double);
     StarPoint GetAnswer(){ return this->__matching_star;}
     StarPoint GetTargetStar(){ return this->__target_star;}
-    ModelEvaluation ExeSimulation(size_t model=0,size_t round=100,size_t missing=0,
+    ModelEvaluation ExeSimulation(bool* model=0,size_t round=100,size_t missing=0,
                                   size_t redundence=0,double deviation=0.0);
-    ModelEvaluation ComprehensiveEvaluation(size_t model=0,size_t round=100,size_t missing=0,
+    ModelEvaluation ComprehensiveEvaluation(bool* model,size_t round=100,size_t missing=0,
                                             size_t redundence=0,double deviation=0.0);
 
 };
