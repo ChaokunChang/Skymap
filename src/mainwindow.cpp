@@ -186,12 +186,7 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
     double x=item->text().section('(',1,1).section(',',0,0).toDouble();
     double y=item->text().section(',',1,1).section(')',0,0).toDouble();
     this->ui->picDisplayScrollArea->ensureVisible(ceil(x),ceil(y));
-    QImage tImg = this->skyImg;
-    QPainter painter(&tImg);
-    painter.setPen(QPen(QColor(255, 255, 255), 3));
-    painter.drawEllipse(QPointF(x,y), 8, 8);
-    painter.end();
-    ui->picDisplayArea->setPixmap(QPixmap::fromImage(tImg));
+
     int res;
     QElapsedTimer timer;
     timer.start();
@@ -223,6 +218,12 @@ void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
    }
     ui->starList->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->starList->blockSignals(false);
+    QImage tImg = this->skyImg;
+    QPainter painter(&tImg);
+    painter.setPen(QPen(QColor(255, 255, 255), 3));
+    painter.drawEllipse(QPointF(x,y), 8, 8);
+    painter.end();
+    ui->picDisplayArea->setPixmap(QPixmap::fromImage(tImg));
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)
