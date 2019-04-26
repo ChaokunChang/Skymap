@@ -17,6 +17,7 @@
 #include "TriangleMatching.h"
 #include "NoOptic.h"
 #include "RCFI.h"
+#include "LPFI.h"
 #include "MyFunctions.h"
 
 #define PIXEL_LENGTH 1.5e-6
@@ -98,6 +99,7 @@ private:
     TriangleMatching* pTM=nullptr;
     NoOptic* pNOM=nullptr;
     RCFI* pRCFI=nullptr;
+    LPFI* pLPFI=nullptr;
 
 public:
     const double LongitudeRange = 360;
@@ -123,7 +125,7 @@ public:
     int TriangleModel();
     int NoOpticModel();
     int RCFIModel();
-
+    int LPFIModel();
     void Match(bool*);
     int Check();
     int CheckAllCandidates();

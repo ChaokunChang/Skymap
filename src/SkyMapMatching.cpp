@@ -204,7 +204,18 @@ int SkyMapMatching::RCFIModel(){
     else {
         return pRCFI->find(this->image_.stars_,this->__target_star);
     }
+}
 
+int SkyMapMatching::LPFIModel(){
+    if(pLPFI==nullptr)
+    {
+        pLPFI = new LPFI(this->sky_.stars_,6,200,120,0.004);
+    }
+    if(this->SIMULATE)
+        return pLPFI->efind(this->image_.stars_,this->__target_star);
+    else {
+        return pLPFI->find(this->image_.stars_,this->__target_star);
+    }
 }
 
 void SkyMapMatching::Match(bool* pmodel) {
@@ -256,7 +267,17 @@ void SkyMapMatching::Match(bool* pmodel) {
         }
         else printf("RCFI Model cannot get answer.\n");
     }
-    if(skymap_index[0]<0 && skymap_index[1]<0 && skymap_index[2]<0) {
+    if(pmodel[3])
+    {
+        skymap_index[3] = LPFIModel();
+        if(skymap_index[3] >= 0) {
+            this->__matching_star = this->sky_.stars_[size_t(skymap_index[3])];
+            Candidate one("LPFI Model",this->__matching_star);
+            this->candidates_.push_back(one);
+        }
+        else printf("LPFI Model cannot get answer.\n");
+    }
+    if(skymap_index[0]<0 && skymap_index[1]<0 && skymap_index[2]<0 && skymap_index[3]<0) {
         qDebug("No Model get answer.\n");
     }
 }

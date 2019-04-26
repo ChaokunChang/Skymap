@@ -126,11 +126,12 @@ void RCFI::init()
     QTextStream Rout(&Rfile);
     int k=0;
     for (std::vector<std::set<int> >::iterator it=RadiusFeatureTable.begin();it!=RadiusFeatureTable.end();it++,k++) {
-        Rout<<k<<',';
+        Rout<<k;
         int i=0;
         for (std::set<int>::iterator its=it->begin();its!=it->end();its++,i++) {
-            Rout<<*its<<(i!=it->size()-1?',':'\n');
+            Rout<<','<<*its;
         }
+        Rout<<'\n';
     }
     QFile Cfile("CFI.csv");
     if (!Cfile.open(QIODevice::WriteOnly))

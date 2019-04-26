@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <QDebug>
 #include <algorithm>
-
+#define EPSINON 1e-6
 double cal_dis(const double& x1,const double& y1,const double& x2,const double& y2);
 bool between(const double& target, const double& left, const double& right);
 double getSpotAD(const double& x1, const double& y1, const double& x2, const double& y2, const double& f);
@@ -23,4 +23,6 @@ size_t random_size_t(const size_t& l,const size_t& r);
 double getSphereAD(double, double, double, double);
 double getSphereAngle(double, double, double, double, double, double);
 double getSpotAngle(double, double, double, double, double, double,double);
+std::pair<double,double> star2spot(double, double, double, double, double, double);
+std::pair<double,double> LPT(double,double);
 #endif //SKYMAP_MYFUNCTIONS_H

@@ -6,7 +6,6 @@
 #define SKYMAP_STAR_H
 
 #include "MyFunctions.h"
-
 struct StarPoint{
     int index;
     double x; //0 -> 360
@@ -22,7 +21,6 @@ struct StarPoint{
     bool InRange(const StarPoint &center, double length, double width);
     void change_coordinate(const StarPoint &new_center);
 };
-
 
 //Abandoned
 //

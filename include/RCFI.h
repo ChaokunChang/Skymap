@@ -1,4 +1,7 @@
 #pragma once
+#ifndef RCFI_H
+#define RCFI_H
+
 #include <string>
 #include <vector>
 #include <set>
@@ -33,4 +36,4 @@ private:
 	double Rr;
     int Nq;
 };
-
+#endif

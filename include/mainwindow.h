@@ -18,7 +18,7 @@
 #include "ImageProcessing.h"
 #include "SkyMapMatching.h"
 #include "exif.h"
-#define EPSINON 1e-6
+
 namespace Ui {
 class MainWindow;
 }

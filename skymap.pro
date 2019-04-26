@@ -23,34 +23,29 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-CONFIG += c++17
+CONFIG += c++11
 
 SOURCES = \
     src\main.cpp \
     src\mainwindow.cpp \
-    src\CSVAdapter.cpp \
     src\extraction.cpp \
     src\ImageProcessing.cpp \
     src\MyFunctions.cpp \
     src\NoOptic.cpp \
-    src\Sky.cpp \
-    src\SkyMap.cpp \
     src\SkyMapMatching.cpp \
     src\Star.cpp \
     src\TriangleMatching.cpp \
     src/QCSVAdapter.cpp \
     src/exif.cpp \
-    src/RCFI.cpp
+    src/RCFI.cpp \
+    src/LPFI.cpp
 
 HEADERS += \
     include\mainwindow.h \
-    include\CSVAdapter.h \
     include\extraction.h \
     include\ImageProcessing.h \
     include\MyFunctions.h \
     include\NoOptic.h \
-    include\Sky.h \
-    include\SkyMap.h \
     include\SkyMapMatching.h \
     include\Star.h \
     include\TriangleMatching.h \
@@ -58,7 +53,8 @@ HEADERS += \
     include/exif.h \
     #include/ConsolColor.h
     include/RCFI.h \
-    include/commonhelper.h
+    include/commonhelper.h \
+    include/LPFI.h
 
 FORMS += \
     form\mainwindow.ui
