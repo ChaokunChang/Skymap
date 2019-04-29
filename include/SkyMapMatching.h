@@ -116,8 +116,10 @@ public:
     vector<StarPoint> LoadSky(QString &f_name);
     vector<StarPoint> LoadImage(QString &f_name,image_properties);
 
-    void GenerateSimImage(const StarPoint &centre, const double &length, const double &width); //generate image with given position and size;
-    void GenerateSimImage(const StarPoint &centre, const double &image_ratio, const int &num); // generate image with centre and particular number of stars.
+    void GenerateSubSky(const StarPoint &centre, const double &length, const double &width); //generate image with given position and size;
+    void GenerateSubSky(const StarPoint &centre, const double &image_ratio, const int &num); // generate image with centre and particular number of stars.
+    void GenerateSimImage(const StarPoint &centre, const double &length, const double &width,double f); //generate image with given position and size;
+    void GenerateSimImage(const StarPoint &centre, const double &image_ratio, const int &num,double f); // generate image with centre and particular number of stars.
 
     size_t SelectTargetStar();
     void SelectTargetStar(int);
@@ -133,7 +135,7 @@ public:
     //void initPara(int,int,double,double,double);
     StarPoint GetAnswer(){ return this->__matching_star;}
     StarPoint GetTargetStar(){ return this->__target_star;}
-    ModelEvaluation ExeSimulation(bool* model=0,size_t round=100,size_t missing=0,
+    ModelEvaluation ExeSimulation(bool* model,size_t round=100,size_t missing=0,
                                   size_t redundence=0,double deviation=0.0);
     ModelEvaluation ComprehensiveEvaluation(bool* model,size_t round=100,size_t missing=0,
                                             size_t redundence=0,double deviation=0.0);

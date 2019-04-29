@@ -4,11 +4,8 @@
 
 #include "SkyMapMatching.h"
 #include <fstream>
-#include <random>
 
 SkyMapMatching::SkyMapMatching(){
-
-    struct timeb time_seed;
     ftime(&time_seed);
     srand(static_cast<unsigned>(time_seed.time*1000) + time_seed.millitm);
 }
@@ -378,7 +375,7 @@ vector<StarPoint> SkyMap::Subset(const StarPoint &centre, double length, double 
 
 }
 
-void SkyMapMatching::GenerateSimImage(const StarPoint &centre, const double &length, const double &width) {
+void SkyMapMatching::GenerateSubSky(const StarPoint &centre, const double &length, const double &width) {
     //Some Check here.
     qDebug()<<"@Generating SimImage...";
     if(length<=0 || width<=0 ){
@@ -389,6 +386,7 @@ void SkyMapMatching::GenerateSimImage(const StarPoint &centre, const double &len
     }
     if(!this->image_.stars_.empty()) this->image_.stars_.clear();
     this->image_.stars_=this->sky_.Subset(centre,length,width);
+
 //    for (size_t i=0;i!=this->image_.stars_.size();i++) {
 //        this->image_.stars_[i].change_coordinate(centre);
 //    }
@@ -402,6 +400,74 @@ void SkyMapMatching::GenerateSimImage(const StarPoint &centre, const double &len
     qDebug()<<"*center: "<<centre.index<<"-> ("<<centre.x<<" , "<<centre.y<<")";
     qDebug()<<"*range : "<<length<<" * "<<width;
     qDebug()<<"Image Size:"<<this->image_.stars_.capacity();
+}
+
+void SkyMapMatching::GenerateSimImage(const StarPoint &center, const double &length, const double &width, double f){
+    static int count_num = 0;
+    if(abs(f)<1e-6) f = 58.4536;//mm
+    int ppi_x=1024,ppi_y=1024;
+
+    double R = sqrt(pow(length,2)+pow(width,2))/2;
+    double r_length = 2*R/cos(center.y);
+    double r_width = 2*R;
+    this->GenerateSubSky(center,r_length,r_width);
+    //for simplify, the rotational angle of image is set to be 0;
+    double alpha = center.x,beta = center.y,fi=0;
+    double s_alpha = sin(alpha),c_alpha = cos(alpha);
+    double s_beta = sin(beta), c_beta=cos(beta);
+    double s_fi = sin(fi),c_fi=cos(fi);
+    double a1 = s_alpha*c_fi - c_alpha*s_beta*s_fi;
+    double a2 = -s_alpha*s_fi - c_alpha*s_beta*c_fi;
+    double a3 = -c_alpha*c_beta;
+    double b1 = -c_alpha*c_fi - s_alpha*s_beta*s_fi;
+    double b2 = c_alpha*s_fi - s_alpha*s_beta*c_fi;
+    double b3 = -s_alpha*c_beta;
+    double c1 = c_alpha*s_fi;
+    double c2 = c_alpha*c_fi;
+    double c3 = -s_beta;
+
+    double xi_ = cos(center.x+ length/(2*cos(beta)))*cos(center.y + width/2);
+    double yi_ = sin(center.x+ r_length/(2*cos(beta)))*cos(center.y + width/2);
+    double zi_ = sin(center.y + width/2);
+    double xi = a1*xi_+b1*yi_+c1*zi_;
+    double yi = a2*xi_+b2*yi_+c2*zi_;
+    double zi = a3*xi_+b3*yi_+c3*zi_;
+    double max_xi = f*xi/zi;
+    double max_yi = f*yi/zi;
+    max_xi = 0.0;
+    max_yi = 0.0;
+    vector<pair<int,int> > point_location;
+    for (size_t i =0;i<this->image_.count_;i++) {
+        xi_ = cos(this->image_.stars_[i].x)*cos(this->image_.stars_[i].y);
+        yi_ = sin(this->image_.stars_[i].x)*cos(this->image_.stars_[i].y);
+        zi_ = sin(this->image_.stars_[i].y);
+        xi = a1*xi_+b1*yi_+c1*zi_;
+        yi = a2*xi_+b2*yi_+c2*zi_;
+        zi = a3*xi_+b3*yi_+c3*zi_;
+        this->image_.stars_[i].x = f*xi/zi;
+        this->image_.stars_[i].y = f*yi/zi;
+        max_xi = max(max_xi, this->image_.stars_[i].x);
+        max_yi = max(max_yi, this->image_.stars_[i].y);
+    };
+    for(StarPoint sp: this->image_.stars_){
+        point_location.push_back( { int(ppi_x*(max_xi+sp.x)/(2*max_xi)) ,int(ppi_y*(max_yi+sp.y)/(2*max_yi) )} );
+    }
+
+    cv::Mat sim_image = cv::Mat::zeros(ppi_x,ppi_y,CV_8UC1);
+    for(pair<int,int> point:point_location){
+        if(point.first<0 || point.second<0 || point.first-1>ppi_x || point.second>ppi_y) {count_num++;continue;}
+        sim_image.at<uchar>(point.first,point.second) = 200;
+        sim_image.at<uchar>(point.first+1 <=ppi_x?point.first+1:ppi_x,point.second) = 200;
+        sim_image.at<uchar>(point.first-1 >=0?point.first-1:0,point.second) = 200;
+        sim_image.at<uchar>(point.first,point.second+1 <=ppi_y?point.second+1:ppi_y) = 200;
+        sim_image.at<uchar>(point.first,point.second-1 >=0?point.second-1:0) = 200;
+        sim_image.at<uchar>(point.first+1 <=ppi_x?point.first+1:ppi_x,point.second+1 <=ppi_y?point.second+1:ppi_y) = 200;
+        sim_image.at<uchar>(point.first-1 >=0?point.first-1:0,point.second-1 >=0?point.second-1:0) = 200;
+        sim_image.at<uchar>(point.first+1 <=ppi_x?point.first+1:ppi_x,point.second-1 >=0?point.second-1:0) = 200;
+        sim_image.at<uchar>(point.first-1 >=0?point.first-1:0,point.second+1 <=ppi_y?point.second+1:ppi_y) = 200;
+    }
+    cv::imwrite("./SimImage_"+to_string(count_num++)+".jpg",sim_image);
+    waitKey(0);
 }
 
 vector<StarPoint> SkyMap::Subset(const StarPoint &centre, double image_ratio, int numi=0) {
@@ -434,7 +500,7 @@ vector<StarPoint> SkyMap::Subset(const StarPoint &centre, double image_ratio, in
     return stars;
 }
 
-void SkyMapMatching::GenerateSimImage(const StarPoint &centre, const double &image_ratio, const int &num) {
+void SkyMapMatching::GenerateSubSky(const StarPoint &centre, const double &image_ratio, const int &num) {
     vector<StarPoint> stars = sky_.Subset(centre,image_ratio,num);
     if(!this->image_.stars_.empty()) this->image_.stars_.clear();
     if(stars.size() == size_t(num)) {
@@ -555,15 +621,17 @@ ModelEvaluation SkyMapMatching::ComprehensiveEvaluation(bool* model, size_t roun
     size_t r=0;
     int counts=0;
     StarPoint center;
-    double fl=30.0,fr=30.0;
+    double fl=12.0,fr=12.0;
     while(r<round){
-        if(r==63){
-            cout<<""<<endl;
-        }
         qDebug()<<"--------------------------------------------------------------";
         qDebug()<<"-----------------------start:"<<r+1<<"th---------------------------";
         center = random_point(0.0,this->LongitudeRange,- this->LatitudeRange/2,this->LatitudeRange/2);
-        this->GenerateSimImage(center,fl,fr);
+        if(r == 0){
+            center.x = 40.0;
+            center.y = -20.0;
+        }
+        this->GenerateSimImage(center,fl,fr,58);
+        this->GenerateSubSky(center,fl,fr);
         if(this->image_.count_>=3){
             //add noise....
             qDebug()<<"@Adding noise...";
@@ -649,8 +717,8 @@ ModelEvaluation SkyMapMatching::ExeSimulation(bool* model,size_t round,size_t mi
 
     ModelEvaluation eval1=this->ComprehensiveEvaluation(model,round,miss_num,add_num,off_rate);
     this->SIMULATE = false;
-    cout<<output<<endl;
-    qDebug()<<QString::fromStdString(output)<<endl;
-    qDebug("End.");
+    //cout<<output<<endl;
+    //qDebug()<<QString::fromStdString(output)<<endl;
+    //qDebug("End.");
     return eval1;
 }

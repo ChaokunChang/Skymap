@@ -3,7 +3,7 @@
 //
 #include "MyFunctions.h"
 
-
+struct timeb time_seed;
 double sacos(double x)
 {
     return acos(std::min(1.0, std::max(-1.0, x)));
@@ -30,14 +30,17 @@ double getSpotAD(const double& x1,const double& y1,const double& x2,const double
 
 
 int random_int(const int& l,const int& r){
+    srand(static_cast<unsigned>(time_seed.time*1000) + time_seed.millitm);
     return l + rand()%(r-l);
 }
 
 size_t random_size_t(const size_t& l,const size_t& r){
+    srand(static_cast<unsigned>(time_seed.time*1000) + time_seed.millitm);
     return size_t(random_int(int(l),int(r)));
 }
 
 double random_double(const double& l,const double& r){
+    srand(static_cast<unsigned>(time_seed.time*1000) + time_seed.millitm);
     return l + (double(rand())/RAND_MAX)*(r-l);
 }
 

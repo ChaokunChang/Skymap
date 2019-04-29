@@ -13,7 +13,13 @@
 #include <algorithm>
 #include <QDebug>
 #include <algorithm>
+#include <random>
+#include <time.h>
+#include <sys/timeb.h>
+#include "extraction.h"
 #define EPSINON 1e-6
+
+extern struct timeb time_seed;
 double cal_dis(const double& x1,const double& y1,const double& x2,const double& y2);
 bool between(const double& target, const double& left, const double& right);
 double getSpotAD(const double& x1, const double& y1, const double& x2, const double& y2, const double& f);
