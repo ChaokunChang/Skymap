@@ -38,16 +38,14 @@ void StarPoint::change_coordinate(const StarPoint &new_center) {
 
 bool StarPoint::XInRange(const StarPoint &center, double length) {
     if(center.x + length/2 > 360){
-        if( (this->x > center.x) || (this->x<(center.x + length/2 - 360) ) ) return true;
+        return ( (this->x > center.x-length/2) || (this->x<(center.x + length/2 - 360) ) );
     }else if(center.x - length/2 < 0){
-        if( (this->x < center.x) || (this->x>(center.x - length/2 + 360) ) ) return true;
-    }else if( (this->x > center.x-length/2)&&(this->x < center.x+length/2) ) return true;
-    else return false;
-    return false;
+        return ( (this->x < center.x+length/2) || (this->x>(center.x - length/2 + 360) ) );
+    }else return ( (this->x > center.x-length/2)&&(this->x < center.x+length/2) );
 }
 
 bool StarPoint::YInRange(const StarPoint &center, double width) {
-    return abs(this->y-center.y) < width/2;
+    return fabs(this->y-center.y) < width/2;
 }
 
 bool StarPoint::InRange(const StarPoint &center, double length, double width) {

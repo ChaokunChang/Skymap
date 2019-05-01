@@ -30,18 +30,20 @@ double getSpotAD(const double& x1,const double& y1,const double& x2,const double
 
 
 int random_int(const int& l,const int& r){
-    srand(static_cast<unsigned>(time_seed.time*1000) + time_seed.millitm);
-    return l + rand()%(r-l);
+//    srand(static_cast<unsigned>(time_seed.time*1000) + time_seed.millitm);
+//    return l + rand()%(r-l);
+    return QRandomGenerator::global()->bounded(l,r);
 }
 
 size_t random_size_t(const size_t& l,const size_t& r){
-    srand(static_cast<unsigned>(time_seed.time*1000) + time_seed.millitm);
+    //srand(static_cast<unsigned>(time_seed.time*1000) + time_seed.millitm);
     return size_t(random_int(int(l),int(r)));
 }
 
 double random_double(const double& l,const double& r){
-    srand(static_cast<unsigned>(time_seed.time*1000) + time_seed.millitm);
-    return l + (double(rand())/RAND_MAX)*(r-l);
+//    srand(static_cast<unsigned>(time_seed.time*1000) + time_seed.millitm);
+//    return l + (double(rand())/RAND_MAX)*(r-l);
+    return l + QRandomGenerator::global()->bounded(r-l);
 }
 
 double getSphereAD(double x1, double y1, double x2, double y2)

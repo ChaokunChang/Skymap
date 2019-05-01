@@ -22,6 +22,13 @@
 
 #define PIXEL_LENGTH 1.5e-6
 #define DEFAULT_FOCAL_LENGTH 4e-3
+
+#define APPLICATION 0
+#define EVALUATION 1
+#define SIMULATION 2
+
+typedef size_t MODE;
+
 using namespace std;
 struct image_properties{
     int imageWidth;
@@ -108,6 +115,7 @@ public:
     Observation image_;
     vector<Candidate> candidates_;
     int NOM_mode;
+    MODE RUNNING_MODE;
 
 public:
     SkyMapMatching();

@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <random>
 #include <time.h>
+#include <QRandomGenerator>
 #include <sys/timeb.h>
 #include "extraction.h"
 #define EPSINON 1e-6
