@@ -38,7 +38,8 @@ SOURCES = \
     src/QCSVAdapter.cpp \
     src/exif.cpp \
     src/RCFI.cpp \
-    src/LPFI.cpp
+    src/LPFI.cpp \
+    src/SkyMap.cpp
 
 HEADERS += \
     include\mainwindow.h \
@@ -54,7 +55,8 @@ HEADERS += \
     #include/ConsolColor.h
     include/RCFI.h \
     include/commonhelper.h \
-    include/LPFI.h
+    include/LPFI.h \
+    include/SkyMap.h
 
 FORMS += \
     form\mainwindow.ui

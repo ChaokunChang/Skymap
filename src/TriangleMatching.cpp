@@ -139,7 +139,7 @@ void TriangleMatching::MatchAlgorithm(double center_edge1, double center_edge2, 
 int TriangleMatching::GetCandidate(){
     int result=-1;
     if (__Candidate.empty()) {
-        qDebug() << "Triangle No candidate.";
+        qDebug() << "Triangle Model: No candidate any more.";
         //扩大组的范围，或换一组三角形匹配。
     }
     else {

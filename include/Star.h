@@ -22,31 +22,4 @@ struct StarPoint{
     void change_coordinate(const StarPoint &new_center);
 };
 
-//Abandoned
-//
-//class Star {
-//public:
-//    Star();
-//    Star(int, double, double, double);
-//    ~Star();
-//    Star & operator=(const Star &source){
-//        id = source.id;
-//        spx = source.spx;
-//        spy = source.spy;
-//        mag = source.mag;
-//        return *this;
-//    }
-//    int getID() { return id; }
-//    double getX() { return spx; }
-//    double getY() { return spy; }
-//    double getMag() { return mag; }
-//    //bool operator< (const Star& a) const { return a.id < id; }
-//private:
-//    int id;
-//    double spx;
-//    double spy;
-//    double mag;
-//};
-
-
 #endif //SKYMAP_STAR_H

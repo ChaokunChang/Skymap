@@ -50,7 +50,7 @@ private:
     void loadPicture(QString);
     int findMatchingStar(int);
     void getAlgorithm();
-    double evalStarMapMatching(evalArgs);
+    double evalStarMapMatching(EvalArgs);
 
     vector<StarPoint> starRecs,starMap;
     vector<QString> starNames;

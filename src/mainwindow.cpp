@@ -150,19 +150,28 @@ vector<StarPoint> loadStarPoint(QString fileName)
 
 vector<StarPoint> initStarMapMatching(SkyMapMatching* pSMM, image_properties prop)
 {
+    /**
+     * @brief logic
+     * Maybe the logic can be splited here.
+     * In this function we only initilize the skymap, without the sky_image.
+     * Each time we want to load a new image, just load image only.
+     * (The current logic will cause that each time we load image, the skymap is loaded and propessing again,
+     * which is needless.)
+     */
     QString dataset = data_path;
+    if(pSMM->sky_.stars_.empty()) pSMM->LoadSky(dataset);
+
     QString picture = "./tmp.csv";
-    vector<StarPoint> ret=pSMM->LoadSky(dataset);
-    image_properties property;
     pSMM->LoadImage(picture, prop);
-    return ret;
+
+    return pSMM->sky_.stars_;
 }
 
-double MainWindow::evalStarMapMatching(evalArgs arg)
+double MainWindow::evalStarMapMatching(EvalArgs arg)
 {
     QString dataset = data_path;
     if(pSMM->sky_.stars_.empty()) pSMM->LoadSky(dataset);
-    return pSMM->ExeSimulation(algorithm,static_cast<size_t>(arg.round),
+    return pSMM->ExeEvaluation(algorithm,static_cast<size_t>(arg.round),
                                static_cast<size_t>(arg.missing),static_cast<size_t>(arg.redundance),
                                arg.deviation).accuracy;
 }
@@ -271,7 +280,7 @@ void MainWindow::on_focalLengthInput_editingFinished()
 void MainWindow::on_evalButton_clicked()
 {
     QString dataset = data_path;
-    evalArgs arg={ui->roundInput->text().toInt(),ui->missingInput->text().toInt(),ui->redundanceInput->text().toInt(),ui->deviationInput->text().toDouble()};
+    EvalArgs arg={ui->roundInput->text().toInt(),ui->missingInput->text().toInt(),ui->redundanceInput->text().toInt(),ui->deviationInput->text().toDouble()};
     getAlgorithm();
     ui->starNoDisplay->setText(algorithmNames.join(','));
     ui->starNameDisplay->setText(QString::number(arg.missing));
