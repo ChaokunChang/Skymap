@@ -20,7 +20,7 @@ void SkyMapMatching::LoadSky(QString &f_name) {
     this->sky_.centre_ = StarPoint(-1,180.0,0,0);
 }
 
-void SkyMapMatching::LoadImage(QString &f_name,image_properties property) {
+void SkyMapMatching::LoadImage(QString &f_name,ImageProperties property) {
     QCSVAdapter csv_sky(f_name);
     vector<StarPoint> stars = csv_sky.getRecords();
     if(property.focal_length<1e-6) {
@@ -28,15 +28,8 @@ void SkyMapMatching::LoadImage(QString &f_name,image_properties property) {
          * if the focal_length = 0, it means the picture hasn't info of focal length.
          * we must handle this case with some default setting.
          */
-        property.focal_length = 58.0;
+        property.focal_length = 35.0;
     }
-    /**
-     * @brief stars[i].x stars[i].y
-     * The stars' location in input image is defined with pixel,
-     * while the distance measure in algorithms is commen distance.
-     * Hence, location of stars must be transformed.
-     * The transformation algorithm is depended, the following one is not the properest.
-     */
     double max_x=0,max_y=0;
     for(StarPoint sp:stars){
         max_x = max(max_x,sp.x);
@@ -44,41 +37,49 @@ void SkyMapMatching::LoadImage(QString &f_name,image_properties property) {
     }
     qDebug()<<"Max_x:"<<max_x;
     qDebug()<<"Max_y:"<<max_y;
-    qDebug()<<" ImageWidthL:"<<property.imageWidthL;
-    qDebug()<<"ImageHeightL:"<<property.imageHeightL;
-    for(size_t i=0;i<stars.size();i++){
-        stars[i].x *= PIXEL_LENGTH/property.imageWidth;
-        stars[i].y *= PIXEL_LENGTH/property.imageHeight;
-        //qDebug()<<i<<"th:("<<stars[i].x<<","<<stars[i].y<<")";
-    }
-
-    this->image_.setProperties(property);
-    if(!this->image_.stars_.empty()) this->image_.stars_.clear();
-    this->image_.stars_ = stars;
-    this->image_.count_=this->image_.stars_.size();
-    /**
-     * @brief RangeStandarization
-     * For simplify in answer_checking, RangeStandarization is useful, and will not influence the picture's information.
-     *
-     */
-    this->image_.RangeStandardization();
-
-    qDebug()<<"image true range: ("<<this->image_.range_.first<<","<<this->image_.range_.second<<")";
+    qDebug()<<"ImageLength_inch:"<<property.length_inch;
+    qDebug()<<"ImageWidth__inch:"<<property.width_inch;
+    this->image_.property = property;
 
     /**
      * @brief center
      * Find the center of this image, which is an important property of an image.
      */
-    StarPoint center(0,this->image_.range_.first/2,this->image_.range_.second/2,0);
-    this->image_.centre_ = center;
-    for(size_t i=0;i<this->image_.count_;i++){
-        this->image_.stars_[i].change_coordinate(center);
+    StarPoint center(0,property.length_pixel*1.0/(2*property.ppmm),property.width_pixel*1.0/(2*property.ppmm),0);
+    this->image_.centre_.x = 0.0;
+    this->image_.centre_.y = 0.0;
+
+    /**
+     * @brief stars[i].x stars[i].y
+     * The stars' location in input image is defined with pixel,
+     * while the distance measure in algorithms is commen distance(/mm).
+     * Hence, location of stars must be transformed.
+     * The transformation algorithm is depended, the following one is not the properest.
+     */
+    for(size_t i=0;i<stars.size();i++){
+        stars[i].x /= property.ppmm;
+        stars[i].y /= property.ppmm;
+        stars[i].x -= center.x;
+        stars[i].y -= center.y;
+        qDebug()<<i<<"th:("<<stars[i].x<<","<<stars[i].y<<")";
     }
+    if(!this->image_.stars_.empty()) this->image_.stars_.clear();
+    this->image_.stars_ = stars;
+    this->image_.count_=this->image_.stars_.size();
+
+    /**
+     * @brief RangeStandarization
+     * For simplify in answer_checking, RangeStandarization is useful,
+     * and will not influence the picture's information.
+     */
+    this->image_.RangeStandardization();
+    qDebug()<<"image true range: ("<<this->image_.range_.first<<","<<this->image_.range_.second<<")";
 }
 
 size_t SkyMapMatching::SelectTargetStar() {
     double min_dis = INT32_MAX;
     size_t target = 0;
+    double dis = 0;
     for(size_t i=0;i<this->image_.stars_.size();i++){
         StarPoint s = this->image_.stars_[i];
         /**
@@ -86,7 +87,9 @@ size_t SkyMapMatching::SelectTargetStar() {
          * dis = getSphereAD in evaluation.
          * dis = getSpotAD in simulation and application.
          */
-        double dis = getSphereAD(s.x,s.y,this->image_.centre_.x,this->image_.centre_.y);
+        if(this->RUNNING_MODE == EVALUATION) dis = getSphereAD(s.x,s.y,
+                                                               this->image_.centre_.x,this->image_.centre_.y);
+        else dis = getSpotAD(s.x,s.y,this->image_.centre_.x,this->image_.centre_.y,this->image_.property.focal_length);
         if(dis<min_dis){
             min_dis = dis;
             target = i;
@@ -110,7 +113,7 @@ void show_angle_distance(const Observation &obv){
             while(s2==s1) s2 = random_size_t(0,obv.count_);
             double angle_distance = getSpotAD(obv.stars_[s1].x,obv.stars_[s1].y,
                                               obv.stars_[s2].x,obv.stars_[s2].y,
-                                              obv.focal_length);
+                                              obv.property.focal_length);
             qDebug()<<QString::number(s1)+"--"+QString::number(s2)+" : "
                       +QString::number(angle_distance);
 
@@ -121,7 +124,7 @@ void show_angle_distance(const Observation &obv){
             for(size_t j=i+1;j<obv.count_;j++){
                 double angle_distance = getSpotAD(obv.stars_[i].x,obv.stars_[i].y,
                                                   obv.stars_[j].x,obv.stars_[j].y,
-                                                  obv.focal_length);
+                                                  obv.property.focal_length);
                 qDebug()<<QString::number(i)+"--"+QString::number(j)+" : "
                           +QString::number(angle_distance);
             }
@@ -137,8 +140,8 @@ int SkyMapMatching::TriangleModel() {
     }
     assert(this->image_.count_>=3);
     qDebug()<<"focal_length:";
-    if(this->image_.focal_length>1e-6){
-        qDebug()<<this->image_.focal_length;
+    if(this->image_.property.focal_length>1e-6){
+        qDebug()<<this->image_.property.focal_length;
         qDebug()<<"Belowing are all-possible angle_distance in this image.";
         show_angle_distance(this->image_);
     }else{
@@ -155,11 +158,12 @@ int SkyMapMatching::TriangleModel() {
         pTM->ChooseAdjacentStars(this->image_.stars_,triangle);
         if(this->RUNNING_MODE != EVALUATION){
             //this->image_.focal_length = 1000;
-            qDebug("Info: %d  %d %.2f %.2f",this->image_.imageWidth,this->image_.imageHeight,this->image_.imageWidthL,this->image_.focal_length);
+            qDebug("Info: %d  %d %.2f %.2f",this->image_.scope_length,this->image_.scope_width,
+                   this->image_.property.length_inch,this->image_.property.width_inch);
             qDebug("Loc info: %.2f, %.2f, %.2f, %.2f ",triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y);
-            dis12 = getSpotAD(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y,this->image_.focal_length);
-            dis13 = getSpotAD(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y,this->image_.focal_length);
-            dis23 = getSpotAD(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y,this->image_.focal_length);
+            dis12 = getSpotAD(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y,this->image_.property.focal_length);
+            dis13 = getSpotAD(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y,this->image_.property.focal_length);
+            dis23 = getSpotAD(triangle[1].x,triangle[1].y,triangle[2].x,triangle[2].y,this->image_.property.focal_length);
         }else {
             dis12 = getSphereAD(triangle[0].x,triangle[0].y,triangle[1].x,triangle[1].y);
             dis13 = getSphereAD(triangle[0].x,triangle[0].y,triangle[2].x,triangle[2].y);
@@ -211,7 +215,7 @@ int SkyMapMatching::NoOpticModel(){
 int SkyMapMatching::RCFIModel(){
     if(pRCFI==nullptr)
     {
-        pRCFI = new RCFI(this->sky_.stars_,12,600,this->image_.focal_length);
+        pRCFI = new RCFI(this->sky_.stars_,12,600,this->image_.property.focal_length);
     }
     if(this->RUNNING_MODE == EVALUATION)
         return pRCFI->sfind(this->image_.stars_,this->__target_star);
@@ -306,13 +310,6 @@ bool similar_position(StarPoint &s1, StarPoint &s2){
     return abs(s1.Distance(s2)) <0.001;
 }
 
-bool similar_vector(vector<StarPoint> &vec1, vector<StarPoint> &vec2){
-    /*TODO:
-     * compare two vector,
-     * without consideration of the absolute position, but the relative position.*/
-    return true;
-}
-
 int SkyMapMatching::Check() {
     if(this->RUNNING_MODE == EVALUATION){
         return this->__target_star.index == this->__matching_star.index ? 1:-1;
@@ -386,8 +383,9 @@ void SkyMapMatching::GenerateSubSky(const StarPoint &centre, const double &lengt
     this->image_.stars_=this->sky_.Subset(centre,length,width);
     this->image_.count_ = this->image_.stars_.size();
     this->image_.centre_ = centre;
-    image_properties prop(0,0,length,width,0.0);
-    this->image_.setProperties(prop);
+    this->image_.scope_length = length;
+    this->image_.scope_width = width;
+    this->image_.property.focal_length = 0.0;
 
     qDebug()<<"The Generated image is:";
     qDebug()<<"*center: "<<centre.index<<"-> ("<<centre.x<<" , "<<centre.y<<")";
@@ -400,8 +398,6 @@ string SkyMapMatching::GenerateSimImage(const StarPoint &center, const double &l
     count_num ++;
     if(abs(f)<1e-6) f = 58.4536;//mm
     int ppi_x=1024,ppi_y=1024;
-    int per_len_um = 12;
-    int per_wid_um = 12;
     int dpi_um = 12;
     double R = sqrt(pow(length,2)+pow(width,2))/2;
     double r_length = 2*R/cos(center.y * M_PI / 180);
@@ -468,6 +464,96 @@ string SkyMapMatching::GenerateSimImage(const StarPoint &center, const double &l
     return path;
 }
 
+GeneratedImage SkyMapMatching::GenerateSimImage(const StarPoint &center, const double &scope_length, const double& scope_width,
+                         ImageProperties &property){
+    static int count_num = 0;
+    count_num ++;
+
+    double f = property.focal_length;
+    if(abs(f)<1e-6) f = 58.4536;//mm
+    property.focal_length = f;
+    int ppi_x=property.length_pixel,ppi_y=property.width_pixel;
+    /**
+     * @brief assert
+     * ratio must be same.
+     * if they are not, we must change image_property according to scope length:width.
+     */
+    assert(fabs(ppi_x*scope_width-ppi_y*scope_length)<1e-6);
+    if(fabs(ppi_x*scope_width-ppi_y*scope_length)<1e-6){
+        ppi_y = int(ppi_x*scope_width/scope_length);
+        property.width_pixel = ppi_y;
+    }
+
+    cout<<"@Image properties:"<<endl;
+    cout<<"length:"<<property.length_inch<<endl;
+    cout<<"width :"<<property.width_inch<<endl;
+    cout<<"focal :"<<property.focal_length<<endl;
+    cout<<"ppi   :"<<property.ppi<<endl;
+    cout<<"ppmm  :"<<property.ppmm<<endl;
+    cout<<"length_pixel:"<<ppi_x<<endl;
+    cout<<"width__pixel:"<<ppi_y<<endl;
+
+    double R = sqrt(pow(scope_length,2)+pow(scope_width,2))/2;
+    double r_length = 2*R/cos(center.y * M_PI / 180);
+    double r_width = 2*R;
+    cout<<"R:      "<<R<<endl;
+    cout<<"center:("<<center.x<<","<<center.y<<")"<<endl;
+    cout<<"range :("<<r_length<<","<<r_width<<")"<<endl;
+    assert(r_length>=0 && r_width>=0);
+
+    vector<StarPoint> stars = this->sky_.Subset(center,r_length,r_width);
+    cout<<"size  :("<<stars.size()<<")"<<endl;
+
+    cv::Mat zeromat = cv::Mat::zeros(ppi_x,ppi_y,CV_8UC1);
+    if(stars.size()<3) return GeneratedImage(zeromat,"",stars,property);
+
+    vector<pair<int,int> > point_location;
+    double max_x=-DBL_MAX,max_y=-DBL_MAX;
+    double min_x=DBL_MAX,min_y=DBL_MAX;
+    cout<<endl<<"--- generated image stars:"<<endl;
+    for(size_t i=0;i<stars.size();i++){
+        pair<double,double> p = star2spot(stars[i].x,stars[i].y,center.x,center.y,0.0,f);
+        cout<<"("<<i+1<<","<<stars[i].x<<","<<stars[i].y<<","<<p.first<<","<<p.second<<")"<<endl;
+        stars[i].x = p.first;
+        stars[i].y = p.second;
+        max_x = fmax(max_x,p.first);
+        max_y = fmax(max_y,p.second);
+        min_x = fmin(min_x,p.first);
+        min_y = fmin(min_y,p.second);
+    }
+    double max_xlen = max_x - min_x;
+    double max_ylen = max_y - min_y;
+    cout<<min_x<<","<<max_x<<","<<max_xlen<<endl;
+    cout<<min_y<<","<<max_y<<","<<max_ylen<<endl;
+    cout<<endl<<"--- location in image:"<<endl;
+
+    int center_loc_x = int(ppi_x*(0-min_x)/(max_xlen));
+    int center_loc_y = int(ppi_y*(0-min_y)/(max_ylen) );
+    cout<<"center: ("<<center_loc_x<<","<<center_loc_y<<")"<<endl;
+    double length_limit = f * tan(scope_length*M_PI/360);
+    double width_limit = f * tan(scope_width*M_PI/360);
+    cout<<"left_limit :"<<length_limit<<endl;
+    cout<<"right_limit:"<<width_limit<<endl;
+
+    //limit range...
+    property.change_ppmm(ppi_x*1.0/(2*length_limit));
+    cv::Mat sim_image_shift = cv::Mat::zeros(ppi_x,ppi_y,CV_8UC1);
+    vector<StarPoint> stars_in_image;
+    for(StarPoint point:stars){
+        cv::Point p;
+        p.x = static_cast<int>(point.x*property.ppmm) + ppi_x/2;
+        p.y = static_cast<int>(point.y*property.ppmm) + ppi_y/2;
+        if(p.x < 0 || p.x > ppi_x || p.y < 0 || p.y > ppi_y ) continue;
+        stars_in_image.push_back(point);
+        circle(sim_image_shift,p,5,CV_RGB(0,0,255),-1);
+    }
+    sort(stars_in_image.begin(),stars_in_image.end(),star_point_cmp);
+    string path_shift = "./SimImage_"+to_string(count_num)+".jpg";
+    cv::imwrite(path_shift,sim_image_shift);
+
+    return GeneratedImage(sim_image_shift,path_shift,stars,property);
+}
+
 void SkyMapMatching::GenerateSubSky(const StarPoint &centre, const double &image_ratio, const int &num) {
     vector<StarPoint> stars = sky_.Subset(centre,image_ratio,num);
     if(!this->image_.stars_.empty()) this->image_.stars_.clear();
@@ -482,8 +568,8 @@ void SkyMapMatching::GenerateSubSky(const StarPoint &centre, const double &image
         qDebug()<<"Invalid Subset! You can try another ratio or center.";
     }
     this->image_.RangeStandardization();
-    this->image_.imageWidthL = this->image_.range_.first;
-    this->image_.imageHeightL = this->image_.range_.second;
+    this->image_.scope_length = this->image_.range_.first;
+    this->image_.scope_width = this->image_.range_.second;
 }
 
 StarPoint random_point(double l,double r,double u,double d){
@@ -621,7 +707,7 @@ EvalResult SkyMapMatching::ExeEvaluation(bool* model,size_t round,size_t miss_nu
             RandomMissing(this->image_.stars_,miss_num);
             this->image_.count_ -= miss_num;
 
-            RandomAddPoints(this->image_.stars_,this->image_.imageWidthL,this->image_.imageHeightL,add_num);
+            RandomAddPoints(this->image_.stars_,this->image_.scope_length,this->image_.scope_width,add_num);
             this->image_.count_ += add_num;
             if(this->image_.count_<3){
                 qDebug()<<"Impossible after adding noise.";
@@ -645,7 +731,9 @@ EvalResult SkyMapMatching::ExeEvaluation(bool* model,size_t round,size_t miss_nu
             qDebug()<<"-----------------------end:"<<r+1<<"th---------------------------";
             r++;
             //center = random_point(0.0,this->LongitudeRange,-60,60);
-            this->GenerateSimImage(center,fl,fr,58);
+            //this->GenerateSimImage(center,fl,fr,58);
+            ImageProperties property(int(1024),int(1024),int(96),double(58.0));
+            this->GenerateSimImage(center,fl,fr,property);
         }
         else {qDebug()<<"-----------------------retry:"<<r+1<<"th---------------------------";counts++;}
         qDebug()<<"--------------------------------------------------------------";
@@ -658,7 +746,7 @@ EvalResult SkyMapMatching::ExeEvaluation(bool* model,size_t round,size_t miss_nu
     return eval;
 }
 
-SimResult SkyMapMatching::ExeSimulation(bool* model,image_properties property,size_t round,size_t miss_num,
+SimResult SkyMapMatching::ExeSimulation(bool* model,ImageProperties property,size_t round,size_t miss_num,
                                         size_t add_num,double off_rate){
     this->RUNNING_MODE = SIMULATION;
     qDebug()<<endl<<endl<<endl;
@@ -688,7 +776,7 @@ SimResult SkyMapMatching::ExeSimulation(bool* model,image_properties property,si
             RandomMissing(this->image_.stars_,miss_num);
             this->image_.count_ -= miss_num;
 
-            RandomAddPoints(this->image_.stars_,this->image_.imageWidthL,this->image_.imageHeightL,add_num);
+            RandomAddPoints(this->image_.stars_,this->image_.scope_length,this->image_.scope_width,add_num);
             this->image_.count_ += add_num;
             if(this->image_.count_<3){
                 qDebug()<<"Impossible after adding noise.";

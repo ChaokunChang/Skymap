@@ -63,7 +63,7 @@ private:
 const QString name_path= ":/Data/Data/sky_table_name_SAO.csv";
 const QString data_path= ":/Data/Data/sky_table_loc_SAO.csv";
 vector<StarPoint> loadStarPoint(QString);
-vector<StarPoint> initStarMapMatching(SkyMapMatching*,image_properties);
+vector<StarPoint> initStarMapMatching(SkyMapMatching*,ImageProperties);
 
 vector<QString> loadStarNames(QString);
 #endif // MAINWINDOW_H

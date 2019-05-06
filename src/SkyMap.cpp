@@ -43,15 +43,6 @@ vector<StarPoint> SkyMap::Subset(const StarPoint &centre, double image_ratio, in
     return stars;
 }
 
-void Observation::setProperties(image_properties &prop){
-    this->imageWidth = prop.imageWidth;
-    this->imageHeight = prop.imageHeight;
-    this->imageWidthL = prop.imageWidthL;
-    this->imageHeightL = prop.imageHeightL;
-    this->focal_length = prop.focal_length;
-    this->range_ = {prop.imageWidthL,prop.imageHeightL};
-}
-
 void Observation::RangeStandardization(){
     if(this->count_==0){
         this->range_ = {0,0};
@@ -70,4 +61,26 @@ void Observation::RangeStandardization(){
 
 void Observation::ContentSync(){
     this->count_ = this->stars_.size();
+}
+
+void ImageProperties::change_ppmm(double new_ppmm){
+    ppmm = new_ppmm;
+    ppi = static_cast<int>(mm2inch(ppmm));
+    length_inch = length_pixel / mm2inch(ppmm);
+    width_inch = width_pixel / mm2inch(ppmm);
+}
+
+ImageProperties::ImageProperties(const ImageProperties& p){
+    this->focal_length = p.focal_length;
+    this->length_pixel = p.length_pixel;
+    this->width_pixel = p.width_pixel;
+    this->change_ppmm(p.ppmm);
+    this->ppi = p.ppi;
+}
+
+GeneratedImage::GeneratedImage(cv::Mat &image,string path, vector<StarPoint> &stars, ImageProperties &property){
+    this->image_ = image;
+    this->stars_ = stars;
+    this->propery_ = property;
+    this->image_path_ = path;
 }
