@@ -44,6 +44,8 @@ private slots:
 
     void on_simButton_clicked();
 
+    void on_simStarPointTable_cellDoubleClicked(int row, int column);
+
 protected:
     void dragEnterEvent(QDragEnterEvent*event);//拖动进入事件
     void dropEvent(QDropEvent*event);

@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #define LOADANI(i) loading[((i)/100)%4]
-#define simDev 5
+#define simDev 100
 static QStringList loading={"",".","..","..."};
 static QStringList AN={"三角匹配","无标定参数","径向环向特征","Log-Polar"};
 MainWindow::MainWindow(QWidget *parent) :
@@ -11,18 +11,17 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     this->setAttribute(Qt::WA_DeleteOnClose);
     qApp->setWindowIcon(QIcon(":/Data/Data/skymap_logo.ico"));
+
+    QStringList starPointTableHeader;
+    starPointTableHeader<<tr("编号")<<tr("X")<<tr("Y");
+    ui->starPointTable->setHorizontalHeaderLabels(starPointTableHeader);
+    QStringList simStarPointTableHeader;
+    simStarPointTableHeader<<tr("星表编号")<<tr("X")<<tr("Y")<<tr("识别结果");
+    ui->simStarPointTable->setHorizontalHeaderLabels(simStarPointTableHeader);
     pSMM = new SkyMapMatching();
     connect(ui->open,SIGNAL(triggered()),this,SLOT(on_openButton_clicked()));
     connect(ui->quit,SIGNAL(triggered()),qApp,SLOT(quit()));
     connect(ui->about,SIGNAL(triggered()),this,SLOT(showAboutDialog()));
-    QStringList starPointTableHeader;
-    starPointTableHeader<<tr("编号")<<tr("X")<<tr("Y");
-    ui->starPointTable->setHorizontalHeaderLabels(starPointTableHeader);
-    ui->starPointTable->horizontalHeader()->setHighlightSections(false);
-    QStringList simStarPointTableHeader;
-    simStarPointTableHeader<<tr("星表编号")<<tr("X")<<tr("Y")<<tr("识别结果");
-    ui->simStarPointTable->setHorizontalHeaderLabels(simStarPointTableHeader);
-    ui->simStarPointTable->horizontalHeader()->setHighlightSections(false);
 }
 
 MainWindow::~MainWindow()
@@ -91,7 +90,7 @@ void MainWindow::loadPicture(QString fileName)
         this->ui->posYInput->setText(QString::number(this->posY));
         ui->posXInput->setReadOnly(true);
         ui->posYInput->setReadOnly(true);
-        ui->starPointTable->clear();
+        ui->starPointTable->setRowCount(0);
         ui->openButton->blockSignals(true);
         ui->evalButton->blockSignals(true);
         ui->statusBar->showMessage(tr("请稍候……正在处理图片"));
@@ -131,10 +130,9 @@ void MainWindow::loadPicture(QString fileName)
          ui->openButton->blockSignals(false);
     }
     ui->starPointTable->blockSignals(true);
+    ImageProperties prop(skyImg.width(),skyImg.height(),skyImg.logicalDpiX(),this->focus);
     ui->statusBar->showMessage(tr("请稍候……正在加载并处理星表"));
     starNames=loadStarNames(name_path);
-    ImageProperties prop(skyImg.width(),skyImg.height(),skyImg.logicalDpiX(),this->focus);
-
     QElapsedTimer timer;
     timer.start();
     QFuture<vector<StarPoint> > futureSMM = QtConcurrent::run(initStarMapMatching,this->pSMM,prop);
@@ -202,10 +200,12 @@ void MainWindow::simStarMapMatching(GeneratedImage gi)
         return;
     }
     vector<StarPoint> found=loadStarPoint(QString::fromStdString(gi.image_path_));
-    int false_pos=0,error_num=0,total_num=gi.stars_.size(),found_num=found.size();
+    QString picture = "./tmp.csv";
+    pSMM->LoadImage(picture, gi.propery_);
+    int false_pos=0,error_num=0,suc_num=0,total_num=gi.stars_.size(),found_num=found.size();
     for(vector<StarPoint>::iterator it=found.begin();it!=found.end();it++)
     {
-        int ans=findMatchingStar(it->index),true_ans;
+        int ans=findMatchingStar(it->index),true_ans=0;
         bool endFlag=true;
         for(vector<StarPoint>::iterator cit=gi.stars_.begin();cit!=gi.stars_.end();cit++)
         {
@@ -214,6 +214,9 @@ void MainWindow::simStarMapMatching(GeneratedImage gi)
                 if(ans!=cit->index)
                 {
                     error_num++;
+                }
+                else {
+                    suc_num++;
                 }
                 true_ans=cit->index;
                 endFlag=false;
@@ -239,7 +242,7 @@ void MainWindow::simStarMapMatching(GeneratedImage gi)
         ans_item->setText(QString::number(ans));
         ui->simStarPointTable->setItem(row_count,3,ans_item);
     }
-    sr={total_num,found_num,false_pos,error_num,1-error_num*1.0/total_num};
+    sr={total_num,found_num,false_pos,error_num,suc_num*1.0/total_num};
 }
 
 void MainWindow::on_openButton_clicked()
@@ -434,7 +437,6 @@ void MainWindow::on_starPointTable_cellDoubleClicked(int row, int column)
     while(!futureFMS.isFinished())
     {
         ui->statusBar->showMessage(tr("请稍候……正在寻找匹配")+LOADANI(int(timer.elapsed())));
-        timer.restart();
         QApplication::processEvents();
     }
     res=futureFMS.result();
@@ -465,6 +467,8 @@ void MainWindow::on_starPointTable_cellDoubleClicked(int row, int column)
 
 void MainWindow::on_simButton_clicked()
 {
+    QString dataset = data_path;
+    if(pSMM->sky_.stars_.empty()) pSMM->LoadSky(dataset);
     ui->starNoDisplay->clear();
     ui->starNameDisplay->clear();
     ui->starPosXDisplay->clear();
@@ -484,10 +488,11 @@ void MainWindow::on_simButton_clicked()
     int imageWidth = ui->imageWidthInput->text().toInt();
     int imageHeight = ui->imageHeightInput->text().toInt();
     int ppi = ui->ppiInput->text().toInt();
-    ui->simStarPointTable->clear();
+    ui->simStarPointTable->setRowCount(0);
     ImageProperties ip(imageWidth,imageHeight,ppi,this->focus);
     GeneratedImage gi=this->pSMM->GenerateSimImage({-1,x,y,0},scopeWdith,scopeHeight,ip);
     QImage simImg = cvMat2QImage(gi.image_);
+    this->skyImg=QImage(QString::fromStdString(gi.image_path_));
     ui->picDisplayArea->setPixmap(QPixmap::fromImage(simImg));
     QElapsedTimer timer;
     timer.start();
@@ -498,7 +503,6 @@ void MainWindow::on_simButton_clicked()
     while(!futureSim.isFinished())
     {
         ui->statusBar->showMessage(tr("请稍候……正在进行仿真")+LOADANI(int(timer.elapsed())));
-        timer.restart();
         QApplication::processEvents();
     }
     ui->statusBar->clearMessage();
@@ -508,5 +512,17 @@ void MainWindow::on_simButton_clicked()
     ui->starPosXDisplay->setText(QString::number(sr.found_num));
     ui->starPosYDisplay->setText(QString::number(sr.false_pos));
     ui->starConsDisplay->setText(QString::number(sr.error_num));
-    ui->starDescriptionDisplay->setText(QString::number(sr.accuracy));
+    ui->starDescriptionDisplay->setText(QString::number(sr.accuracy*100)+"%");
+}
+
+void MainWindow::on_simStarPointTable_cellDoubleClicked(int row, int column)
+{
+    QImage tImg = this->skyImg;
+    double x=ui->simStarPointTable->item(row,1)->text().toDouble();
+    double y=ui->simStarPointTable->item(row,2)->text().toDouble();
+    QPainter painter(&tImg);
+    painter.setPen(QPen(QColor(255, 255, 255), 3));
+    painter.drawEllipse(QPointF(x,y), 8, 8);
+    painter.end();
+    ui->picDisplayArea->setPixmap(QPixmap::fromImage(tImg));
 }
