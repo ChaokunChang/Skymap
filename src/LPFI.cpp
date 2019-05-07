@@ -177,7 +177,7 @@ vector<pair<int,int> > calc_next(vector<int>& v)
     {
         while(k>-2&&abs(v[k+2]-v[q])>1)
         {
-            if(ec<=2)
+            if(ec<=1)
             {
                 ec++;
             }
@@ -207,7 +207,7 @@ bool compare(vector<int>& v,vector<int>& p)
     {
         while(k>-2&&abs(p[k+2]-v[i])>1)
         {
-            if(ec<=2)
+            if(ec<=1)
             {
                 ec++;
             }

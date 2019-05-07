@@ -42,6 +42,8 @@ private slots:
     void showAboutDialog();
     void on_starPointTable_cellDoubleClicked(int row, int column);
 
+    void on_simButton_clicked();
+
 protected:
     void dragEnterEvent(QDragEnterEvent*event);//拖动进入事件
     void dropEvent(QDropEvent*event);
@@ -52,7 +54,7 @@ private:
     int findMatchingStar(int);
     void getAlgorithm();
     double evalStarMapMatching(EvalArgs);
-
+    void simStarMapMatching(GeneratedImage);
     vector<StarPoint> starRecs,starMap;
     vector<QString> starNames;
     SkyMapMatching* pSMM;
@@ -60,6 +62,7 @@ private:
     double posX,posY,focus;
     bool algorithm[4]={false};
     QStringList algorithmNames;
+    simResult sr;
 };
 const QString name_path= ":/Data/Data/sky_table_name_SAO.csv";
 const QString data_path= ":/Data/Data/sky_table_loc_SAO.csv";

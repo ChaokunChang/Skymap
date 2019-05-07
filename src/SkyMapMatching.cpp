@@ -746,68 +746,68 @@ EvalResult SkyMapMatching::ExeEvaluation(bool* model,size_t round,size_t miss_nu
     return eval;
 }
 
-SimResult SkyMapMatching::ExeSimulation(bool* model,ImageProperties property,size_t round,size_t miss_num,
-                                        size_t add_num,double off_rate){
-    this->RUNNING_MODE = SIMULATION;
-    qDebug()<<endl<<endl<<endl;
-    qDebug()<<"Simulation start....";
-    qDebug()<<"Total round number:"<<round;
-    assert(round>0);
-    int succeed_num=0;
-    int failed_num = 0;
-    size_t r=0;
-    int counts=0;
-    StarPoint center;
-    double fl=12.0,fr=12.0;
-    while(r<round){
-        qDebug()<<"--------------------------------------------------------------";
-        qDebug()<<"-----------------------start:"<<r+1<<"th---------------------------";
-        center = random_point(0.0,this->LongitudeRange,- this->LatitudeRange/2,this->LatitudeRange/2);
-        //center = random_point(0.0,this->LongitudeRange,-60,60);
-        QString path = QString::fromStdString( this->GenerateSimImage(center,fl,fr,property.focal_length) );
-        this->LoadImage(path,property);
-        if(this->image_.count_>=3){
-            //add noise....
-            qDebug()<<"@Adding noise...";
-            if(miss_num>=this->image_.count_){
-                qDebug()<<"There is no enough stars to be deleted...";
-                continue;
-            }
-            RandomMissing(this->image_.stars_,miss_num);
-            this->image_.count_ -= miss_num;
+//SimResult SkyMapMatching::ExeSimulation(bool* model,ImageProperties property,size_t round,size_t miss_num,
+//                                        size_t add_num,double off_rate){
+//    this->RUNNING_MODE = SIMULATION;
+//    qDebug()<<endl<<endl<<endl;
+//    qDebug()<<"Simulation start....";
+//    qDebug()<<"Total round number:"<<round;
+//    assert(round>0);
+//    int succeed_num=0;
+//    int failed_num = 0;
+//    size_t r=0;
+//    int counts=0;
+//    StarPoint center;
+//    double fl=12.0,fr=12.0;
+//    while(r<round){
+//        qDebug()<<"--------------------------------------------------------------";
+//        qDebug()<<"-----------------------start:"<<r+1<<"th---------------------------";
+//        center = random_point(0.0,this->LongitudeRange,- this->LatitudeRange/2,this->LatitudeRange/2);
+//        //center = random_point(0.0,this->LongitudeRange,-60,60);
+//        QString path = QString::fromStdString( this->GenerateSimImage(center,fl,fr,property.focal_length) );
+//        this->LoadImage(path,property);
+//        if(this->image_.count_>=3){
+//            //add noise....
+//            qDebug()<<"@Adding noise...";
+//            if(miss_num>=this->image_.count_){
+//                qDebug()<<"There is no enough stars to be deleted...";
+//                continue;
+//            }
+//            RandomMissing(this->image_.stars_,miss_num);
+//            this->image_.count_ -= miss_num;
 
-            RandomAddPoints(this->image_.stars_,this->image_.scope_length,this->image_.scope_width,add_num);
-            this->image_.count_ += add_num;
-            if(this->image_.count_<3){
-                qDebug()<<"Impossible after adding noise.";
-                continue;
-            }
-            RandomDiviation(this->image_.stars_,off_rate);
+//            RandomAddPoints(this->image_.stars_,this->image_.scope_length,this->image_.scope_width,add_num);
+//            this->image_.count_ += add_num;
+//            if(this->image_.count_<3){
+//                qDebug()<<"Impossible after adding noise.";
+//                continue;
+//            }
+//            RandomDiviation(this->image_.stars_,off_rate);
 
-            this->__image_target=this->SelectTargetStar();
-            qDebug()<<"The Target star(skymap's index):<--"<<this->__target_star.index<<" "<<this->sky_.stars_[size_t(this->__target_star.index)].x<<','<<this->sky_.stars_[size_t(this->__target_star.index)].y<<" -->";
-            qDebug()<<"@Matching...";
-            this->Match(model);
-            qDebug()<<"@Checking...";
-            if(this->CheckAllCandidates() == -1){
-                failed_num ++;
-                qDebug("Failed the %dth round.\n",r+1);
-            }
-            else {
-                succeed_num ++;
-                qDebug("Passed the %dth round.\n",r+1);
-            }
-            qDebug()<<"-----------------------end:"<<r+1<<"th---------------------------";
-            r++;
-        }
-        else {qDebug()<<"-----------------------retry:"<<r+1<<"th---------------------------";counts++;}
-        qDebug()<<"--------------------------------------------------------------";
-        qDebug("Retry Counts:%d",counts);
-    }
-    double ans = (succeed_num)*1.0/(succeed_num+failed_num);
-    SimResult sim(succeed_num+failed_num,ans,model);
-    this->RUNNING_MODE = DEFAULT_MODE;
+//            this->__image_target=this->SelectTargetStar();
+//            qDebug()<<"The Target star(skymap's index):<--"<<this->__target_star.index<<" "<<this->sky_.stars_[size_t(this->__target_star.index)].x<<','<<this->sky_.stars_[size_t(this->__target_star.index)].y<<" -->";
+//            qDebug()<<"@Matching...";
+//            this->Match(model);
+//            qDebug()<<"@Checking...";
+//            if(this->CheckAllCandidates() == -1){
+//                failed_num ++;
+//                qDebug("Failed the %dth round.\n",r+1);
+//            }
+//            else {
+//                succeed_num ++;
+//                qDebug("Passed the %dth round.\n",r+1);
+//            }
+//            qDebug()<<"-----------------------end:"<<r+1<<"th---------------------------";
+//            r++;
+//        }
+//        else {qDebug()<<"-----------------------retry:"<<r+1<<"th---------------------------";counts++;}
+//        qDebug()<<"--------------------------------------------------------------";
+//        qDebug("Retry Counts:%d",counts);
+//    }
+//    double ans = (succeed_num)*1.0/(succeed_num+failed_num);
+//    SimResult sim(succeed_num+failed_num,ans,model);
+//    this->RUNNING_MODE = DEFAULT_MODE;
 
-    return sim;
+//    return sim;
 
-}
+//}

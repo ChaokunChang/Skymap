@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #define LOADANI(i) loading[((i)/100)%4]
+#define simDev 5
 static QStringList loading={"",".","..","..."};
 static QStringList AN={"三角匹配","无标定参数","径向环向特征","Log-Polar"};
 MainWindow::MainWindow(QWidget *parent) :
@@ -18,6 +19,10 @@ MainWindow::MainWindow(QWidget *parent) :
     starPointTableHeader<<tr("编号")<<tr("X")<<tr("Y");
     ui->starPointTable->setHorizontalHeaderLabels(starPointTableHeader);
     ui->starPointTable->horizontalHeader()->setHighlightSections(false);
+    QStringList simStarPointTableHeader;
+    simStarPointTableHeader<<tr("星表编号")<<tr("X")<<tr("Y")<<tr("识别结果");
+    ui->simStarPointTable->setHorizontalHeaderLabels(simStarPointTableHeader);
+    ui->simStarPointTable->horizontalHeader()->setHighlightSections(false);
 }
 
 MainWindow::~MainWindow()
@@ -39,8 +44,8 @@ void MainWindow::loadPicture(QString fileName)
     else
     {
         ui->focalLengthInput->clear();
-        ui->posXDisplay->clear();
-        ui->posYDisplay->clear();
+        ui->posXInput->clear();
+        ui->posYInput->clear();
         if(fileName.right(3).compare("jpg",Qt::CaseInsensitive)||fileName.right(3).compare("jpeg",Qt::CaseInsensitive))
         {
             const char *photoPath = fileName.toStdString().c_str();
@@ -82,8 +87,10 @@ void MainWindow::loadPicture(QString fileName)
             this->ui->focalLengthInput->setText(QString::number(this->focus));
             this->ui->focalLengthInput->setReadOnly(true);
         }
-        this->ui->posXDisplay->setText(QString::number(this->posX));
-        this->ui->posYDisplay->setText(QString::number(this->posY));
+        this->ui->posXInput->setText(QString::number(this->posX));
+        this->ui->posYInput->setText(QString::number(this->posY));
+        ui->posXInput->setReadOnly(true);
+        ui->posYInput->setReadOnly(true);
         ui->starPointTable->clear();
         ui->openButton->blockSignals(true);
         ui->evalButton->blockSignals(true);
@@ -188,6 +195,53 @@ double MainWindow::evalStarMapMatching(EvalArgs arg)
                                arg.deviation).accuracy;
 }
 
+void MainWindow::simStarMapMatching(GeneratedImage gi)
+{
+    if(gi.stars_.empty())
+    {
+        return;
+    }
+    vector<StarPoint> found=loadStarPoint(QString::fromStdString(gi.image_path_));
+    int false_pos=0,error_num=0,total_num=gi.stars_.size(),found_num=found.size();
+    for(vector<StarPoint>::iterator it=found.begin();it!=found.end();it++)
+    {
+        int ans=findMatchingStar(it->index),true_ans;
+        bool endFlag=true;
+        for(vector<StarPoint>::iterator cit=gi.stars_.begin();cit!=gi.stars_.end();cit++)
+        {
+            if(abs(cit->x-it->x)+abs(cit->y-it->y)<=simDev)
+            {
+                if(ans!=cit->index)
+                {
+                    error_num++;
+                }
+                true_ans=cit->index;
+                endFlag=false;
+                break;
+            }
+        }
+        if(endFlag)
+        {
+            false_pos++;
+        }
+        int row_count=ui->simStarPointTable->rowCount();
+        ui->simStarPointTable->insertRow(row_count);
+        QTableWidgetItem *true_ans_item=new QTableWidgetItem();
+        true_ans_item->setText(QString::number(true_ans));
+        ui->simStarPointTable->setItem(row_count,0,true_ans_item);
+        QTableWidgetItem *x_item=new QTableWidgetItem();
+        x_item->setText(QString::number(it->x));
+        ui->simStarPointTable->setItem(row_count,1,x_item);
+        QTableWidgetItem *y_item=new QTableWidgetItem();
+        y_item->setText(QString::number(it->y));
+        ui->simStarPointTable->setItem(row_count,2,y_item);
+        QTableWidgetItem *ans_item=new QTableWidgetItem();
+        ans_item->setText(QString::number(ans));
+        ui->simStarPointTable->setItem(row_count,3,ans_item);
+    }
+    sr={total_num,found_num,false_pos,error_num,1-error_num*1.0/total_num};
+}
+
 void MainWindow::on_openButton_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,tr("打开图片"),"",tr("所有文件(*.*);;图片文件(*.jpg *.png *.bmp *.jpeg)"));
@@ -253,7 +307,7 @@ void MainWindow::on_evalButton_clicked()
     QFuture<double> futureEval = QtConcurrent::run(this,&MainWindow::evalStarMapMatching,arg);
     while(!futureEval.isFinished())
     {
-        ui->statusBar->showMessage(tr("请稍候……正在进行仿真")+LOADANI(int(timer.elapsed())));
+        ui->statusBar->showMessage(tr("请稍候……正在进行验证")+LOADANI(int(timer.elapsed())));
         QApplication::processEvents();
     }
     res=futureEval.result();
@@ -278,8 +332,10 @@ void MainWindow::on_tabWidget_currentChanged(int index)
         ui->starPosYDisplay->clear();
         ui->starConsDisplay->clear();
         ui->starDescriptionDisplay->clear();
+        ui->posXInput->setReadOnly(true);
+        ui->posYInput->setReadOnly(true);
     }
-    else
+    else if(index==1)
     {
         ui->infoGroupBox->setTitle(tr("算法验证"));
         ui->starNoLabel->setText(tr("算法"));
@@ -294,6 +350,26 @@ void MainWindow::on_tabWidget_currentChanged(int index)
         ui->starPosYDisplay->clear();
         ui->starConsDisplay->clear();
         ui->starDescriptionDisplay->clear();
+        ui->posXInput->setReadOnly(true);
+        ui->posYInput->setReadOnly(true);
+    }
+    else
+    {
+        ui->infoGroupBox->setTitle(tr("算法仿真"));
+        ui->starNoLabel->setText(tr("算法"));
+        ui->starNameLabel->setText(tr("包含星数"));
+        ui->starPosXLabel->setText(tr("发现星数"));
+        ui->starPosYLabel->setText(tr("假阳性数"));
+        ui->starConsLabel->setText(tr("错误识别数"));
+        ui->starDescriptionLabel->setText(tr("准确率"));
+        ui->starNoDisplay->clear();
+        ui->starNameDisplay->clear();
+        ui->starPosXDisplay->clear();
+        ui->starPosYDisplay->clear();
+        ui->starConsDisplay->clear();
+        ui->starDescriptionDisplay->clear();
+        ui->posXInput->setReadOnly(false);
+        ui->posYInput->setReadOnly(false);
     }
 }
 
@@ -385,4 +461,52 @@ void MainWindow::on_starPointTable_cellDoubleClicked(int row, int column)
     painter.drawEllipse(QPointF(x,y), 8, 8);
     painter.end();
     ui->picDisplayArea->setPixmap(QPixmap::fromImage(tImg));
+}
+
+void MainWindow::on_simButton_clicked()
+{
+    ui->starNoDisplay->clear();
+    ui->starNameDisplay->clear();
+    ui->starPosXDisplay->clear();
+    ui->starPosYDisplay->clear();
+    ui->starConsDisplay->clear();
+    ui->starDescriptionDisplay->clear();
+    double theta = ui->thetaInput->text().toDouble();
+    if(theta<0)
+        theta=0;
+    if(theta>360)
+        theta=360;
+    ui->thetaInput->setText(QString::number(theta));
+    double x=ui->posXInput->text().toDouble();
+    double y=ui->posYInput->text().toDouble();
+    double scopeWdith = ui->viewWidthInput->text().toDouble();
+    double scopeHeight = ui->viewHeightInput->text().toDouble();
+    int imageWidth = ui->imageWidthInput->text().toInt();
+    int imageHeight = ui->imageHeightInput->text().toInt();
+    int ppi = ui->ppiInput->text().toInt();
+    ui->simStarPointTable->clear();
+    ImageProperties ip(imageWidth,imageHeight,ppi,this->focus);
+    GeneratedImage gi=this->pSMM->GenerateSimImage({-1,x,y,0},scopeWdith,scopeHeight,ip);
+    QImage simImg = cvMat2QImage(gi.image_);
+    ui->picDisplayArea->setPixmap(QPixmap::fromImage(simImg));
+    QElapsedTimer timer;
+    timer.start();
+    ui->starPointTable->blockSignals(true);
+    ui->statusBar->showMessage(tr("请稍候……正在进行仿真"));
+    getAlgorithm();
+    QFuture<void> futureSim = QtConcurrent::run(this,&MainWindow::simStarMapMatching,gi);
+    while(!futureSim.isFinished())
+    {
+        ui->statusBar->showMessage(tr("请稍候……正在进行仿真")+LOADANI(int(timer.elapsed())));
+        timer.restart();
+        QApplication::processEvents();
+    }
+    ui->statusBar->clearMessage();
+    getAlgorithm();
+    ui->starNoDisplay->setText(algorithmNames.join(','));
+    ui->starNameDisplay->setText(QString::number(sr.total_num));
+    ui->starPosXDisplay->setText(QString::number(sr.found_num));
+    ui->starPosYDisplay->setText(QString::number(sr.false_pos));
+    ui->starConsDisplay->setText(QString::number(sr.error_num));
+    ui->starDescriptionDisplay->setText(QString::number(sr.accuracy));
 }
