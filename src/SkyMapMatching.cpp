@@ -846,13 +846,13 @@ EvalResult SkyMapMatching::ExeEvaluation(bool* model,size_t round,size_t miss_nu
     ImageProperties property(int(1024),int(1024),int(96),double(58.0));
     property.length_inch = property.length_pixel*1.0/property.ppi;
     property.width_inch = property.width_pixel*1.0/property.ppi;
-    SimResult sim_eval = this->ExeSimulation(model,property,round,fl,fr,miss_num,add_num,off_rate);
+    simResult sim_eval = this->ExeSimulation(model,property,round,fl,fr,miss_num,add_num,off_rate);
     cout<<"Simulation result:"<<sim_eval.accuracy<<endl;
-    return sim_eval;
-    //return eval;
+    //return sim_eval;
+    return eval;
 }
 
-SimResult SkyMapMatching::ExeSimulation(bool* model,ImageProperties property,size_t round,
+simResult SkyMapMatching::ExeSimulation(bool* model,ImageProperties property,size_t round,
                                         double scope_length,double scope_width,
                                         size_t miss_num,size_t add_num,double off_rate){
     this->RUNNING_MODE = SIMULATION;
@@ -899,9 +899,8 @@ SimResult SkyMapMatching::ExeSimulation(bool* model,ImageProperties property,siz
         qDebug("Retry Counts:%d",counts);
     }
     double ans = (succeed_num)*1.0/(succeed_num+failed_num);
-    SimResult sim(succeed_num+failed_num,ans,model);
+    simResult sim;
+    sim.accuracy = (ans);
     this->RUNNING_MODE = DEFAULT_MODE;
-
     return sim;
-
 }

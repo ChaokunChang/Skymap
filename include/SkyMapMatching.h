@@ -22,7 +22,7 @@
 #include "SkyMap.h"
 
 #define PIXEL_LENGTH 1.5e-6
-#define DEFAULT_FOCAL_LENGTH 4e-3
+#define DEFAULT_FOCAL_LENGTH 4
 
 /**
  * Below are the running modes of this system.
@@ -70,14 +70,12 @@ public:
         round(r),accuracy(c){}
 };
 
-class SimArgs: public EvalArgs{
-
-};
-
-class SimResult: public EvalResult{
-public:
-    SimResult(): EvalResult(){}
-    SimResult(int r,double c,bool* model,string prop="default"):EvalResult(r,c,model,prop){}
+struct simResult{
+    int total_num;
+    int found_num;
+    int false_pos;
+    int error_num;
+    double accuracy;
 };
 
 class SkyMapMatching {
@@ -134,7 +132,7 @@ public:
     StarPoint GetTargetStar(){ return this->__target_star;}
     EvalResult ExeEvaluation(bool* model,size_t round=100,size_t missing=0,
                              size_t redundence=0,double deviation=0.0);
-    SimResult ExeSimulation(bool* model,ImageProperties property,size_t round=100,double scope_length=12.0,
+    simResult ExeSimulation(bool* model,ImageProperties property,size_t round=100,double scope_length=12.0,
                             double scope_width=12.0,size_t missing=0,size_t redundence=0,double deviation=0.0);
 };
 #endif //SKYMAP_SKYMAPMATCHING_H

@@ -9,6 +9,7 @@
 #include <fstream>
 #include "extraction.h"
 #include "QCSVAdapter.h"
+#include <QImage>
 
 using namespace std;
 class ImageProcessing {
@@ -20,5 +21,7 @@ public:
     vector<StarPoint> Process();
 };
 
+QImage cvMat2QImage(const cv::Mat&);
+cv::Mat QImage2cvMat(QImage);
 
 #endif //SKYMAP_IMAGEPROCESSING_H
