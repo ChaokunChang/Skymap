@@ -30,19 +30,14 @@ double getSpotAD(const double& x1,const double& y1,const double& x2,const double
 
 
 int random_int(const int& l,const int& r){
-//    srand(static_cast<unsigned>(time_seed.time*1000) + time_seed.millitm);
-//    return l + rand()%(r-l);
     return QRandomGenerator::global()->bounded(l,r);
 }
 
 size_t random_size_t(const size_t& l,const size_t& r){
-    //srand(static_cast<unsigned>(time_seed.time*1000) + time_seed.millitm);
     return size_t(random_int(int(l),int(r)));
 }
 
 double random_double(const double& l,const double& r){
-//    srand(static_cast<unsigned>(time_seed.time*1000) + time_seed.millitm);
-//    return l + (double(rand())/RAND_MAX)*(r-l);
     return l + QRandomGenerator::global()->bounded(r-l);
 }
 
@@ -94,4 +89,11 @@ std::pair<double,double> LPT(double x,double y)
     else {
         return {theta+360,r};
     }
+}
+
+double inch2mm(double inch){
+    return 25.4*inch;
+}
+double mm2inch(double mm){
+    return mm/25.4;
 }

@@ -126,8 +126,8 @@ void MainWindow::loadPicture(QString fileName)
     ui->starPointTable->blockSignals(true);
     ui->statusBar->showMessage(tr("请稍候……正在加载并处理星表"));
     starNames=loadStarNames(name_path);
-    image_properties prop(skyImg.width(),skyImg.height(),skyImg.width()*25.4/skyImg.logicalDpiX(),skyImg.height()*25.4/skyImg.logicalDpiY(),this->focus);
-    //this->pSMM->initPara(skyImg.width(),skyImg.height(),skyImg.width()*25.4/skyImg.logicalDpiX(),skyImg.height()*25.4/skyImg.logicalDpiY(),this->focus);
+    ImageProperties prop(skyImg.width(),skyImg.height(),skyImg.logicalDpiX(),this->focus);
+
     QElapsedTimer timer;
     timer.start();
     QFuture<vector<StarPoint> > futureSMM = QtConcurrent::run(initStarMapMatching,this->pSMM,prop);
@@ -160,7 +160,7 @@ vector<StarPoint> loadStarPoint(QString fileName)
     return starRecs;
 }
 
-vector<StarPoint> initStarMapMatching(SkyMapMatching* pSMM, image_properties prop)
+vector<StarPoint> initStarMapMatching(SkyMapMatching* pSMM, ImageProperties prop)
 {
     /**
      * @brief logic

@@ -32,4 +32,6 @@ double getSphereAngle(double, double, double, double, double, double);
 double getSpotAngle(double, double, double, double, double, double,double);
 std::pair<double,double> star2spot(double, double, double, double, double, double);
 std::pair<double,double> LPT(double,double);
+double inch2mm(double inch);
+double mm2inch(double inch);
 #endif //SKYMAP_MYFUNCTIONS_H

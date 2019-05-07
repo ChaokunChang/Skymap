@@ -108,11 +108,13 @@ public:
     void SetEvaluation(){this->RUNNING_MODE = EVALUATION;}
 
     void LoadSky(QString &f_name);
-    void LoadImage(QString &f_name,image_properties);
+    void LoadImage(QString &f_name,ImageProperties);
 
     void GenerateSubSky(const StarPoint &centre, const double &length, const double &width); //generate image with given position and size;
     void GenerateSubSky(const StarPoint &centre, const double &image_ratio, const int &num); // generate image with centre and particular number of stars.
     string GenerateSimImage(const StarPoint &centre, const double &length, const double &width,double f); //generate image with given position and size;
+    GeneratedImage GenerateSimImage(const StarPoint &center, const double &scope_length, const double& scope_width,
+                             ImageProperties &property);
     void GenerateSimImage(const StarPoint &centre, const double &image_ratio, const int &num,double f); // generate image with centre and particular number of stars.
 
     size_t SelectTargetStar();
@@ -131,7 +133,7 @@ public:
     StarPoint GetTargetStar(){ return this->__target_star;}
     EvalResult ExeEvaluation(bool* model,size_t round=100,size_t missing=0,
                              size_t redundence=0,double deviation=0.0);
-    SimResult ExeSimulation(bool* model,image_properties property,size_t round=100,size_t missing=0,
+    SimResult ExeSimulation(bool* model,ImageProperties property,size_t round=100,size_t missing=0,
                              size_t redundence=0,double deviation=0.0);
 };
 
