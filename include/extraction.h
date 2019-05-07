@@ -7,7 +7,7 @@
 #include <vector>
 
 // macros
-#define BLOCK 5
+#define BLOCK 8
 #define ALPHA 5
 #define STARS_MAX 200
 #define FOOTSTEP 40

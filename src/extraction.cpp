@@ -311,6 +311,9 @@ vector<pair<pair<double, double>, double>> get_centroids(Mat &img)
             p.first.second = block_sum(img, x[i], y[j], 'y', T);
             p.first.second = p.first.second / p.second + y[j].first;
 
+//            double tmp = p.first.second;
+//            p.first.second = p.first.first;
+//            p.first.first = tmp;
             centroids.push_back(p);
         }
     }

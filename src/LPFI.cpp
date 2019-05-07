@@ -10,7 +10,7 @@ bool mag_cmp(StarPoint& a,StarPoint& b)
     return a.magnitude>b.magnitude;
 }
 
-LPFI::LPFI(std::vector<StarPoint> navStarMap,double r=6, int m=200,int n=120,double f=0.004):navStarTable(navStarMap),r(r),m(m),n(n),focal_length(f)
+LPFI::LPFI(std::vector<StarPoint> navStarMap,double r=6, int m=100,int n=80,double f=0.004):navStarTable(navStarMap),r(r),m(m),n(n),focal_length(f)
 {
     qDebug()<<"load sky complete!"<<endl;
     load();
@@ -137,7 +137,7 @@ vector<int> LPFI::calc_LPF(std::vector<StarPoint>& StarTable,StarPoint target,bo
         {
             if(pic[i][j]==true)
             {
-                tmpvec[i]=j;
+                tmpvec[i]=j+1;
                 break;
             }
         }
@@ -177,7 +177,7 @@ vector<pair<int,int> > calc_next(vector<int>& v)
     {
         while(k>-2&&abs(v[k+2]-v[q])>1)
         {
-            if(ec<=1)
+            if(ec<=2)
             {
                 ec++;
             }
@@ -207,7 +207,7 @@ bool compare(vector<int>& v,vector<int>& p)
     {
         while(k>-2&&abs(p[k+2]-v[i])>1)
         {
-            if(ec<=1)
+            if(ec<=2)
             {
                 ec++;
             }

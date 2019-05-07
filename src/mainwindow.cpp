@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #define LOADANI(i) loading[((i)/100)%4]
-#define simDev 100
+#define simDev 5
 static QStringList loading={"",".","..","..."};
 static QStringList AN={"三角匹配","无标定参数","径向环向特征","Log-Polar"};
 MainWindow::MainWindow(QWidget *parent) :

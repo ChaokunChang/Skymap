@@ -27,6 +27,9 @@ void SkyMapMatching::LoadImage(QString &f_name,ImageProperties property) {
 }
 
 void SkyMapMatching::LoadImage(vector<StarPoint> &stars, ImageProperties property){
+    for(size_t i=0;i<stars.size();i++){
+        stars[i].y = property.width_pixel - stars[i].y;
+    }
     if(property.focal_length<1e-6) {
         /** property
          * if the focal_length = 0, it means the picture hasn't info of focal length.
@@ -188,7 +191,7 @@ int SkyMapMatching::TriangleModel() {
         pTM =new TriangleMatching(sky_.stars_.size(), 15.0, 0.02);
         pTM->LoadData(sky_.stars_);
     }
-    assert(this->image_.count_>=3);
+    //assert(this->image_.count_>=3);
     qDebug()<<"focal_length:";
     if(this->image_.property.focal_length>1e-6){
         qDebug()<<this->image_.property.focal_length;
@@ -277,7 +280,7 @@ int SkyMapMatching::RCFIModel(){
 int SkyMapMatching::LPFIModel(){
     if(pLPFI==nullptr)
     {
-        pLPFI = new LPFI(this->sky_.stars_,6,200,120,0.004);
+        pLPFI = new LPFI(this->sky_.stars_,6,100,80,0.004);
     }
     if(this->RUNNING_MODE == EVALUATION)
         return pLPFI->efind(this->image_.stars_,this->__target_star);
@@ -299,12 +302,12 @@ void SkyMapMatching::Match(bool* pmodel) {
 
         }
         else printf("Triangle Model cannot get answer.\n");
-        while((skymap_index[0]=this->pTM->GetCandidate())){
-            if(skymap_index[0] == -1) break;
-            this->__matching_star = this->sky_.stars_[size_t(skymap_index[0])];
-            Candidate one("Triangle Model",this->__matching_star);
-            this->candidates_.push_back(one);
-        }
+//        while((skymap_index[0]=this->pTM->GetCandidate())){
+//            if(skymap_index[0] == -1) break;
+//            this->__matching_star = this->sky_.stars_[size_t(skymap_index[0])];
+//            Candidate one("Triangle Model",this->__matching_star);
+//            this->candidates_.push_back(one);
+//        }
     }
     if(pmodel[1])
     {
@@ -361,7 +364,7 @@ bool similar_position(StarPoint &s1, StarPoint &s2){
 }
 
 int SkyMapMatching::Check() {
-    if(this->RUNNING_MODE == EVALUATION){
+    if(this->RUNNING_MODE == EVALUATION || this->RUNNING_MODE == SIMULATION){
         return this->__target_star.index == this->__matching_star.index ? 1:-1;
     }
     //get the __matching_star's offset in check_set, which should be equal to offset of __target_star in sky_image.
@@ -704,8 +707,11 @@ GeneratedImage SkyMapMatching::GenerateSimImage(const StarPoint &center, const d
         p.x = static_cast<int>(point.x*property.ppmm) + ppi_x/2;
         p.y = static_cast<int>(point.y*property.ppmm) + ppi_y/2;
         if(p.x < 0 || p.x > ppi_x || p.y < 0 || p.y > ppi_y ) continue;
-        stars_in_image.push_back(point);
-        circle(sim_image_shift,p,5,CV_RGB(0,0,255),-1);
+
+        StarPoint sp(point.index,p.x,p.y,0.0);
+        stars_in_image.push_back(sp);
+
+        circle(sim_image_shift,p,4,CV_RGB(0,0,255),-1);
     }
 
     /**
@@ -730,7 +736,7 @@ GeneratedImage SkyMapMatching::GenerateSimImage(const StarPoint &center, const d
     string path_shift = "./SimImage_"+to_string(count_num)+".jpg";
     cv::imwrite(path_shift,sim_image_shift);
 
-    return GeneratedImage(sim_image_shift,path_shift,stars,property);
+    return GeneratedImage(sim_image_shift,path_shift,stars_in_image,property);
 }
 
 void SkyMapMatching::GenerateSubSky(const StarPoint &centre, const double &image_ratio, const int &num) {
@@ -843,12 +849,14 @@ EvalResult SkyMapMatching::ExeEvaluation(bool* model,size_t round,size_t miss_nu
 
     /*Test Simulation...
      */
-    ImageProperties property(int(1024),int(1024),int(96),double(58.0));
-    property.length_inch = property.length_pixel*1.0/property.ppi;
-    property.width_inch = property.width_pixel*1.0/property.ppi;
-    simResult sim_eval = this->ExeSimulation(model,property,round,fl,fr,miss_num,add_num,off_rate);
-    cout<<"Simulation result:"<<sim_eval.accuracy<<endl;
-    //return sim_eval;
+//    ImageProperties property(int(1024),int(1024),int(96),double(58.0));
+//    property.length_inch = property.length_pixel*1.0/property.ppi;
+//    property.width_inch = property.width_pixel*1.0/property.ppi;
+//    simResult sim_eval = this->ExeSimulation(model,property,round,fl,fr,miss_num,add_num,off_rate);
+//    cout<<"Simulation result:"<<sim_eval.accuracy<<endl;
+//    cout<<"Toal number:"<<sim_eval.total_num<<endl;
+//    cout<<"Error number:"<<sim_eval.error_num<<endl;
+
     return eval;
 }
 
@@ -900,6 +908,8 @@ simResult SkyMapMatching::ExeSimulation(bool* model,ImageProperties property,siz
     }
     double ans = (succeed_num)*1.0/(succeed_num+failed_num);
     simResult sim;
+    sim.total_num = succeed_num + failed_num;
+    sim.error_num = failed_num;
     sim.accuracy = (ans);
     this->RUNNING_MODE = DEFAULT_MODE;
     return sim;

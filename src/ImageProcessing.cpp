@@ -24,7 +24,7 @@ vector<StarPoint> ImageProcessing::Process() {
 
     vector<StarPoint> recList;
     for (size_t i=0;i!=centroids.size();i++) {
-        StarPoint starRec(int(i),centroids[i].first.first,centroids[i].first.second,centroids[i].second);
+        StarPoint starRec(int(i),centroids[i].first.second,centroids[i].first.first,centroids[i].second);
         recList.push_back(starRec);
     }
     QCSVAdapter pic_csv(QString::fromStdString(this->__gen_picture));

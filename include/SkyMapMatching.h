@@ -22,7 +22,7 @@
 #include "SkyMap.h"
 
 #define PIXEL_LENGTH 1.5e-6
-#define DEFAULT_FOCAL_LENGTH 4
+#define DEFAULT_FOCAL_LENGTH 4e-3
 
 /**
  * Below are the running modes of this system.
