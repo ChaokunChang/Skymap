@@ -10,7 +10,7 @@ bool mag_cmp(StarPoint& a,StarPoint& b)
     return a.magnitude>b.magnitude;
 }
 
-LPFI::LPFI(std::vector<StarPoint> navStarMap,double r=6, int m=100,int n=80,double f=0.004):navStarTable(navStarMap),r(r),m(m),n(n),focal_length(f)
+LPFI::LPFI(std::vector<StarPoint> navStarMap,double r=6, int m=100,int n=80,double f=50):navStarTable(navStarMap),r(r),m(m),n(n),focal_length(f)
 {
     qDebug()<<"load sky complete!"<<endl;
     load();
@@ -119,11 +119,16 @@ vector<int> LPFI::calc_LPF(std::vector<StarPoint>& StarTable,StarPoint target,bo
         {
             pair<double,double> tspot=star2spot(it->x,it->y,target.x,target.y,0,focal_length);
             pair<double,double> spot=LPT(tspot.first,tspot.second);
-            pic[int(spot.first/(360/double(m)))][int(spot.second/(r/n))]=true;
+            if(spot.first<360&&spot.second<log(r*focal_length))
+                pic[int(spot.first/(360/double(m)))][int(spot.second/(log(r*focal_length)/n))]=true;
+            else {
+                cout<<"Violation"<<endl;
+            }
         }
         else {
             pair<double,double> spot=LPT(it->x,it->y);
-            pic[int(spot.first/(360/double(m)))][int(spot.second/(r/n))]=true;
+            if(spot.first<360&&spot.second<log(r*focal_length))
+                pic[int(spot.first/(360/double(m)))][int(spot.second/(log(r*focal_length)/n))]=true;
         }
     }
     int tmpvec[m*2];

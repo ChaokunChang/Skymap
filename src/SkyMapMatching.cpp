@@ -280,7 +280,7 @@ int SkyMapMatching::RCFIModel(){
 int SkyMapMatching::LPFIModel(){
     if(pLPFI==nullptr)
     {
-        pLPFI = new LPFI(this->sky_.stars_,6,100,80,0.004);
+        pLPFI = new LPFI(this->sky_.stars_,6,100,80,50);
     }
     if(this->RUNNING_MODE == EVALUATION)
         return pLPFI->efind(this->image_.stars_,this->__target_star);
