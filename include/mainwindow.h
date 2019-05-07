@@ -32,7 +32,6 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_starList_itemDoubleClicked(QListWidgetItem*);
     void on_openButton_clicked();
 
     void on_focalLengthInput_editingFinished();
@@ -41,6 +40,8 @@ private slots:
 
     void on_tabWidget_currentChanged(int index);
     void showAboutDialog();
+    void on_starPointTable_cellDoubleClicked(int row, int column);
+
 protected:
     void dragEnterEvent(QDragEnterEvent*event);//拖动进入事件
     void dropEvent(QDropEvent*event);

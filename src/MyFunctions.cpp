@@ -73,7 +73,7 @@ std::pair<double,double> star2spot(double x, double y, double alpha, double zeta
     double sx=cosX*cosY,sy=sinX*cosY,sz=sinY;
     double A1=sinA*cosT-cosA*sinZ*sinT,A2=-sinA*sinT-cosA*sinZ*cosT,A3=-cosA*cosZ;
     double B1=-cosA*cosT-sinA*sinZ*sinT,B2=cosA*sinT-sinA*sinZ*cosT,B3=-sinA*cosZ;
-    double C1=cosA*sinT,C2=cosA*cosT,C3=-sinZ;
+    double C1=cosZ*sinT,C2=cosZ*cosT,C3=-sinZ;
     double rx=f*(A1*sx+B1*sy+C1*sz)/(A3*sx+B3*sy+C3*sz);
     double ry=f*(A2*sx+B2*sy+C2*sz)/(A3*sx+B3*sy+C3*sz);
     return {rx,ry};

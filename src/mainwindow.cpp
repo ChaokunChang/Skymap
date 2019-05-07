@@ -14,6 +14,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->open,SIGNAL(triggered()),this,SLOT(on_openButton_clicked()));
     connect(ui->quit,SIGNAL(triggered()),qApp,SLOT(quit()));
     connect(ui->about,SIGNAL(triggered()),this,SLOT(showAboutDialog()));
+    QStringList starPointTableHeader;
+    starPointTableHeader<<tr("编号")<<tr("X")<<tr("Y");
+    ui->starPointTable->setHorizontalHeaderLabels(starPointTableHeader);
+    ui->starPointTable->horizontalHeader()->setHighlightSections(false);
 }
 
 MainWindow::~MainWindow()
@@ -80,7 +84,7 @@ void MainWindow::loadPicture(QString fileName)
         }
         this->ui->posXDisplay->setText(QString::number(this->posX));
         this->ui->posYDisplay->setText(QString::number(this->posY));
-        ui->starList->clear();
+        ui->starPointTable->clear();
         ui->openButton->blockSignals(true);
         ui->evalButton->blockSignals(true);
         ui->statusBar->showMessage(tr("请稍候……正在处理图片"));
@@ -104,14 +108,22 @@ void MainWindow::loadPicture(QString fileName)
         else {
             for(size_t i=0;i!=this->starRecs.size();i++)
             {
-                QListWidgetItem* item = new QListWidgetItem;
-                item->setText(QString::number(this->starRecs[i].index+1)+tr("-坐标：(")+QString::number(this->starRecs[i].x)+tr(",")+QString::number(this->starRecs[i].y)+tr(")"));
-                ui->starList->addItem(item);
+                int row_count=ui->starPointTable->rowCount();
+                ui->starPointTable->insertRow(row_count);
+                QTableWidgetItem *num_item=new QTableWidgetItem();
+                num_item->setText(QString::number(this->starRecs[i].index+1));
+                ui->starPointTable->setItem(row_count,0,num_item);
+                QTableWidgetItem *x_item=new QTableWidgetItem();
+                x_item->setText(QString::number(this->starRecs[i].x));
+                ui->starPointTable->setItem(row_count,1,x_item);
+                QTableWidgetItem *y_item=new QTableWidgetItem();
+                y_item->setText(QString::number(this->starRecs[i].y));
+                ui->starPointTable->setItem(row_count,2,y_item);
             }
         }
          ui->openButton->blockSignals(false);
     }
-    ui->starList->blockSignals(true);
+    ui->starPointTable->blockSignals(true);
     ui->statusBar->showMessage(tr("请稍候……正在加载并处理星表"));
     starNames=loadStarNames(name_path);
     image_properties prop(skyImg.width(),skyImg.height(),skyImg.width()*25.4/skyImg.logicalDpiX(),skyImg.height()*25.4/skyImg.logicalDpiY(),this->focus);
@@ -127,7 +139,7 @@ void MainWindow::loadPicture(QString fileName)
     this->starMap=futureSMM.result();
     ui->statusBar->clearMessage();
     this->setAcceptDrops(true);
-    ui->starList->blockSignals(false);
+    ui->starPointTable->blockSignals(false);
     ui->evalButton->blockSignals(true);
     ui->tabWidget->setCurrentIndex(0);
 }
@@ -180,59 +192,6 @@ void MainWindow::on_openButton_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,tr("打开图片"),"",tr("所有文件(*.*);;图片文件(*.jpg *.png *.bmp *.jpeg)"));
     loadPicture(fileName);
-}
-
-void MainWindow::on_starList_itemDoubleClicked(QListWidgetItem *item)
-{
-    ui->picDisplayArea->setPixmap(QPixmap::fromImage(this->skyImg));
-    ui->starNoDisplay->clear();
-    ui->starNameDisplay->clear();
-    ui->starPosXDisplay->clear();
-    ui->starPosYDisplay->clear();
-    ui->starConsDisplay->clear();
-    ui->starDescriptionDisplay->clear();
-    this->setAcceptDrops(false);
-    double x=item->text().section('(',1,1).section(',',0,0).toDouble();
-    double y=item->text().section(',',1,1).section(')',0,0).toDouble();
-    this->ui->picDisplayScrollArea->ensureVisible(ceil(x),ceil(y));
-
-    int res;
-    QElapsedTimer timer;
-    timer.start();
-    ui->starList->blockSignals(true);
-    ui->statusBar->showMessage(tr("请稍候……正在寻找匹配"));
-    getAlgorithm();
-    QFuture<int> futureFMS = QtConcurrent::run(this,&MainWindow::findMatchingStar,item->text().section('-',0,0).toInt()-1);
-    while(!futureFMS.isFinished())
-    {
-        ui->statusBar->showMessage(tr("请稍候……正在寻找匹配")+LOADANI(int(timer.elapsed())));
-        timer.restart();
-        QApplication::processEvents();
-    }
-    res=futureFMS.result();
-    ui->statusBar->clearMessage();
-    if(res>=0)
-    {
-        ui->starNoDisplay->setText(QString::number(res));
-        ui->starNameDisplay->setText(starNames[res]);
-        ui->starPosXDisplay->setText(QString::number(starMap[res].x));
-        ui->starPosYDisplay->setText(QString::number(starMap[res].y));
-        ui->starConsDisplay->setText(QString::number(starMap[res].magnitude));
-    }
-    else {
-        QMessageBox matchingFailMsgBox;
-        matchingFailMsgBox.setWindowTitle(tr("错误"));
-        matchingFailMsgBox.setText(tr("匹配失败！"));
-        matchingFailMsgBox.exec();
-   }
-    ui->starList->setSelectionMode(QAbstractItemView::SingleSelection);
-    ui->starList->blockSignals(false);
-    QImage tImg = this->skyImg;
-    QPainter painter(&tImg);
-    painter.setPen(QPen(QColor(255, 255, 255), 3));
-    painter.drawEllipse(QPointF(x,y), 8, 8);
-    painter.end();
-    ui->picDisplayArea->setPixmap(QPixmap::fromImage(tImg));
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent* event)
@@ -374,4 +333,56 @@ void MainWindow::showAboutDialog()
     You should have received a copy of the GNU General Public License       \n \
     along with this program.  If not, see <https://www.gnu.org/licenses/>.      \n"));
     aboutMsgBox.exec();
+}
+
+void MainWindow::on_starPointTable_cellDoubleClicked(int row, int column)
+{
+    ui->picDisplayArea->setPixmap(QPixmap::fromImage(this->skyImg));
+    ui->starNoDisplay->clear();
+    ui->starNameDisplay->clear();
+    ui->starPosXDisplay->clear();
+    ui->starPosYDisplay->clear();
+    ui->starConsDisplay->clear();
+    ui->starDescriptionDisplay->clear();
+    this->setAcceptDrops(false);
+    double x=ui->starPointTable->item(row,1)->text().toDouble();
+    double y=ui->starPointTable->item(row,2)->text().toDouble();
+    this->ui->picDisplayScrollArea->ensureVisible(ceil(x),ceil(y));
+    int res;
+    QElapsedTimer timer;
+    timer.start();
+    ui->starPointTable->blockSignals(true);
+    ui->statusBar->showMessage(tr("请稍候……正在寻找匹配"));
+    getAlgorithm();
+    QFuture<int> futureFMS = QtConcurrent::run(this,&MainWindow::findMatchingStar,ui->starPointTable->item(row,0)->text().toInt());
+    while(!futureFMS.isFinished())
+    {
+        ui->statusBar->showMessage(tr("请稍候……正在寻找匹配")+LOADANI(int(timer.elapsed())));
+        timer.restart();
+        QApplication::processEvents();
+    }
+    res=futureFMS.result();
+    ui->statusBar->clearMessage();
+    if(res>=0)
+    {
+        ui->starNoDisplay->setText(QString::number(res));
+        ui->starNameDisplay->setText(starNames[res]);
+        ui->starPosXDisplay->setText(QString::number(starMap[res].x));
+        ui->starPosYDisplay->setText(QString::number(starMap[res].y));
+        ui->starConsDisplay->setText(QString::number(starMap[res].magnitude));
+    }
+    else {
+        QMessageBox matchingFailMsgBox;
+        matchingFailMsgBox.setWindowTitle(tr("错误"));
+        matchingFailMsgBox.setText(tr("匹配失败！"));
+        matchingFailMsgBox.exec();
+   }
+    ui->starPointTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->starPointTable->blockSignals(false);
+    QImage tImg = this->skyImg;
+    QPainter painter(&tImg);
+    painter.setPen(QPen(QColor(255, 255, 255), 3));
+    painter.drawEllipse(QPointF(x,y), 8, 8);
+    painter.end();
+    ui->picDisplayArea->setPixmap(QPixmap::fromImage(tImg));
 }
