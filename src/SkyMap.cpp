@@ -64,18 +64,20 @@ void Observation::ContentSync(){
 }
 
 void ImageProperties::change_ppmm(double new_ppmm){
-    ppmm = new_ppmm;
-    ppi = static_cast<int>(mm2inch(ppmm));
-    length_inch = length_pixel / mm2inch(ppmm);
-    width_inch = width_pixel / mm2inch(ppmm);
+    this->ppmm = new_ppmm;
+    this->ppi = static_cast<int>(1.0/mm2inch(1.0/new_ppmm));
+    this->length_inch = length_pixel*1.0 / this->ppi;
+    this->width_inch = width_pixel*1.0 / this->ppi;
 }
 
 ImageProperties::ImageProperties(const ImageProperties& p){
     this->focal_length = p.focal_length;
     this->length_pixel = p.length_pixel;
     this->width_pixel = p.width_pixel;
-    this->change_ppmm(p.ppmm);
     this->ppi = p.ppi;
+    this->ppmm = p.ppmm;
+    this->length_inch = p.length_inch;
+    this->width_inch = p.width_inch;
 }
 
 GeneratedImage::GeneratedImage(cv::Mat &image,string path, vector<StarPoint> &stars, ImageProperties &property){
